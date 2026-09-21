@@ -783,14 +783,18 @@ main {
 
 /* Projects Grid */
 .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 2.2rem;
     perspective: 1200px;
 }
 
 /* 3D Holographic Project Cards */
 .project-card {
+    flex: 0 1 360px;
+    width: 360px;
+    max-width: 100%;
     border-radius: 8px;
     overflow: hidden;
     color: inherit;
@@ -968,7 +972,6 @@ main {
 
 .card-content a,
 .project-title-link,
-.github-hint,
 .tags {
     pointer-events: auto;
     position: relative;
@@ -1052,41 +1055,8 @@ main {
     color: var(--text-muted);
     font-size: 0.95rem;
     line-height: 1.65;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
     flex-grow: 1;
-}
-
-.card-footer-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--text-dim);
-}
-
-.github-hint {
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    text-decoration: none;
-    transition: color 0.3s ease, text-shadow 0.3s ease;
-    cursor: pointer;
-}
-
-.github-hint:hover {
-    color: var(--neon-cyan);
-    text-shadow: 0 0 8px var(--neon-cyan-glow);
-}
-
-.pulse-indicator {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--neon-cyan);
-    box-shadow: 0 0 8px var(--neon-cyan);
-    animation: statusBlink 2.5s infinite;
 }
 
 .card-live-overlay {
@@ -1254,8 +1224,9 @@ main {
         display: none;
     }
 
-    .projects-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    .project-card {
+        flex: 0 1 320px;
+        width: 320px;
     }
 }
 
