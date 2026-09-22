@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-matrix-mode="false">
 
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#030712" id="theme-color-meta">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Terminal+Vision&display=swap" rel="stylesheet">
     <script>
         /* Theme bootstrap: resolve the saved (or system) theme before first paint to avoid a flash. */
         (function () {
@@ -43,10 +43,10 @@
     <div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
     <div id="cursor-ring" class="cursor-ring" aria-hidden="true"></div>
 
-    <!-- Cyber Interactive Background Canvas & Matrix Grid -->
+    <!-- Matrix Interactive Background Canvas & Rain Grid -->
     <div class="cyber-bg-container" aria-hidden="true">
-        <canvas id="cyber-canvas"></canvas>
-        <div class="cyber-grid-overlay"></div>
+        <canvas id="cyber-canvas" data-matrix="true"></canvas>
+        <div class="cyber-grid-overlay matrix-rain-lines"></div>
         <div class="cyber-scanline-vignette"></div>
         <div class="ambient-glow glow-1"></div>
         <div class="ambient-glow glow-2"></div>
@@ -109,7 +109,7 @@
                 <div class="cyber-badge-wrapper">
                     <div class="cyber-badge">
                         <span class="badge-beacon"></span>
-                        <span class="badge-text scramble-target" data-original="NEURAL ARCHITECTURE // NEXT-GEN AI">NEURAL ARCHITECTURE // NEXT-GEN AI</span>
+                        <span class="badge-text scramble-target" data-original="RAJ COLACO // NEXT-GEN AI">RAJ COLACO // NEXT-GEN AI</span>
                         <span class="badge-corner tl"></span>
                         <span class="badge-corner br"></span>
                     </div>
@@ -793,6 +793,9 @@
             <p>&copy; 2026 Raj Colaco // Engineered with Advanced AI & Neural Aesthetics. All Rights Reserved.</p>
         </div>
     </footer>
+
+    <!-- Window-shade theme wipe overlay (driven by JS, pointer-events:none) -->
+    <div id="theme-wipe-overlay" aria-hidden="true"></div>
 
     <script src="assets/js/script.js"></script>
 </body>
