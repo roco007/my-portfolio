@@ -1,245 +1,46 @@
-# 🚀 AI Projects Portfolio
+# Raj Colaco // Futuristic AI Portfolio
 
-> **Building the future with AI, one project at a time.**
-
-A modern and interactive portfolio website showcasing my AI-powered applications, experiments, developer tools, and innovative projects.
-
-The portfolio brings together projects focused on **Artificial Intelligence, multi-agent systems, SaaS, developer productivity, and interactive web experiences**.
-
-🌐 **Live Portfolio:** [View Portfolio](https://roco007.github.io/my-portfolio/?utm_source=chatgpt.com)
+Cybernetic, next-generation AI developer portfolio featuring interactive neural particle constellations, 3D holographic card physics, cyber text decryption, category filtering, and telemetry HUD metrics.
 
 ---
 
-## ✨ Overview
+## 🚀 Adding a New Project (`add_project.py`)
 
-This repository contains the source code for my personal AI projects portfolio.
+A script [`add_project.py`](file:///Users/raj.colaco/Desktop/PersonalGit/my-portfolio/add_project.py) automatically ingests and generates new project cards using **just 1 input: your GitHub repository link**.
 
-The website is designed to provide a clean and visually engaging way to explore my work, including:
+When a project is added, it is placed **at the top of the grid (before existing cards)**, automatically renumbers all system chips (`SYS.001`, `SYS.002`, ...), and updates the `DEPLOYED UNITS` count in the telemetry HUD.
 
-- 🤖 AI-powered applications
-- 🧠 Multi-agent systems
-- 🚀 SaaS products
-- 🛠 Developer tools
-- 🌌 Interactive web experiences
-- 💡 Experimental projects
-
-Each project includes a preview, description, technology tags, and links to the live application or source repository.
-
----
-
-## 🖥️ Featured Projects
-
-### 🤖 HH Judge AI
-
-An AI-powered multi-agent evaluation system designed to evaluate projects similar to an expert judging panel at an elite hacker house.
-
-The system can analyze a project using:
-
-- 🌐 Live application URL
-- 💻 Public GitHub repository
-
-It uses multiple AI agents to evaluate different aspects of a project and generate structured feedback.
-
-🔗 **Repository:** [HH Judge AI](https://github.com/roco007/HHJudgeAI?utm_source=chatgpt.com)
-
-🔗 **Live Demo:** [View Live Demo](https://hh-judge-ai.vercel.app/?utm_source=chatgpt.com)
-
----
-
-### 💡 Opportunity AI
-
-An AI-powered opportunity discovery platform designed to help developers, entrepreneurs, and indie hackers discover potentially profitable AI project ideas.
-
-The platform focuses on identifying:
-
-- Real-world problems
-- Market gaps
-- AI opportunities
-- MVP strategies
-- Validation approaches
-- Monetization potential
-
-With a focus on opportunities in the **US and European markets**, the goal is to move users from:
-
-```text
-Market Problem
-      ↓
-Business Opportunity
-      ↓
-AI Solution
-      ↓
-MVP Plan
-      ↓
-Validation Strategy
-```
-
-🔗 **Repository:** [Opportunity AI](https://github.com/roco007/OpporunityAi?utm_source=chatgpt.com)
-
-🔗 **Live Demo:** [View Live Demo](https://opportunity-ai-blue.vercel.app/dashboard?utm_source=chatgpt.com)
-
----
-
-### 🌌 Interactive Solar System
-
-An immersive browser-based experience for exploring the solar system.
-
-The project features:
-
-- 🪐 Interactive planetary exploration
-- 🌍 Planetary motion
-- 🎮 Interactive controls
-- 🌌 Immersive visual experience
-- 💻 Browser-based accessibility
-
-🔗 **Repository:** [Interactive Solar System](https://github.com/roco007/Interactive-Solar-System?utm_source=chatgpt.com)
-
----
-
-### 🛠 JSON Master
-
-A developer-focused tool designed to simplify working with JSON data.
-
-The project focuses on providing useful utilities and a streamlined interface for developers working with JSON.
-
-🔗 **Live Demo:** [View JSON Master](https://jsonmaster-gfnesxad.manus.space?utm_source=chatgpt.com)
-
----
-
-## 🎨 Features
-
-- ✨ Modern portfolio design
-- 🪟 Glassmorphism-inspired UI
-- 🌈 Animated background effects
-- 📱 Responsive layout
-- ⚡ Lightweight static website
-- 🖼️ Project preview cards
-- 🔗 Direct links to live projects
-- 💻 Links to GitHub repositories
-- 🎯 Smooth navigation
-- 🎞️ Interactive animations
-
----
-
-## 🛠 Tech Stack
-
-This portfolio is built using:
-
-- **HTML5**
-- **CSS3**
-- **JavaScript**
-- **Google Fonts**
-- **GitHub Pages**
-
-The project follows a lightweight static website architecture without requiring a complex frontend framework.
-
----
-
-## 📁 Project Structure
-
-```text
-my-portfolio/
-│
-├── assets/
-│   ├── css/
-│   │   └── styles.css
-│   │
-│   └── images/
-│       └── project previews and assets
-│
-├── index.html
-├── README.md
-└── engine.bin
-```
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
+### 🌟 1-Input Mode (Pass GitHub Repo URL)
+Simply provide the GitHub repository URL:
 ```bash
-git clone https://github.com/roco007/my-portfolio.git
+python3 add_project.py https://github.com/roco007/OpporunityAi
 ```
+*(or run `python3 add_project.py` and paste the URL when prompted)*
 
-### 2. Navigate to the Project
+#### How It Works:
+1. **Name**: Automatically derived from the repo name by splitting camelCase / PascalCase:
+   - `justDoIt` or `JustDoIt` → **Just Do It**
+   - `OpporunityAi` → **Opporunity AI**
+   - `interactive-solar-system` → **Interactive Solar System**
+2. **Description**: Automatically fetched from the GitHub repository **About** section.
+3. **Live Demo URL**: Automatically fetched from the website link in the GitHub repository **About** section.
+4. **Category & Tags**: Automatically inferred from repository topics, primary language, and description keywords.
+5. **Image**: Automatically matches any corresponding preview image in `assets/images/`.
 
+---
+
+### Optional Manual Overrides
+If you ever want to override any specific detail, you can optionally pass flags:
 ```bash
-cd my-portfolio
+python3 add_project.py https://github.com/roco007/OpporunityAi \
+  --name "Opportunity AI" \
+  --image "assets/images/OpportunityAI_preview.png"
 ```
 
-### 3. Open the Website
-
-Since this is a static website, you can simply open:
-
-```text
-index.html
-```
-
-in your browser.
-
-Alternatively, you can use a local development server such as:
-
-```bash
-npx serve .
-```
-
----
-
-## 🌐 Deployment
-
-The portfolio is deployed using **GitHub Pages**.
-
-You can visit the live website here:
-
-[AI Projects Portfolio](https://roco007.github.io/my-portfolio/?utm_source=chatgpt.com)
-
----
-
-## 🎯 Purpose
-
-This portfolio serves as a central place to showcase projects that explore the intersection of:
-
-> **Artificial Intelligence + Software Engineering + Automation + Product Innovation**
-
-The goal is to continuously experiment with new technologies, build useful products, and turn interesting ideas into working applications.
-
----
-
-## 🔮 Future Improvements
-
-Potential improvements for the portfolio include:
-
-- [ ] Add more AI projects
-- [ ] Add project filtering by category
-- [ ] Add detailed project pages
-- [ ] Add technology stack information for each project
-- [ ] Add project development stories
-- [ ] Add GitHub statistics
-- [ ] Add animations and micro-interactions
-- [ ] Improve mobile responsiveness
-- [ ] Add dark/light theme controls
-- [ ] Add a blog or project insights section
-- [ ] Add contact and collaboration options
-
----
-
-## 👨‍💻 Author
-
-**Raj Colaco**
-
-Software Developer | AI Builder | Product Enthusiast
-
-- 💼 [LinkedIn](https://www.linkedin.com/in/raj-colaco/?utm_source=chatgpt.com)
-- 💻 [GitHub](https://github.com/roco007?utm_source=chatgpt.com)
-
----
-
-<div align="center">
-
-### 🚀 Exploring ideas. Building products. Learning continuously.
-
-**Thanks for visiting my portfolio!**
-
-⭐ If you like the projects, consider starring the repositories.
-
-</div>
+Available override flags:
+- `-n`, `--name`: Override project title
+- `-l`, `--live`: Override live demo URL
+- `-d`, `--desc`: Override description
+- `-c`, `--category`: Override category (`ai`, `utility`, `interactive`)
+- `-t`, `--tags`: Override tags (comma-separated)
+- `-i`, `--image`: Override image path or filename
