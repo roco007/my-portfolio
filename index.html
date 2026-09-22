@@ -1,14 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raj Colaco // Next-Gen AI & Full-Stack Systems</title>
     <meta name="description" content="Futuristic portfolio of Raj Colaco showcasing advanced AI systems, multi-agent evaluation frameworks, interactive 3D simulations, and developer utilities.">
+    <meta name="theme-color" content="#030712" id="theme-color-meta">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        /* Theme bootstrap: resolve the saved (or system) theme before first paint to avoid a flash. */
+        (function () {
+            var THEME_COLORS = { dark: '#030712', light: '#f2f6fc' };
+            var storedTheme = null;
+            try {
+                storedTheme = localStorage.getItem('portfolio-theme');
+            } catch (err) {
+                storedTheme = null;
+            }
+
+            var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            var theme = (storedTheme === 'light' || storedTheme === 'dark')
+                ? storedTheme
+                : (prefersLight ? 'light' : 'dark');
+
+            document.documentElement.setAttribute('data-theme', theme);
+
+            var themeColorMeta = document.getElementById('theme-color-meta');
+            if (themeColorMeta) {
+                themeColorMeta.setAttribute('content', THEME_COLORS[theme]);
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
 </head>
@@ -51,11 +76,27 @@
                     <li><a href="#contact" class="nav-item" data-hover="CONTACT"><span class="nav-index">03.</span> CONTACT</a></li>
                 </ul>
 
-                <a href="#contact" class="nav-contact-btn cyber-btn-sm">
-                    <span class="btn-glitch-text">INIT UPLINK</span>
-                    <span class="btn-corner tl"></span>
-                    <span class="btn-corner br"></span>
-                </a>
+                <div class="nav-actions">
+                    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Light mode"
+                        aria-pressed="false" title="Switch to light mode">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" focusable="false">
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <path d="M12 2.2v2.4M12 19.4v2.4M4.1 4.1l1.7 1.7M18.2 18.2l1.7 1.7M2.2 12h2.4M19.4 12h2.4M4.1 19.9l1.7-1.7M18.2 5.8l1.7-1.7"></path>
+                            </svg>
+                            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" focusable="false">
+                                <path d="M20.4 14.6A8.6 8.6 0 1 1 9.4 3.6a8.8 8.8 0 0 0 11 11z"></path>
+                            </svg>
+                            <span class="theme-toggle-knob"></span>
+                        </span>
+                    </button>
+
+                    <a href="#contact" class="nav-contact-btn cyber-btn-sm">
+                        <span class="btn-glitch-text">INIT UPLINK</span>
+                        <span class="btn-corner tl"></span>
+                        <span class="btn-corner br"></span>
+                    </a>
+                </div>
             </div>
         </nav>
     </header>
@@ -120,7 +161,7 @@
                     <div class="telemetry-divider"></div>
                     <div class="telemetry-item">
                         <span class="telemetry-label">DEPLOYED UNITS</span>
-                        <span class="telemetry-value">11 AI APPS</span>
+                        <span class="telemetry-value">12 AI APPS</span>
                     </div>
                     <div class="telemetry-divider"></div>
                     <div class="telemetry-item">
@@ -179,6 +220,44 @@
             </div>
 
             <div class="projects-grid" id="projects-grid">
+                <!-- Project: DocuRelease AI -->
+                <article class="project-card glass-cyber fade-in" data-category="ai">
+                    <span class="card-corner tl"></span>
+                    <span class="card-corner tr"></span>
+                    <span class="card-corner bl"></span>
+                    <span class="card-corner br"></span>
+                    <div class="card-laser-glow"></div>
+
+                    <!-- Live Site Overlay Link -->
+                    <a href="https://docureleaseai.vercel.app/" target="_blank" rel="noopener noreferrer"
+                        class="card-live-overlay" aria-label="Launch DocuRelease AI live demo"></a>
+
+                    <div class="card-image-wrapper">
+                        <img src="assets/images/DocuReleaseAI_preview.png" alt="DocuRelease AI Preview" class="card-image" loading="lazy">
+                        <div class="cyber-laser-scan"></div>
+                        <a href="https://docureleaseai.vercel.app/" target="_blank" rel="noopener noreferrer" class="card-overlay" aria-label="Initialize DocuRelease AI Demo">
+                            <span class="live-btn">
+                                <span class="btn-text">INITIALIZE DEMO</span>
+                                <span class="arrow">↗</span>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header-meta">
+                            <div class="tags">
+                                <span class="tag tag-ai">TypeScript</span>
+                                <span class="tag">AI Tool</span>
+                            </div>
+                            <span class="cyber-chip-id">SYS.001</span>
+                        </div>
+                        <h3>
+                            <a href="https://github.com/roco007/DocuReleaseAI" target="_blank" rel="noopener noreferrer"
+                                class="project-title-link">DocuRelease AI</a>
+                        </h3>
+                        <p>DocuRelease AI automatically hooks into your GitHub repositories, analyzes code changes using Google Gemini 2.5 Pro, and generates pristine documentation and release notes in seconds.</p>
+                    </div>
+                </article>
+
                 <!-- Project: Rate Shift Uk -->
                 <article class="project-card glass-cyber fade-in" data-category="ai">
                     <span class="card-corner tl"></span>
@@ -207,7 +286,7 @@
                                 <span class="tag tag-ai">TypeScript</span>
                                 <span class="tag">AI Tool</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.001</span>
+                            <span class="cyber-chip-id">SYS.002</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/RateShiftUK" target="_blank" rel="noopener noreferrer"
@@ -245,7 +324,7 @@
                                 <span class="tag tag-ai">AI Tool</span>
                                 <span class="tag">Multi-Agent</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.002</span>
+                            <span class="cyber-chip-id">SYS.003</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/HHJudgeAI" target="_blank" rel="noopener noreferrer"
@@ -287,7 +366,7 @@
                                 <span class="tag tag-ai">AI Tool</span>
                                 <span class="tag">SaaS</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.003</span>
+                            <span class="cyber-chip-id">SYS.004</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/OpporunityAi" target="_blank"
@@ -329,7 +408,7 @@
                                 <span class="tag tag-interactive">Game / 3D</span>
                                 <span class="tag">Vite</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.004</span>
+                            <span class="cyber-chip-id">SYS.005</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/Interactive-Solar-System" target="_blank"
@@ -370,7 +449,7 @@
                                 <span class="tag tag-utility">Utility</span>
                                 <span class="tag">Web App</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.005</span>
+                            <span class="cyber-chip-id">SYS.006</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/jsonTools" target="_blank" rel="noopener noreferrer"
@@ -411,7 +490,7 @@
                                 <span class="tag tag-utility">Generator</span>
                                 <span class="tag">Tailwind</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.006</span>
+                            <span class="cyber-chip-id">SYS.007</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/instantQrGenerator" target="_blank"
@@ -451,7 +530,7 @@
                                 <span class="tag tag-utility">Utility</span>
                                 <span class="tag">Web App</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.007</span>
+                            <span class="cyber-chip-id">SYS.008</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/yamlTools" target="_blank" rel="noopener noreferrer"
@@ -491,7 +570,7 @@
                                 <span class="tag tag-utility">Tester</span>
                                 <span class="tag">Debugger</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.008</span>
+                            <span class="cyber-chip-id">SYS.009</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/regexCompare" target="_blank" rel="noopener noreferrer"
@@ -532,7 +611,7 @@
                                 <span class="tag tag-ai">AI Tool</span>
                                 <span class="tag">Database</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.009</span>
+                            <span class="cyber-chip-id">SYS.010</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/sqlOptimizer" target="_blank" rel="noopener noreferrer"
@@ -573,7 +652,7 @@
                                 <span class="tag tag-utility">Converter</span>
                                 <span class="tag">Utility</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.010</span>
+                            <span class="cyber-chip-id">SYS.011</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/css-to-tailwind" target="_blank"
@@ -614,7 +693,7 @@
                                 <span class="tag tag-interactive">Fitness</span>
                                 <span class="tag">Tracker</span>
                             </div>
-                            <span class="cyber-chip-id">SYS.011</span>
+                            <span class="cyber-chip-id">SYS.012</span>
                         </div>
                         <h3>
                             <a href="https://github.com/roco007/Wrokout-Tracker" target="_blank"

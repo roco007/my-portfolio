@@ -1,5 +1,6 @@
 /**
  * Next-Gen Futuristic Portfolio Interactions & Cyber Visual Engine
+ * - Dark / Light Theme Manager (persisted + OS preference aware)
  * - Interactive Neural Particle Canvas
  * - 3D Holographic Card Tilt & Dynamic Glare
  * - Cyber Text Decryption / Hacker Scramble Effect
@@ -10,7 +11,72 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
-    // 1. Interactive Neural Particle Canvas Engine
+    // 1. Theme Manager (Dark / Light Mode)
+    // -------------------------------------------------------------
+    const THEME_STORAGE_KEY = 'portfolio-theme';
+    const THEME_COLORS = { dark: '#030712', light: '#f2f6fc' };
+    const root = document.documentElement;
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeColorMeta = document.getElementById('theme-color-meta');
+    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+
+    const readStoredTheme = () => {
+        try {
+            const stored = localStorage.getItem(THEME_STORAGE_KEY);
+            return (stored === 'light' || stored === 'dark') ? stored : null;
+        } catch (err) {
+            return null;
+        }
+    };
+
+    const applyTheme = (theme, persist) => {
+        const resolved = theme === 'light' ? 'light' : 'dark';
+        root.setAttribute('data-theme', resolved);
+
+        if (persist) {
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, resolved);
+            } catch (err) {
+                // Storage unavailable (e.g. private mode) - theme still applies for this session
+            }
+        }
+
+        if (themeColorMeta) {
+            themeColorMeta.setAttribute('content', THEME_COLORS[resolved]);
+        }
+
+        if (themeToggle) {
+            const isLight = resolved === 'light';
+            themeToggle.setAttribute('aria-pressed', String(isLight));
+            themeToggle.setAttribute('title', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+        }
+
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: resolved } }));
+    };
+
+    // The inline head bootstrap already painted the correct theme - re-apply to sync control state
+    applyTheme(root.getAttribute('data-theme') || (colorSchemeQuery.matches ? 'light' : 'dark'));
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light', true);
+        });
+    }
+
+    // Follow the OS preference until the visitor makes an explicit choice
+    const handleSystemThemeChange = (event) => {
+        if (readStoredTheme()) return;
+        applyTheme(event.matches ? 'light' : 'dark');
+    };
+
+    if (typeof colorSchemeQuery.addEventListener === 'function') {
+        colorSchemeQuery.addEventListener('change', handleSystemThemeChange);
+    } else if (typeof colorSchemeQuery.addListener === 'function') {
+        colorSchemeQuery.addListener(handleSystemThemeChange); // Legacy Safari support
+    }
+
+    // -------------------------------------------------------------
+    // 2. Interactive Neural Particle Canvas Engine
     // -------------------------------------------------------------
     const canvas = document.getElementById('cyber-canvas');
     if (canvas) {
@@ -21,6 +87,40 @@ document.addEventListener('DOMContentLoaded', () => {
         let particles = [];
         let mouse = { x: null, y: null, radius: 170 };
         let animationFrameId = null;
+
+        // Palettes mirror the CSS theme tokens so the mesh stays legible on both backgrounds
+        const PARTICLE_PALETTES = {
+            dark: {
+                dots: [
+                    'rgba(0, 240, 255, ',    // Neon Cyan
+                    'rgba(139, 92, 246, ',   // Neon Violet
+                    'rgba(255, 42, 133, '    // Neon Pink
+                ],
+                link: 'rgba(0, 240, 255, ',
+                linkAlpha: 0.25,
+                mouseAlpha: 0.55,
+                glow: 8
+            },
+            light: {
+                dots: [
+                    'rgba(14, 116, 144, ',   // Deep Cyan
+                    'rgba(124, 58, 237, ',   // Deep Violet
+                    'rgba(219, 39, 119, '    // Deep Pink
+                ],
+                link: 'rgba(14, 116, 144, ',
+                linkAlpha: 0.2,
+                mouseAlpha: 0.45,
+                glow: 6
+            }
+        };
+
+        const resolvePalette = () => (
+            document.documentElement.getAttribute('data-theme') === 'light'
+                ? PARTICLE_PALETTES.light
+                : PARTICLE_PALETTES.dark
+        );
+
+        let palette = resolvePalette();
 
         const resizeCanvas = () => {
             width = window.innerWidth;
@@ -35,11 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             particles = [];
             // Responsive particle count based on screen area
             const particleCount = Math.min(Math.floor((width * height) / 14000), 85);
-            const colors = [
-                'rgba(0, 240, 255, ',    // Neon Cyan
-                'rgba(139, 92, 246, ',   // Neon Violet
-                'rgba(255, 42, 133, '    // Neon Pink
-            ];
+            const colors = palette.dots;
 
             for (let i = 0; i < particleCount; i++) {
                 particles.push({
@@ -79,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
                 ctx.fillStyle = `${p1.baseColor}${alpha})`;
                 ctx.shadowColor = `${p1.baseColor}0.8)`;
-                ctx.shadowBlur = 8;
+                ctx.shadowBlur = palette.glow;
                 ctx.fill();
                 ctx.shadowBlur = 0;
 
@@ -91,11 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < maxDist) {
-                        const lineAlpha = (1 - dist / maxDist) * 0.25;
+                        const lineAlpha = (1 - dist / maxDist) * palette.linkAlpha;
                         ctx.beginPath();
                         ctx.moveTo(p1.x, p1.y);
                         ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `rgba(0, 240, 255, ${lineAlpha})`;
+                        ctx.strokeStyle = `${palette.link}${lineAlpha})`;
                         ctx.lineWidth = 0.8;
                         ctx.stroke();
                     }
@@ -108,11 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
 
                     if (mDist < mouse.radius) {
-                        const mouseLineAlpha = (1 - mDist / mouse.radius) * 0.55;
+                        const mouseLineAlpha = (1 - mDist / mouse.radius) * palette.mouseAlpha;
                         ctx.beginPath();
                         ctx.moveTo(p1.x, p1.y);
                         ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = `rgba(0, 240, 255, ${mouseLineAlpha})`;
+                        ctx.strokeStyle = `${palette.link}${mouseLineAlpha})`;
                         ctx.lineWidth = 1.2;
                         ctx.stroke();
 
@@ -150,12 +246,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Re-skin the constellation when the visitor flips the theme
+        document.addEventListener('themechange', () => {
+            palette = resolvePalette();
+            initParticles();
+        });
+
         resizeCanvas();
         drawParticles();
     }
 
     // -------------------------------------------------------------
-    // 2. Custom Sci-Fi Reticle Cursor (Desktop)
+    // 3. Custom Sci-Fi Reticle Cursor (Desktop)
     // -------------------------------------------------------------
     const dot = document.getElementById('cursor-dot');
     const ring = document.getElementById('cursor-ring');
@@ -194,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 3. 3D Holographic Card Tilt & Spotlight Glare
+    // 4. 3D Holographic Card Tilt & Spotlight Glare
     // -------------------------------------------------------------
     const projectCards = document.querySelectorAll('.project-card');
 
@@ -232,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // 4. Cyber Text Decryption / Hacker Scramble Effect
+    // 5. Cyber Text Decryption / Hacker Scramble Effect
     // -------------------------------------------------------------
     const scrambleElements = document.querySelectorAll('.scramble-target');
     const glyphs = '0101_#@$%=+-~*<>[]{}/\\^!&?';
@@ -274,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // 5. Interactive Category Filter System
+    // 6. Interactive Category Filter System
     // -------------------------------------------------------------
     const filterPills = document.querySelectorAll('.filter-pill');
 
@@ -311,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // 6. Scroll Fade-in Intersection Observer
+    // 7. Scroll Fade-in Intersection Observer
     // -------------------------------------------------------------
     const observerOptions = {
         root: null,
