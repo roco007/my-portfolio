@@ -1,7 +1,6 @@
 /**
- * Next-Gen Futuristic Portfolio Interactions & Cyber Visual Engine
  * - Dark / Light Theme Manager (persisted + OS preference aware)
- * - Interactive Neural Particle Canvas
+ * - Interactive Matrix Particle Canvas
  * - 3D Holographic Card Tilt & Dynamic Glare
  * - Cyber Text Decryption / Hacker Scramble Effect
  * - Dual-Ring Sci-Fi Reticle Cursor
@@ -14,7 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Theme Manager (Dark / Light Mode)
     // -------------------------------------------------------------
     const THEME_STORAGE_KEY = 'portfolio-theme';
+    const MATRIX_STORAGE_KEY = 'portfolio-matrix-mode';
     const THEME_COLORS = { dark: '#030712', light: '#f2f6fc' };
+    const MATRIX_THEME_COLORS = { dark: '#050608', light: '#e7f4e4' };
     const root = document.documentElement;
     const themeToggle = document.getElementById('theme-toggle');
     const themeColorMeta = document.getElementById('theme-color-meta');
@@ -29,7 +30,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const applyTheme = (theme, persist) => {
+    const commitMatrix = (matrixOn, persist) => {
+        const on = !!matrixOn;
+        root.setAttribute('data-matrix-mode', String(on));
+
+        if (persist) {
+            try {
+                localStorage.setItem(MATRIX_STORAGE_KEY, String(on));
+            } catch (err) {
+                // Storage unavailable - matrix mode still applies for this session
+            }
+        }
+
+        if (themeColorMeta) {
+            const currentTheme = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            themeColorMeta.setAttribute('content', on ? MATRIX_THEME_COLORS[currentTheme] : THEME_COLORS[currentTheme]);
+        }
+
+        updateLogoForMatrixMode();
+        updateHeroBadgeForMatrixMode();
+        document.dispatchEvent(new CustomEvent('matrixmodechange', { detail: { matrix: on } }));
+    };
+
+    const updateLogoForMatrixMode = () => {
+        const matrixOn = root.getAttribute('data-matrix-mode') === 'true';
+        const logoText = document.querySelector('.logo-text');
+        const logoSub = document.querySelector('.logo-sub');
+        if (logoText) logoText.innerText = matrixOn ? 'Hello' : 'AI';
+        if (logoSub) logoSub.innerText = matrixOn ? 'NEO!!!' : 'SYSTEMS';
+    };
+
+    const updateHeroBadgeForMatrixMode = () => {
+        const matrixOn = root.getAttribute('data-matrix-mode') === 'true';
+        const badge = document.querySelector('.badge-text.scramble-target');
+        if (!badge) return;
+        const original = matrixOn ? 'RAJ COLACO // NEXT-GEN AI' : 'RAJ COLACO // NEXT-GEN AI';
+        badge.setAttribute('data-original', original);
+        // Sync visible text immediately so the badge reflects the mode even before the next scramble tick
+        if (!badge._scrambleTimer) {
+            badge.innerText = original;
+        }
+    };
+
+    const commitTheme = (theme, persist) => {
         const resolved = theme === 'light' ? 'light' : 'dark';
         root.setAttribute('data-theme', resolved);
 
@@ -42,7 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (themeColorMeta) {
-            themeColorMeta.setAttribute('content', THEME_COLORS[resolved]);
+            const currentTheme = resolved === 'light' ? 'light' : 'dark';
+            themeColorMeta.setAttribute('content', root.getAttribute('data-matrix-mode') === 'true' ? MATRIX_THEME_COLORS[currentTheme] : THEME_COLORS[currentTheme]);
         }
 
         if (themeToggle) {
@@ -54,19 +98,188 @@ document.addEventListener('DOMContentLoaded', () => {
         document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: resolved } }));
     };
 
-    // The inline head bootstrap already painted the correct theme - re-apply to sync control state
-    applyTheme(root.getAttribute('data-theme') || (colorSchemeQuery.matches ? 'light' : 'dark'));
+    const WIPE_PHASE_MS = 700;
+    const WIPE_EASING = 'cubic-bezier(0.55, 0.06, 0.35, 1)';
+    const wipeOverlay = document.getElementById('theme-wipe-overlay');
+    const reduceMotionQuery = window.matchMedia
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null;
+    let wipePending = null;
+    let wipeRunning = false;
+
+    const shadeKeyForState = (theme, matrixOn) =>
+        (matrixOn ? 'matrix-' : '') + (theme === 'light' ? 'light' : 'dark');
+
+    const runThemeWipe = (swapUnderCover) => {
+        // No overlay, no WAAPI, or reduced motion: instant swap, no covering.
+        if (!wipeOverlay || !wipeOverlay.animate || !Element.prototype.animate) {
+            swapUnderCover();
+            return;
+        }
+        if (reduceMotionQuery && reduceMotionQuery.matches) {
+            swapUnderCover();
+            return;
+        }
+        if (wipeRunning) return;
+        wipeRunning = true;
+
+        const fromTheme = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const fromMatrix = root.getAttribute('data-matrix-mode') === 'true';
+        wipeOverlay.setAttribute('data-shade', shadeKeyForState(fromTheme, fromMatrix));
+        const toPending = wipePending;
+        const toMatrix = toPending && toPending.kind === 'matrix'
+            ? !!toPending.value
+            : fromMatrix;
+        if (fromMatrix || toMatrix) {
+            wipeOverlay.setAttribute('data-edge', 'matrix');
+        } else {
+            wipeOverlay.removeAttribute('data-edge');
+        }
+
+        // Swap the real theme FIRST: fragments (old theme color) sit on top of
+        // the new theme and flake away revealing it = disintegration.
+        swapUnderCover();
+        if (wipePending) {
+            const next = wipePending;
+            wipePending = null;
+            if (next.kind === 'theme') {
+                commitTheme(next.value, true);
+            } else {
+                commitMatrix(next.value, true);
+            }
+        }
+
+        // Build a tile grid covering the viewport. Each tile disintegrates
+        // top-rows first with per-tile jitter so the old theme crumbles away.
+        const vw = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0, 320);
+        const vh = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, 320);
+        const cols = vw < 640 ? 10 : 16;
+        const rows = vh < 640 ? 12 : 18;
+        const fragW = Math.ceil(vw / cols) + 1;
+        const fragH = Math.ceil(vh / rows) + 1;
+        wipeOverlay.innerHTML = '';
+        wipeOverlay.classList.add('is-disintegrating');
+        wipeOverlay.style.visibility = 'visible';
+
+        const animations = [];
+        const rowBase = 320; // top row goes first, ~320ms head start over bottom
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const frag = document.createElement('div');
+                frag.className = 'wipe-fragment';
+                frag.style.left = (c * fragW - 1) + 'px';
+                frag.style.top = (r * fragH - 1) + 'px';
+                frag.style.width = fragW + 'px';
+                frag.style.height = fragH + 'px';
+                wipeOverlay.appendChild(frag);
+
+                // Top-to-bottom ordering with jitter + slight column stagger.
+                const jitter = Math.random() * 160;
+                const delay = (r / Math.max(rows - 1, 1)) * rowBase + (c / Math.max(cols - 1, 1)) * 60 + jitter;
+                const driftX = (Math.random() - 0.5) * 44;
+                // Fragments fall slightly and shrink into nothing (ash-like).
+                const anim = frag.animate(
+                    [
+                        { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+                        // Glitch flicker mid-break (green tint lands via data-edge glow).
+                        { transform: `translate(${driftX * 0.3}px, -3px) scale(1.02)`, opacity: 1, offset: 0.35 },
+                        { transform: `translate(${driftX}px, 26px) scale(0.12)`, opacity: 0 }
+                    ],
+                    { duration: WIPE_PHASE_MS, delay, easing: WIPE_EASING, fill: 'forwards' }
+                );
+                animations.push(anim);
+            }
+        }
+
+        const teardown = () => {
+            wipeOverlay.classList.remove('is-disintegrating');
+            wipeOverlay.style.visibility = 'hidden';
+            wipeOverlay.innerHTML = '';
+            wipeRunning = false;
+            if (wipePending) {
+                const next = wipePending;
+                wipePending = null;
+                requestThemeSwap(next.kind, next.value);
+            }
+        };
+
+        const totalMs = WIPE_PHASE_MS + rowBase + 160 + 60 + 120;
+        let settled = false;
+        const done = () => {
+            if (settled) return;
+            settled = true;
+            teardown();
+        };
+        if (animations.length && animations[0] && animations[0].finished) {
+            Promise.all(animations.map((a) => a.finished.catch(() => {}))).then(done).catch(done);
+        }
+        setTimeout(done, totalMs);
+    };
+
+    const requestThemeSwap = (kind, value) => {
+        if (wipeRunning) {
+            wipePending = { kind, value };
+            return;
+        }
+        if (kind === 'theme') {
+            const target = value === 'light' ? 'light' : 'dark';
+            const current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            // Dark/light swaps are instant (no disintegration).
+            commitTheme(target, true);
+            return;
+        } else {
+            const target = !!value;
+            const current = root.getAttribute('data-matrix-mode') === 'true';
+            if (target === current) {
+                commitMatrix(target, true);
+                return;
+            }
+            if (target === true && current === false) {
+                // Non-matrix -> Matrix only: disintegrate the old UI.
+                runThemeWipe(() => commitMatrix(target, true));
+            } else {
+                // Matrix -> non-matrix: instant, no animation.
+                commitMatrix(target, true);
+            }
+        }
+    };
+
+    // Inline head bootstrap painted the correct theme; re-apply to sync controls.
+    // Matrix defaults to OFF; a previously stored ON is honored.
+    commitTheme(root.getAttribute('data-theme') || (colorSchemeQuery.matches ? 'light' : 'dark'));
+    let storedMatrix = null;
+    try {
+        storedMatrix = localStorage.getItem(MATRIX_STORAGE_KEY);
+    } catch (err) {
+        storedMatrix = null;
+    }
+    commitMatrix(storedMatrix === 'true', false);
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-            applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light', true);
+            requestThemeSwap('theme', root.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
         });
+    }
+
+    // Matrix mode toggle via the AI.SYSTEMS logo button
+    const logoButton = document.querySelector('.logo');
+    if (logoButton && typeof logoButton.addEventListener === 'function') {
+        logoButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            const nextMatrix = root.getAttribute('data-matrix-mode') !== 'true';
+            requestThemeSwap('matrix', nextMatrix);
+            window.location.hash = 'home';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        // Initial logo text sync in case DOM was already painted
+        updateLogoForMatrixMode();
+        updateHeroBadgeForMatrixMode();
     }
 
     // Follow the OS preference until the visitor makes an explicit choice
     const handleSystemThemeChange = (event) => {
         if (readStoredTheme()) return;
-        applyTheme(event.matches ? 'light' : 'dark');
+        requestThemeSwap('theme', event.matches ? 'light' : 'dark');
     };
 
     if (typeof colorSchemeQuery.addEventListener === 'function') {
@@ -111,14 +324,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 linkAlpha: 0.2,
                 mouseAlpha: 0.45,
                 glow: 6
+            },
+            matrixDark: {
+                dots: [
+                    'rgba(0, 204, 68, ',     // Matrix Green
+                    'rgba(40, 150, 40, ',    // Deeper green
+                    'rgba(70, 190, 70, '     // Mid green glow
+                ],
+                link: 'rgba(0, 204, 68, ',
+                linkAlpha: 0.28,
+                mouseAlpha: 0.6,
+                glow: 10
+            },
+            matrixLight: {
+                dots: [
+                    'rgba(10, 143, 58, ',    // Deep Matrix Green
+                    'rgba(35, 110, 35, ',    // Slightly deeper green
+                    'rgba(55, 155, 55, '     // Mid green
+                ],
+                link: 'rgba(10, 143, 58, ',
+                linkAlpha: 0.22,
+                mouseAlpha: 0.5,
+                glow: 8
             }
         };
 
-        const resolvePalette = () => (
-            document.documentElement.getAttribute('data-theme') === 'light'
-                ? PARTICLE_PALETTES.light
-                : PARTICLE_PALETTES.dark
-        );
+        const resolvePalette = () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            const matrixOn = document.documentElement.getAttribute('data-matrix-mode') === 'true';
+            return matrixOn ? PARTICLE_PALETTES['matrix' + capitalize(theme)] : PARTICLE_PALETTES[theme];
+        };
+
+        const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
         let palette = resolvePalette();
 
@@ -246,8 +483,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Re-skin the constellation when the visitor flips the theme
+        // Re-skin the constellation when the visitor flips the theme or matrix mode
         document.addEventListener('themechange', () => {
+            palette = resolvePalette();
+            initParticles();
+        });
+        document.addEventListener('matrixmodechange', () => {
             palette = resolvePalette();
             initParticles();
         });
@@ -337,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Cyber Text Decryption / Hacker Scramble Effect
     // -------------------------------------------------------------
     const scrambleElements = document.querySelectorAll('.scramble-target');
-    const glyphs = '0101_#@$%=+-~*<>[]{}/\\^!&?';
+    const glyphs = '0101_#@$%=+-~*<>[]{}/\\^!&?░▒▓█▀▄▌▐▖▗▘▙▚▛▜▝▞▟■▲△♢♡♤♧♣♤ SELECT >';
 
     const scrambleText = (el) => {
         const originalText = el.getAttribute('data-original') || el.innerText;
