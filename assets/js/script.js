@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const themeColorMeta = document.getElementById('theme-color-meta');
     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+    let scrambleTextFn = null;
 
     const readStoredTheme = () => {
         try {
@@ -30,17 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const commitMatrix = (matrixOn, persist) => {
+    const commitMatrix = (matrixOn, persist, slowMotion = false) => {
         const on = !!matrixOn;
         root.setAttribute('data-matrix-mode', String(on));
-
-        if (persist) {
-            try {
-                localStorage.setItem(MATRIX_STORAGE_KEY, String(on));
-            } catch (err) {
-                // Storage unavailable - matrix mode still applies for this session
-            }
-        }
 
         if (themeColorMeta) {
             const currentTheme = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
@@ -48,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateLogoForMatrixMode();
-        updateHeroBadgeForMatrixMode();
+        updateHeroBadgeForMatrixMode(slowMotion);
         document.dispatchEvent(new CustomEvent('matrixmodechange', { detail: { matrix: on } }));
     };
 
@@ -60,14 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (logoSub) logoSub.innerText = matrixOn ? 'NEO!!!' : 'SYSTEMS';
     };
 
-    const updateHeroBadgeForMatrixMode = () => {
+    const updateHeroBadgeForMatrixMode = (slowMotion = false) => {
         const matrixOn = root.getAttribute('data-matrix-mode') === 'true';
         const badge = document.querySelector('.badge-text.scramble-target');
         if (!badge) return;
-        const original = matrixOn ? 'RAJ COLACO // NEXT-GEN AI' : 'RAJ COLACO // NEXT-GEN AI';
+        const original = matrixOn ? 'MATRIX // NEXT-GEN AI' : 'RAJ COLACO // NEXT-GEN AI';
         badge.setAttribute('data-original', original);
-        // Sync visible text immediately so the badge reflects the mode even before the next scramble tick
-        if (!badge._scrambleTimer) {
+        if (badge._scrambleTimer) {
+            clearInterval(badge._scrambleTimer);
+            badge._scrambleTimer = null;
+        }
+        if (matrixOn && slowMotion && typeof scrambleTextFn === 'function') {
+            scrambleTextFn(badge, 95, 40); // ~3.8 seconds slow-motion decryption
+        } else {
             badge.innerText = original;
         }
     };
@@ -111,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         (matrixOn ? 'matrix-' : '') + (theme === 'light' ? 'light' : 'dark');
 
     const runThemeWipe = (swapUnderCover) => {
-        // No overlay, no WAAPI, or reduced motion: instant swap, no covering.
-        if (!wipeOverlay || !wipeOverlay.animate || !Element.prototype.animate) {
+        if (!wipeOverlay) {
             swapUnderCover();
             return;
         }
@@ -127,71 +124,143 @@ document.addEventListener('DOMContentLoaded', () => {
         const fromMatrix = root.getAttribute('data-matrix-mode') === 'true';
         wipeOverlay.setAttribute('data-shade', shadeKeyForState(fromTheme, fromMatrix));
         const toPending = wipePending;
-        const toMatrix = toPending && toPending.kind === 'matrix'
-            ? !!toPending.value
-            : fromMatrix;
+        const toMatrix = toPending && toPending.kind === 'matrix' ? !!toPending.value : !fromMatrix;
         if (fromMatrix || toMatrix) {
             wipeOverlay.setAttribute('data-edge', 'matrix');
         } else {
             wipeOverlay.removeAttribute('data-edge');
         }
 
-        // Swap the real theme FIRST: fragments (old theme color) sit on top of
-        // the new theme and flake away revealing it = disintegration.
+        const vw = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0, 320);
+        const vh = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, 320);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        wipeOverlay.innerHTML = '';
+        wipeOverlay.classList.add('is-disintegrating');
+        wipeOverlay.style.visibility = 'visible';
+
+        // Disintegration canvas: samples the geometry of all currently visible UI elements
+        const canvas = document.createElement('canvas');
+        canvas.className = 'disintegration-canvas';
+        canvas.width = Math.round(vw * dpr);
+        canvas.height = Math.round(vh * dpr);
+        canvas.style.width = vw + 'px';
+        canvas.style.height = vh + 'px';
+        wipeOverlay.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            swapUnderCover();
+            wipeOverlay.classList.remove('is-disintegrating');
+            wipeOverlay.style.visibility = 'hidden';
+            wipeOverlay.innerHTML = '';
+            wipeRunning = false;
+            return;
+        }
+
+        // Detect all UI elements currently visible within the viewport
+        const visibleBoxes = [];
+        const candidates = document.querySelectorAll(
+            '.cyber-nav, .hero-content, .hero-telemetry-hud, .hero-badge, .project-card, .section-header, .filter-pills, .contact-card, .footer-content'
+        );
+        candidates.forEach((el) => {
+            const r = el.getBoundingClientRect();
+            if (r.bottom > 10 && r.top < vh - 10 && r.right > 10 && r.left < vw - 10) {
+                visibleBoxes.push({
+                    x: Math.max(0, r.left),
+                    y: Math.max(0, r.top),
+                    w: Math.min(vw - Math.max(0, r.left), r.width),
+                    h: Math.min(vh - Math.max(0, r.top), r.height)
+                });
+            }
+        });
+
+        if (visibleBoxes.length === 0) {
+            visibleBoxes.push({ x: 20, y: 70, w: vw - 40, h: vh - 100 });
+        }
+
+        const glyphChars = '0101_#@$%=+-~*<>[]{}/\\^!&?░▒▓█▀▄▌▐▖▗▘▙▚▛▜▝▞▟■▲△♢♡♤♧♣♤';
+        const particles = [];
+        const baseColor = fromTheme === 'light' ? 'rgba(14, 116, 144, ' : 'rgba(0, 240, 255, ';
+        const targetColor = 'rgba(0, 255, 65, ';
+
+        visibleBoxes.forEach((box) => {
+            // 1. Perimeter border crack shards
+            const perimeter = 2 * (box.w + box.h);
+            const edgeCount = Math.min(180, Math.max(36, Math.floor(perimeter / 16)));
+            for (let i = 0; i < edgeCount; i++) {
+                let px, py;
+                const edge = Math.random();
+                if (edge < 0.25) {
+                    px = box.x + Math.random() * box.w;
+                    py = box.y + (Math.random() - 0.5) * 4;
+                } else if (edge < 0.5) {
+                    px = box.x + Math.random() * box.w;
+                    py = box.y + box.h + (Math.random() - 0.5) * 4;
+                } else if (edge < 0.75) {
+                    px = box.x + (Math.random() - 0.5) * 4;
+                    py = box.y + Math.random() * box.h;
+                } else {
+                    px = box.x + box.w + (Math.random() - 0.5) * 4;
+                    py = box.y + Math.random() * box.h;
+                }
+                particles.push({
+                    x: px * dpr,
+                    y: py * dpr,
+                    vx: (Math.random() - 0.5) * 0.9 * dpr,
+                    vy: (Math.random() - 0.55) * 1.1 * dpr,
+                    size: (Math.random() * 4 + 2) * dpr,
+                    alpha: 1,
+                    decay: Math.random() * 0.005 + 0.0035,
+                    color: Math.random() > 0.4 ? targetColor : baseColor,
+                    isGlyph: Math.random() > 0.45,
+                    char: glyphChars[Math.floor(Math.random() * glyphChars.length)],
+                    delay: Math.random() * 1600, // Organic slow-motion stagger across the first 1.6s
+                    wobble: Math.random() * Math.PI * 2
+                });
+            }
+
+            // 2. Surface disintegration flakes
+            const area = box.w * box.h;
+            const surfaceCount = Math.min(150, Math.max(24, Math.floor(area / 2600)));
+            for (let i = 0; i < surfaceCount; i++) {
+                particles.push({
+                    x: (box.x + Math.random() * box.w) * dpr,
+                    y: (box.y + Math.random() * box.h) * dpr,
+                    vx: (Math.random() - 0.5) * 0.8 * dpr,
+                    vy: (Math.random() - 0.5) * 0.9 * dpr,
+                    size: (Math.random() * 6 + 3) * dpr,
+                    alpha: 1,
+                    decay: Math.random() * 0.0055 + 0.0038,
+                    color: Math.random() > 0.3 ? targetColor : baseColor,
+                    isGlyph: Math.random() > 0.6,
+                    char: glyphChars[Math.floor(Math.random() * glyphChars.length)],
+                    delay: Math.random() * 1800,
+                    wobble: Math.random() * Math.PI * 2
+                });
+            }
+        });
+
+        // Swap the real theme immediately: the Matrix mode UI is revealed
+        // underneath as the disintegration particles flake and dissolve away
         swapUnderCover();
+
         if (wipePending) {
             const next = wipePending;
             wipePending = null;
             if (next.kind === 'theme') {
                 commitTheme(next.value, true);
             } else {
-                commitMatrix(next.value, true);
+                commitMatrix(next.value, true, true);
             }
         }
 
-        // Build a tile grid covering the viewport. Each tile disintegrates
-        // top-rows first with per-tile jitter so the old theme crumbles away.
-        const vw = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0, 320);
-        const vh = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, 320);
-        const cols = vw < 640 ? 10 : 16;
-        const rows = vh < 640 ? 12 : 18;
-        const fragW = Math.ceil(vw / cols) + 1;
-        const fragH = Math.ceil(vh / rows) + 1;
-        wipeOverlay.innerHTML = '';
-        wipeOverlay.classList.add('is-disintegrating');
-        wipeOverlay.style.visibility = 'visible';
-
-        const animations = [];
-        const rowBase = 320; // top row goes first, ~320ms head start over bottom
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const frag = document.createElement('div');
-                frag.className = 'wipe-fragment';
-                frag.style.left = (c * fragW - 1) + 'px';
-                frag.style.top = (r * fragH - 1) + 'px';
-                frag.style.width = fragW + 'px';
-                frag.style.height = fragH + 'px';
-                wipeOverlay.appendChild(frag);
-
-                // Top-to-bottom ordering with jitter + slight column stagger.
-                const jitter = Math.random() * 160;
-                const delay = (r / Math.max(rows - 1, 1)) * rowBase + (c / Math.max(cols - 1, 1)) * 60 + jitter;
-                const driftX = (Math.random() - 0.5) * 44;
-                // Fragments fall slightly and shrink into nothing (ash-like).
-                const anim = frag.animate(
-                    [
-                        { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
-                        // Glitch flicker mid-break (green tint lands via data-edge glow).
-                        { transform: `translate(${driftX * 0.3}px, -3px) scale(1.02)`, opacity: 1, offset: 0.35 },
-                        { transform: `translate(${driftX}px, 26px) scale(0.12)`, opacity: 0 }
-                    ],
-                    { duration: WIPE_PHASE_MS, delay, easing: WIPE_EASING, fill: 'forwards' }
-                );
-                animations.push(anim);
-            }
-        }
+        const totalMs = 4000; // 4 seconds slow motion
+        const startTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        let animId = 0;
 
         const teardown = () => {
+            if (animId) cancelAnimationFrame(animId);
             wipeOverlay.classList.remove('is-disintegrating');
             wipeOverlay.style.visibility = 'hidden';
             wipeOverlay.innerHTML = '';
@@ -203,27 +272,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        const totalMs = WIPE_PHASE_MS + rowBase + 160 + 60 + 120;
-        let settled = false;
-        const done = () => {
-            if (settled) return;
-            settled = true;
-            teardown();
+        const draw = () => {
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            const elapsed = now - startTime;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Digital CRT slice displacement across the visible elements during the initial 800ms
+            if ((elapsed < 800 && Math.random() < 0.6) || (elapsed < 1600 && Math.random() < 0.2)) {
+                const sliceCount = 2 + Math.floor(Math.random() * 3);
+                ctx.fillStyle = toMatrix ? 'rgba(0, 255, 65, 0.07)' : 'rgba(0, 240, 255, 0.07)';
+                for (let s = 0; s < sliceCount; s++) {
+                    const sy = Math.random() * canvas.height;
+                    const sh = (Math.random() * 20 + 8) * dpr;
+                    const shiftX = (Math.random() - 0.5) * 14 * dpr;
+                    ctx.fillRect(shiftX, sy, canvas.width, sh);
+                }
+            }
+
+            ctx.font = `${Math.round(11 * dpr)}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            let alive = false;
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                if (elapsed < p.delay) {
+                    alive = true;
+                    continue;
+                }
+                // Slow-motion zero-g gentle drift with subtle sinusoidal wave
+                p.x += p.vx + Math.sin(p.wobble + elapsed * 0.002) * 0.2 * dpr;
+                p.y += p.vy;
+                p.alpha -= p.decay;
+
+                if (p.alpha > 0.01) {
+                    alive = true;
+                    ctx.fillStyle = p.color + Math.max(0, p.alpha) + ')';
+                    if (p.isGlyph) {
+                        ctx.fillText(p.char, p.x, p.y);
+                    } else {
+                        ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+                    }
+                }
+            }
+
+            if (alive && elapsed < totalMs && wipeRunning) {
+                animId = requestAnimationFrame(draw);
+            } else {
+                teardown();
+            }
         };
-        if (animations.length && animations[0] && animations[0].finished) {
-            Promise.all(animations.map((a) => a.finished.catch(() => {}))).then(done).catch(done);
-        }
-        setTimeout(done, totalMs);
+
+        animId = requestAnimationFrame(draw);
     };
 
     const requestThemeSwap = (kind, value) => {
-        if (wipeRunning) {
-            wipePending = { kind, value };
-            return;
-        }
         if (kind === 'theme') {
             const target = value === 'light' ? 'light' : 'dark';
-            const current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
             // Dark/light swaps are instant (no disintegration).
             commitTheme(target, true);
             return;
@@ -235,25 +341,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             if (target === true && current === false) {
-                // Non-matrix -> Matrix only: disintegrate the old UI.
-                runThemeWipe(() => commitMatrix(target, true));
+                if (wipeRunning) return;
+                // Non-matrix -> Matrix: 4-second slow-motion disintegration
+                runThemeWipe(() => commitMatrix(target, true, true));
             } else {
-                // Matrix -> non-matrix: instant, no animation.
-                commitMatrix(target, true);
+                // Matrix -> non-matrix: quick without any animation
+                if (wipeRunning) {
+                    wipeRunning = false;
+                    wipePending = null;
+                    wipeOverlay.classList.remove('is-disintegrating');
+                    wipeOverlay.style.visibility = 'hidden';
+                    wipeOverlay.innerHTML = '';
+                }
+                commitMatrix(target, true, false);
             }
         }
     };
 
     // Inline head bootstrap painted the correct theme; re-apply to sync controls.
-    // Matrix defaults to OFF; a previously stored ON is honored.
     commitTheme(root.getAttribute('data-theme') || (colorSchemeQuery.matches ? 'light' : 'dark'));
-    let storedMatrix = null;
+
+    // Matrix mode always defaults to false on page load
     try {
-        storedMatrix = localStorage.getItem(MATRIX_STORAGE_KEY);
+        localStorage.removeItem(MATRIX_STORAGE_KEY);
     } catch (err) {
-        storedMatrix = null;
+        // Storage unavailable
     }
-    commitMatrix(storedMatrix === 'true', false);
+    commitMatrix(false, false);
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
@@ -267,9 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
         logoButton.addEventListener('click', (e) => {
             e.preventDefault();
             const nextMatrix = root.getAttribute('data-matrix-mode') !== 'true';
+            // Stay on current frame: no vertical slide, no hash jump
             requestThemeSwap('matrix', nextMatrix);
-            window.location.hash = 'home';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         // Initial logo text sync in case DOM was already painted
         updateLogoForMatrixMode();
@@ -580,10 +693,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrambleElements = document.querySelectorAll('.scramble-target');
     const glyphs = '0101_#@$%=+-~*<>[]{}/\\^!&?░▒▓█▀▄▌▐▖▗▘▙▚▛▜▝▞▟■▲△♢♡♤♧♣♤ SELECT >';
 
-    const scrambleText = (el) => {
+    const scrambleText = (el, totalDuration = 25, intervalMs = 30) => {
         const originalText = el.getAttribute('data-original') || el.innerText;
         let iteration = 0;
-        const totalDuration = 25; // number of tick frames
         clearInterval(el._scrambleTimer);
 
         el._scrambleTimer = setInterval(() => {
@@ -603,8 +715,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.innerText = originalText;
                 clearInterval(el._scrambleTimer);
             }
-        }, 30);
+        }, intervalMs);
     };
+    scrambleTextFn = scrambleText;
 
     // Trigger scramble on initial load
     setTimeout(() => {
