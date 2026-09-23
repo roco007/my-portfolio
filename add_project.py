@@ -209,7 +209,7 @@ def infer_tags(category, topics, language):
 def find_matching_image(repo_name):
     """Check if an image corresponding to the repository name exists in assets/images, using exact & fuzzy matching."""
     if not os.path.exists(IMAGES_DIR):
-        return "assets/images/favicon.png"
+        return "assets/images/project-placeholder.svg"
 
     clean_target = re.sub(r'[^a-zA-Z0-9]', '', repo_name).lower()
     available_files = [f for f in os.listdir(IMAGES_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.svg'))]
@@ -232,7 +232,7 @@ def find_matching_image(repo_name):
         return f"assets/images/{cleaned_map[matches[0]]}"
 
     # Default fallback
-    return "assets/images/favicon.png"
+    return "assets/images/project-placeholder.svg"
 
 
 def build_card_html(name, live_url, repo_url, description, category_key, category_class, tags_list, image_src):
@@ -262,7 +262,7 @@ def build_card_html(name, live_url, repo_url, description, category_key, categor
                         class="card-live-overlay" aria-label="Launch {name} live demo"></a>
 
                     <div class="card-image-wrapper">
-                        <img src="{image_src}" alt="{name} Preview" class="card-image" loading="lazy">
+                        <img src="{image_src}" alt="{name} Preview" class="card-image" loading="lazy" decoding="async" width="768" height="432">
                         <div class="cyber-laser-scan"></div>
                         <a href="{live_url}" target="_blank" rel="noopener noreferrer" class="card-overlay" aria-label="Initialize {name} Demo">
                             <span class="live-btn">
