@@ -34,7 +34,7 @@ If you ever want to override any specific detail, you can optionally pass flags:
 ```bash
 python3 add_project.py https://github.com/roco007/OpporunityAi \
   --name "Opportunity AI" \
-  --image "assets/images/OpportunityAI_preview.png"
+  --image "assets/images/OpportunityAI_preview.webp"
 ```
 
 Available override flags:
