@@ -1,0 +1,556 @@
+/* ==========================================================================
+   Morphing Visualizer CSS (Anime.js 3D Transformation)
+   ========================================================================== */
+
+.visualizerWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+  overflow: visible;
+  user-select: none;
+}
+
+/* Ambient Radial Glow */
+.ambientGlow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 75, 75, 0.18) 0%,
+    rgba(38, 242, 213, 0.08) 45%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  pointer-events: none;
+  transform: translateZ(-200px);
+  transition: all 0.5s ease;
+}
+
+/* 3D Scene Root Canvas */
+.scene3D {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  transform-style: preserve-3d;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   CYLINDER ASSEMBLY (3D Stacked Layers)
+   -------------------------------------------------------------------------- */
+.cylinderAssembly {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cylinderRing {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  box-sizing: border-box;
+}
+
+/* Layer 0: Front Bezel with Anime.js Colorful Ring */
+.ringFrontBezel {
+  background: radial-gradient(circle, #252423 60%, #151413 95%);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 0 25px rgba(0, 0, 0, 0.8),
+    inset 0 0 15px rgba(0, 0, 0, 0.9);
+}
+
+/* Inner Oscilloscope SVG on Front Ring */
+.frontSvgGauge {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Layer 1: Optical Reticle Layer */
+.ringOpticalReticle {
+  background: radial-gradient(circle, rgba(38, 242, 213, 0.1) 0%, rgba(21, 20, 19, 0.95) 75%);
+  border: 1.5px dashed rgba(38, 242, 213, 0.4);
+  box-shadow: inset 0 0 30px rgba(38, 242, 213, 0.2);
+}
+
+.reticleGrid {
+  position: absolute;
+  inset: 20px;
+  border: 1px solid rgba(38, 242, 213, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reticleCross {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: rgba(38, 242, 213, 0.3);
+}
+
+.reticleCrossVert {
+  position: absolute;
+  height: 100%;
+  width: 1px;
+  background: rgba(38, 242, 213, 0.3);
+}
+
+/* Layer 2: Knurled Fluting & Aperture Gear */
+.ringApertureGear {
+  background: #1c1b1a;
+  border: 4px dotted rgba(255, 168, 40, 0.5);
+  box-shadow: 
+    0 0 20px rgba(0, 0, 0, 0.9),
+    inset 0 0 20px rgba(255, 168, 40, 0.15);
+}
+
+.gearTeeth {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  animation: gearSpin 20s linear infinite;
+}
+
+@keyframes gearSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Layer 3: Central AI Chamber & Core Processing Matrix */
+.ringCoreChamber {
+  background: radial-gradient(circle, #2a2928 30%, #151413 85%);
+  border: 2px solid #ff4b4b;
+  box-shadow: 
+    0 0 35px rgba(255, 75, 75, 0.35),
+    inset 0 0 30px rgba(255, 75, 75, 0.25);
+}
+
+.coreMatrixLed {
+  position: absolute;
+  inset: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 75, 75, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.coreLabel {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff4b4b;
+  letter-spacing: 0.12em;
+}
+
+.coreLedBar {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff4b4b, #ffa828);
+  border-radius: 2px;
+  box-shadow: 0 0 8px #ff4b4b;
+}
+
+/* Layer 4: Ribbed Cooling Fins */
+.ringCoolingFins {
+  background: #21201f;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 0 25px rgba(0, 0, 0, 0.8),
+    inset 0 0 15px rgba(0, 0, 0, 0.8);
+}
+
+.finSlices {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image: repeating-radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.03) 0,
+    rgba(255, 255, 255, 0.03) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* Layer 5: Base Mounting Flange */
+.ringBaseMount {
+  background: #151413;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.95);
+}
+
+.mountBolts {
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+}
+
+/* Side Cylinder Shell / Barrel Extrusion Lines */
+.cylinderBarrelShell {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+/* --------------------------------------------------------------------------
+   LEADER LINES & TECHNICAL CALLOUTS (Exploded Assembly)
+   -------------------------------------------------------------------------- */
+.leaderLinesSvg {
+  position: absolute;
+  inset: -60px;
+  width: calc(100% + 120px);
+  height: calc(100% + 120px);
+  pointer-events: none;
+  z-index: 50;
+  overflow: visible;
+  transition: opacity 0.4s ease;
+}
+
+.leaderPath {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 0;
+  transition: all 0.5s ease;
+}
+
+.leaderPoint {
+  animation: leaderGlow 2s infinite alternate ease-in-out;
+}
+
+@keyframes leaderGlow {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+.leaderTag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  fill: #f6f4f2;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.leaderTagSub {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  fill: #93908d;
+}
+
+.leaderTag:hover {
+  fill: #ff4b4b;
+}
+
+/* --------------------------------------------------------------------------
+   HOLOGRAPHIC SYSTEMS OVERLAY (Projects Stage)
+   -------------------------------------------------------------------------- */
+.hologramOverlay {
+  position: absolute;
+  inset: -20px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.holoCard {
+  width: min(340px, 85vw);
+  background: rgba(33, 32, 31, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 75, 75, 0.35);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.8),
+    0 0 25px rgba(255, 75, 75, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.holoCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.holoSysId {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff4b4b;
+  letter-spacing: 0.12em;
+}
+
+.holoCategory {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: #93908d;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.holoTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f6f4f2;
+  margin: 0;
+}
+
+.holoDesc {
+  font-size: 0.8rem;
+  color: #b4b1af;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.holoTechRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.holoTechBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #26f2d5;
+  background: rgba(38, 242, 213, 0.08);
+  border: 1px solid rgba(38, 242, 213, 0.2);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.holoActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.holoBtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.holoBtnPrimary {
+  background: #ff4b4b;
+  color: #ffffff;
+  border: none;
+}
+
+.holoBtnPrimary:hover {
+  background: #ff3333;
+  box-shadow: 0 0 15px rgba(255, 75, 75, 0.5);
+}
+
+.holoBtnOutline {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f6f4f2;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.holoBtnOutline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #26f2d5;
+}
+
+.holoProjectTabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.holoTabDot {
+  width: 28px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.holoTabDotActive {
+  background: #ff4b4b;
+  box-shadow: 0 0 8px #ff4b4b;
+}
+
+/* --------------------------------------------------------------------------
+   INTERACTIVE RADAR DIAL OVERLAY (Motion Lab Stage)
+   -------------------------------------------------------------------------- */
+.radarDialOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.radarDialBox {
+  width: min(340px, 85vw);
+  background: rgba(21, 20, 19, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 255, 170, 0.35);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.8),
+    0 0 25px rgba(0, 255, 170, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radarTitle {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #00ffaa;
+  letter-spacing: 0.12em;
+}
+
+.radarEasingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.radarEasingBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d5d3d1;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.radarEasingBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #00ffaa;
+  color: #ffffff;
+}
+
+.radarEasingBtnActive {
+  background: rgba(0, 255, 170, 0.12);
+  border-color: #00ffaa;
+  color: #00ffaa;
+  box-shadow: 0 0 10px rgba(0, 255, 170, 0.25);
+}
+
+.radarTrackBox {
+  height: 38px;
+  background: #151413;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+}
+
+.radarIndicatorOrb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #00ffaa;
+  box-shadow: 0 0 12px #00ffaa;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE SCALING FOR MOBILE
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .visualizerWrapper {
+    min-height: 240px;
+    height: 100%;
+  }
+
+  .ambientGlow {
+    width: 320px;
+    height: 320px;
+    filter: blur(30px);
+  }
+
+  .scene3D {
+    transform: scale(0.72);
+    transform-origin: center center;
+  }
+}
+
+@media (max-width: 480px) {
+  .visualizerWrapper {
+    min-height: 220px;
+  }
+
+  .scene3D {
+    transform: scale(0.62);
+    transform-origin: center center;
+  }
+}

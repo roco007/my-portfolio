@@ -1,0 +1,516 @@
+/* ==========================================================================
+   Pinned Story Container CSS (Anime.js Pinned Scrollytelling Viewport)
+   ========================================================================== */
+
+.scrollTrack {
+  position: relative;
+  width: 100%;
+  height: 520vh; /* Virtual scroll distance driving transformation */
+  background: var(--bg-primary);
+}
+
+.stickyViewport {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.storyContainer {
+  position: relative;
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: calc(var(--header-height) + 1rem) var(--container-padding) 5.5rem;
+  height: 100%;
+  max-height: 900px;
+  display: grid;
+  grid-template-columns: 0.92fr 1.28fr;
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  box-sizing: border-box;
+  z-index: 10;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   LEFT COLUMN: CHAPTER CONTENT (Cross-Fading Panels)
+   -------------------------------------------------------------------------- */
+.leftColumn {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.chapterPanel {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.15rem;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+/* Status / Chapter Pill */
+.badgeWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-red);
+}
+
+.statusDotGreen {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.statusDotCyan {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+/* Headline matching Anime.js Bold Weight */
+.headline {
+  font-size: clamp(2.3rem, 5.5vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.headlineLineHighlight {
+  color: var(--accent-red);
+  display: inline-block;
+  margin-left: 0.35ch;
+}
+
+.subtitle {
+  font-size: clamp(0.92rem, 1.3vw, 1.1rem);
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 580px;
+  margin: 0;
+}
+
+/* Metric Stats Row (Chapter 1) */
+.metricRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.metricCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metricVal {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+.metricKey {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Capability Tags (Chapter 2) */
+.capabilityGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 540px;
+}
+
+.capabilityPill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all var(--transition-fast);
+}
+
+.capabilityPill:hover {
+  border-color: var(--accent-red);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+.pillDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-red);
+}
+
+/* Action Buttons Row */
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.copyCommandBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.copyCommandBtn:hover {
+  border-color: var(--accent-red);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(var(--accent-red-rgb), 0.2);
+}
+
+.commandPrompt {
+  color: var(--accent-red);
+}
+
+.exploreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--accent-red);
+  border: 1px solid var(--accent-red);
+  color: #ffffff;
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 15px rgba(var(--accent-red-rgb), 0.3);
+}
+
+.exploreBtn:hover {
+  background: var(--hex-red-2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(var(--accent-red-rgb), 0.5);
+}
+
+.terminalBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-cyan);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.terminalBtn:hover {
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+
+.replayIntroBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  color: var(--text-tertiary);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.replayIntroBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-red);
+}
+
+.colophonLine {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+.colophonDivider {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.colophonStatus {
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+.discWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.25rem 0 0.5rem;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   RIGHT COLUMN: 3D TRANSFORMING VISUALIZER & HORIZONTAL DECK
+   -------------------------------------------------------------------------- */
+.rightColumn {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visualizerLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.35s ease;
+  pointer-events: auto;
+}
+
+.horizontalDeckLayer {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  z-index: 5;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE LAYOUT
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .stickyViewport {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .storyContainer {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 42%) minmax(0, 58%);
+    gap: 0.4rem;
+    padding: calc(var(--header-height) + 0.35rem) var(--container-padding) 3.5rem;
+    height: 100%;
+    max-height: 100dvh;
+    box-sizing: border-box;
+  }
+
+  .leftColumn {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .chapterPanel {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    gap: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .rightColumn {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .headline {
+    font-size: clamp(1.45rem, 5.2vw, 2.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  .subtitle {
+    font-size: clamp(0.76rem, 2.6vw, 0.88rem);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .metricRow {
+    gap: 0.45rem;
+    margin-top: 0.15rem;
+  }
+
+  .metricCard {
+    padding: 0.35rem 0.65rem;
+    gap: 0.1rem;
+  }
+
+  .metricVal {
+    font-size: 0.95rem;
+  }
+
+  .metricKey {
+    font-size: 0.58rem;
+  }
+
+  .capabilityGrid {
+    gap: 0.35rem;
+  }
+
+  .capabilityPill {
+    font-size: 0.64rem;
+    padding: 0.22rem 0.55rem;
+  }
+
+  .actionsRow {
+    gap: 0.45rem;
+    margin-top: 0.2rem;
+  }
+
+  .copyCommandBtn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.74rem;
+  }
+
+  .exploreBtn {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.74rem;
+  }
+
+  .terminalBtn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.74rem;
+  }
+
+  .statusPill {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.64rem;
+  }
+
+  .colophonLine {
+    font-size: 0.62rem;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .desktopOnlyMetricRow {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .storyContainer {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-bottom: 3.6rem;
+  }
+
+  .headline {
+    font-size: clamp(1.35rem, 5vw, 1.8rem);
+  }
+
+  .subtitle {
+    -webkit-line-clamp: 2;
+  }
+}

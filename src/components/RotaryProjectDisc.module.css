@@ -1,0 +1,213 @@
+/* ==========================================================================
+   3D Cybernetic Rotary Turntable CSS (Anime.js Aesthetic)
+   True 3D perspective turntable with extruded cylinder rims,
+   ground energy shadow, and floating laser ring.
+   ========================================================================== */
+
+.disc3DScene {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* Floor Shadow & Ambient Cybernetic Glow */
+.floorShadow {
+  position: absolute;
+  width: 420px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(255, 75, 75, 0.16) 45%,
+    rgba(0, 255, 170, 0.08) 65%,
+    transparent 80%
+  );
+  filter: blur(24px);
+  transform: translateY(80px) rotateX(62deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floorEnergyRing {
+  position: absolute;
+  width: 440px;
+  height: 240px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(0, 255, 170, 0.35);
+  transform: translateY(80px) rotateX(62deg);
+  pointer-events: none;
+  animation: pulseFloorRing 6s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+@keyframes pulseFloorRing {
+  from {
+    opacity: 0.35;
+    transform: translateY(80px) rotateX(62deg) scale(0.96);
+  }
+  to {
+    opacity: 0.8;
+    transform: translateY(80px) rotateX(62deg) scale(1.04);
+  }
+}
+
+/* 3D Platter Base (Tilted in 3D Perspective) */
+.platter3D {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  transform: rotateX(54deg);
+  will-change: transform;
+  z-index: 2;
+}
+
+/* Physical 3D Extruded Cylinder Rims */
+.cylinderRimBase {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #2b2927 0%, #161514 60%, #0a0909 100%);
+  transform: translateZ(-24px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.95),
+    0 0 40px rgba(255, 75, 75, 0.18),
+    inset 0 2px 4px rgba(255, 255, 255, 0.15);
+}
+
+.cylinderRimMiddle {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #3a3735 0%, #1c1a19 65%, #100f0e 100%);
+  transform: translateZ(-12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cylinderRimTop {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #181716;
+  transform: translateZ(0px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 0 24px rgba(0, 255, 170, 0.18),
+    inset 0 0 30px rgba(0, 0, 0, 0.88);
+}
+
+/* Floating Holographic Ring hovering above the disc */
+.floatingHoloRing {
+  position: absolute;
+  inset: -10px;
+  transform: translateZ(16px);
+  pointer-events: none;
+  animation: spinHolo 30s linear infinite reverse;
+}
+
+@keyframes spinHolo {
+  from {
+    transform: translateZ(16px) rotate(0deg);
+  }
+  to {
+    transform: translateZ(16px) rotate(360deg);
+  }
+}
+
+.svgHoloRing {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Rotating Top Plate */
+.rotatingTopPlate {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  transform: translateZ(6px);
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svgDisc {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.75));
+}
+
+/* 3D Top Needle Pointer */
+.needlePointer3D {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) translateZ(24px);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 13px solid #ff4b4b;
+  filter: drop-shadow(0 0 10px rgba(255, 75, 75, 0.95));
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Telemetry Readout Tag */
+.telemetryTag {
+  position: absolute;
+  bottom: -46px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(21, 20, 19, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.encoderLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ff4b4b;
+  letter-spacing: 0.06em;
+}
+
+.projectIndex {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #00ffaa;
+  letter-spacing: 0.04em;
+}
+
+.projectTitleTruncated {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

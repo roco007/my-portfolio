@@ -1,5 +1,21 @@
 .wrapper {
   margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  position: relative;
+}
+
+.watermarkNumber {
+  position: absolute;
+  top: -2rem;
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(4.5rem, 10vw, 8.5rem);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.022);
+  line-height: 0.8;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.05em;
+  z-index: 0;
 }
 
 .left {

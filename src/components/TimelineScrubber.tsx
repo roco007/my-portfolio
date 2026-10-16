@@ -3,18 +3,21 @@ import styles from './TimelineScrubber.module.css';
 
 interface TimelineScrubberProps {
   activeSection: string;
+  onScrub?: (percent: number) => void;
 }
 
 const SECTIONS = [
   { id: 'hero', label: 'HEADING' },
-  { id: 'about', label: 'TOOLBOX' },
-  { id: 'skills', label: 'CAPABILITIES' },
+  { id: 'about', label: 'ARCHITECTURE' },
+  { id: 'skills', label: 'TOOLBOX' },
   { id: 'projects', label: 'SYSTEMS' },
-  { id: 'experience', label: 'TIMELINE' },
   { id: 'contact', label: 'UPLINK' },
 ];
 
-export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({ activeSection }) => {
+export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
+  activeSection,
+  onScrub,
+}) => {
   const [scrollPercent, setScrollPercent] = useState<number>(0);
 
   useEffect(() => {
@@ -31,14 +34,37 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({ activeSectio
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.min(Math.max(clickX / rect.width, 0), 1);
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({
+      top: ratio * maxScroll,
+      behavior: 'smooth',
+    });
+    onScrub?.(ratio * 100);
+  };
+
   const activeLabel =
-    SECTIONS.find((s) => s.id === activeSection)?.label || 'HEADING';
+    SECTIONS.find((s) => s.id === activeSection || s.label === activeSection)?.label ||
+    activeSection ||
+    'HEADING';
 
   return (
-    <div className={styles.scrubberWrapper} title={`Active Chapter: ${activeLabel}`}>
+    <div className={styles.scrubberWrapper} title={`Active Chapter: ${activeLabel} // Click to scrub`}>
       <span className={styles.activeLabel}>{activeLabel}</span>
 
-      <div className={styles.scrubberTrack}>
+      <div
+        className={styles.scrubberTrack}
+        onClick={handleTrackClick}
+        role="slider"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(scrollPercent)}
+        aria-label="Timeline Scrubber"
+        tabIndex={0}
+      >
         {/* Tick lines */}
         {Array.from({ length: 36 }).map((_, i) => (
           <span

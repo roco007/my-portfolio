@@ -340,3 +340,28 @@
   font-family: var(--font-mono);
   font-size: 0.875rem;
 }
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE MOBILE STYLES
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .terminalOverlay {
+    padding: 0.5rem;
+  }
+
+  .window {
+    height: 82vh;
+    max-height: 86vh;
+    border-radius: var(--radius-sm);
+  }
+
+  .header {
+    height: 2.35rem;
+    padding: 0 0.75rem;
+  }
+
+  .terminalBody {
+    padding: 0.75rem;
+    font-size: 0.8rem;
+  }
+}

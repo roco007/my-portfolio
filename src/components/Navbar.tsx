@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Menu, X, Github, Mail } from 'lucide-react';
+import { Terminal, Menu, X, Github, Mail, Play } from 'lucide-react';
 import { NAV_LINKS, SOCIAL_LINKS } from '../data/portfolio';
 import { ThemeToggle } from './ThemeToggle';
 import styles from './Navbar.module.css';
@@ -8,12 +8,23 @@ interface NavbarProps {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   onOpenTerminal: () => void;
+  onReplayIntro?: () => void;
 }
+
+const CHAPTER_TARGETS: Record<string, number> = {
+  hero: 0,
+  about: 0.25,
+  skills: 0.52,
+  projects: 0.76,
+  experience: 0.82,
+  contact: 0.95,
+};
 
 export const Navbar: React.FC<NavbarProps> = ({
   theme,
   onToggleTheme,
   onOpenTerminal,
+  onReplayIntro,
 }) => {
   const [activeSection, setActiveSection] = useState<string>('hero');
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
@@ -30,20 +41,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       const totalHeight =
         document.documentElement.scrollHeight - window.innerHeight;
       if (totalHeight > 0) {
-        setScrollProgress((window.scrollY / totalHeight) * 100);
-      }
+        const ratio = window.scrollY / totalHeight;
+        setScrollProgress(ratio * 100);
 
-      // 3. Active section observer
-      const sections = NAV_LINKS.map((link) => link.id);
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sections[i]);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= window.innerHeight * 0.35) {
-            setActiveSection(sections[i]);
-            break;
-          }
-        }
+        if (ratio <= 0.22) setActiveSection('hero');
+        else if (ratio <= 0.45) setActiveSection('about');
+        else if (ratio <= 0.70) setActiveSection('skills');
+        else if (ratio <= 0.88) setActiveSection('projects');
+        else setActiveSection('contact');
       }
     };
 
@@ -56,6 +61,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     setMobileMenuOpen(false);
+
+    if (CHAPTER_TARGETS[id] !== undefined) {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({
+        top: CHAPTER_TARGETS[id] * maxScroll,
+        behavior: 'smooth',
+      });
+      return;
+    }
+
     const target = document.getElementById(id);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth' });
@@ -110,6 +125,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Nav Actions */}
           <div className={styles.navActions}>
+            {/* Replay Intro Button */}
+            {onReplayIntro && (
+              <button
+                type="button"
+                className={styles.iconBtn}
+                onClick={onReplayIntro}
+                title="Replay Welcome Intro Animation"
+                aria-label="Replay Welcome Intro Animation"
+              >
+                <Play size={14} />
+              </button>
+            )}
+
             {/* Terminal CLI Button */}
             <button
               type="button"

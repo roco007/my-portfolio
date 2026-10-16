@@ -65,6 +65,52 @@
   animation: terminal-cursor-blink 1s step-end infinite;
 }
 
+/* ==========================================================================
+   Futuristic Laser Scan Sweep on Scroll Reveal
+   ========================================================================== */
+.futuristic-scan-revealed {
+  position: relative;
+}
+
+.futuristic-scan-revealed::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--hex-turquoise-1) 30%,
+    #ffffff 50%,
+    var(--hex-turquoise-1) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 14px var(--hex-turquoise-1), 0 0 24px rgba(0, 255, 170, 0.45);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: futuristicLaserScan 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes futuristicLaserScan {
+  0% {
+    top: 0%;
+    opacity: 0.95;
+    transform: scaleX(0.7);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scaleX(1);
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+    transform: scaleX(0.9);
+  }
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,

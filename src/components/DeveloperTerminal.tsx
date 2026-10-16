@@ -304,12 +304,12 @@ export const DeveloperTerminal: React.FC<DeveloperTerminalProps> = ({
           {/* Welcome Banner */}
           <div className={styles.welcomeBanner}>
             <pre className={styles.asciiArt}>{`
- ██████╗  █████╗      ██████╗ ███████╗██╗   ██╗
- ██╔══██╗██╔══██╗     ██╔══██╗██╔════╝██║   ██║
- ██████╔╝███████║     ██║  ██║█████╗  ██║   ██║
- ██╔══██╗██╔══██║     ██║  ██║██╔══╝  ╚██╗ ██╔╝
- ██║  ██║██║  ██║     ██████╔╝███████╗ ╚████╔╝ 
-╚═╝  ╚═╝╚═╝  ╚═╝     ╚═════╝ ╚══════╝  ╚═══╝  
+ ██████╗   █████╗        ██╗    ██████╗  ███████╗██╗   ██╗
+ ██╔══██╗ ██╔══██╗       ██║    ██╔══██╗ ██╔════╝██║   ██║
+ ██████╔╝ ███████║       ██║    ██║  ██║ █████╗  ██║   ██║
+ ██╔══██╗ ██╔══██║  ██   ██║    ██║  ██║ ██╔══╝  ╚██╗ ██╔╝
+ ██║  ██║ ██║  ██║  ╚█████╔╝    ██████╔╝ ███████╗ ╚████╔╝ 
+ ╚═╝  ╚═╝ ╚═╝  ╚═╝   ╚════╝     ╚═════╝  ╚══════╝  ╚═══╝  
             `}</pre>
             <p className={styles.welcomeTitle}>
               ⚡ <span className={styles.termHighlight}>RAJ COLACO // AI & FULL-STACK SYSTEMS TERMINAL</span> ⚡

@@ -1,0 +1,254 @@
+.hudRail {
+  position: fixed;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 0.65rem;
+  background: rgba(28, 27, 26, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-full);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.02);
+  transition: opacity 0.3s ease;
+  user-select: none;
+}
+
+/* Header Telemetry */
+.telemetryHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.signalBeacon {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.signalIcon {
+  color: var(--hex-green-1);
+  animation: pulseSignal 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseSignal {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+}
+
+.liveTag {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--hex-green-1);
+  letter-spacing: 0.08em;
+}
+
+.sectorReadout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sectorCode {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--hex-fg-1);
+  letter-spacing: 0.05em;
+}
+
+.sectorLabel {
+  display: none;
+}
+
+/* Vertical Laser Track */
+.laserTrackContainer {
+  position: relative;
+  width: 20px;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+}
+
+.laserLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 75, 75, 0.3),
+    rgba(0, 255, 170, 0.5),
+    rgba(51, 179, 241, 0.3)
+  );
+  border-radius: 1px;
+}
+
+/* Gliding Hologram Cursor */
+.hologramCursor {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  transition: top 0.08s ease-out;
+}
+
+.cursorCrosshair {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--hex-black-3);
+  border: 1.5px solid var(--hex-turquoise-1);
+  box-shadow: 0 0 10px var(--hex-turquoise-1), inset 0 0 4px var(--hex-turquoise-1);
+  color: var(--hex-turquoise-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spinSlow 12s linear infinite;
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cursorTooltip {
+  position: absolute;
+  right: 28px;
+  background: var(--hex-black-4);
+  border: 1px solid var(--hex-turquoise-1);
+  box-shadow: 0 0 8px rgba(0, 255, 170, 0.3);
+  color: var(--hex-turquoise-1);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: all 0.2s ease;
+}
+
+.hudRail:hover .cursorTooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Sector Node Buttons */
+.nodeList {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 4;
+}
+
+.nodeBtn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform var(--transition-fast);
+}
+
+.nodeBtn:hover {
+  transform: scale(1.3);
+}
+
+.nodePip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--hex-bg-4);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.nodeBtn:hover .nodePip {
+  background: var(--hex-fg-1);
+  box-shadow: 0 0 8px var(--hex-fg-1);
+}
+
+.nodeActive .nodePip {
+  background: var(--hex-red-1);
+  border-color: var(--hex-red-1);
+  box-shadow: 0 0 10px var(--hex-red-1);
+  transform: scale(1.2);
+}
+
+.nodeHoverTag {
+  position: absolute;
+  right: 26px;
+  background: var(--hex-bg-2);
+  border: 1px solid var(--border-dim);
+  color: var(--hex-fg-1);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px);
+  transition: all 0.2s ease;
+}
+
+.nodeBtn:hover .nodeHoverTag {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Kinetic Velocity Frequency Visualizer */
+.velocityEqualizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 22px;
+  padding: 0 2px;
+}
+
+.eqBar {
+  width: 2.5px;
+  border-radius: 1px;
+  transition: height 0.08s ease-out, background-color 0.2s ease;
+}
+
+/* Hide on mobile devices where viewport space is premium */
+@media (max-width: 860px) {
+  .hudRail {
+    display: none;
+  }
+}

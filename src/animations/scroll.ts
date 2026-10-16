@@ -12,7 +12,7 @@ export interface ScrollRevealOptions {
 
 /**
  * Attaches an IntersectionObserver to an element or container to trigger
- * a graceful staggered reveal using Anime.js 4.
+ * a futuristic 3D holographic decode & laser scan reveal using Anime.js 4.
  */
 export function setupScrollReveal(
   target: HTMLElement | null,
@@ -21,17 +21,16 @@ export function setupScrollReveal(
   if (!target) return () => {};
 
   const {
-    threshold = 0.15,
-    rootMargin = '0px 0px -50px 0px',
+    threshold = 0.12,
+    rootMargin = '0px 0px -40px 0px',
     delay = 0,
-    staggerDelay = 80,
-    translateY = 30,
-    duration = 750,
+    staggerDelay = 90,
+    translateY = 40,
+    duration = 850,
     reducedMotion = false,
   } = options;
 
   if (reducedMotion) {
-    // Immediate visibility
     target.style.opacity = '1';
     target.style.transform = 'none';
     const children = target.querySelectorAll<HTMLElement>('[data-reveal]');
@@ -47,10 +46,12 @@ export function setupScrollReveal(
   const itemsToAnimate: HTMLElement[] =
     revealItems.length > 0 ? Array.from(revealItems) : [target];
 
-  // Set initial hidden state cleanly
+  // Set initial futuristic hidden state: 3D tilted backward with subtle blur
   itemsToAnimate.forEach((item) => {
     item.style.opacity = '0';
-    item.style.transform = `translateY(${translateY}px)`;
+    item.style.transform = `perspective(1000px) rotateX(10deg) translateY(${translateY}px) scale(0.96)`;
+    item.style.filter = 'blur(4px)';
+    item.style.transition = 'filter 0.5s ease-out';
   });
 
   const observer = new IntersectionObserver(
@@ -60,9 +61,17 @@ export function setupScrollReveal(
           animate(itemsToAnimate, {
             opacity: [0, 1],
             translateY: [translateY, 0],
+            rotateX: [10, 0],
+            scale: [0.96, 1],
             duration,
             delay: itemsToAnimate.length > 1 ? stagger(staggerDelay, { start: delay }) : delay,
             ease: 'outExpo',
+            onComplete: () => {
+              itemsToAnimate.forEach((item) => {
+                item.style.filter = 'none';
+                item.classList.add('futuristic-scan-revealed');
+              });
+            },
           });
 
           // Unobserve once revealed to conserve performance and prevent repeated jarring

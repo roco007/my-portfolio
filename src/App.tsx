@@ -3,27 +3,23 @@ import { Terminal } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { AmbientCanvas } from './components/AmbientCanvas';
 import { DeveloperTerminal } from './components/DeveloperTerminal';
-import { InteractiveMotionLab } from './components/InteractiveMotionLab';
 import { TimelineScrubber } from './components/TimelineScrubber';
-import { Hero } from './sections/Hero';
-import { About } from './sections/About';
-import { Skills } from './sections/Skills';
-import { Projects } from './sections/Projects';
-import { Experience } from './sections/Experience';
-import { Contact } from './sections/Contact';
-import { Footer } from './sections/Footer';
+import { IntroAnimation } from './components/IntroAnimation';
+import { PinnedStoryContainer } from './components/PinnedStoryContainer';
 
 export function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('portfolio-theme');
       if (stored === 'light' || stored === 'dark') return stored;
-      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      return 'dark'; // Anime.js signature dark aesthetic
     }
     return 'dark';
   });
 
   const [terminalOpen, setTerminalOpen] = useState<boolean>(false);
+  const [showIntro, setShowIntro] = useState<boolean>(true);
+  const [activeChapter, setActiveChapter] = useState<string>('HEADING');
 
   // Sync theme with DOM and localStorage
   useEffect(() => {
@@ -36,7 +32,7 @@ export function App() {
 
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', theme === 'dark' ? '#050811' : '#f8fafc');
+      themeColorMeta.setAttribute('content', theme === 'dark' ? '#151413' : '#f6f4f2');
     }
   }, [theme]);
 
@@ -48,8 +44,17 @@ export function App() {
     }
   };
 
+  const handleProgressChange = (_progress: number, chapter: string) => {
+    setActiveChapter(chapter);
+  };
+
   return (
     <>
+      {/* Anime.js Cinematic Intro Sequence */}
+      {showIntro && (
+        <IntroAnimation onComplete={() => setShowIntro(false)} />
+      )}
+
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -62,26 +67,22 @@ export function App() {
         theme={theme}
         onToggleTheme={() => toggleTheme()}
         onOpenTerminal={() => setTerminalOpen(true)}
+        onReplayIntro={() => setShowIntro(true)}
       />
 
-      {/* Main Content Sections */}
+      {/* Master Pinned Scrollytelling Storyboard */}
       <main id="main-content" tabIndex={-1}>
-        <Hero onOpenTerminal={() => setTerminalOpen(true)} />
-        <InteractiveMotionLab />
-        <About />
-        <Skills />
-        <Projects />
-        <Experience />
-        <Contact onOpenTerminal={() => setTerminalOpen(true)} />
+        <PinnedStoryContainer
+          onOpenTerminal={() => setTerminalOpen(true)}
+          onReplayIntro={() => setShowIntro(true)}
+          onProgressChange={handleProgressChange}
+        />
       </main>
 
       {/* Floating Scrubber Dock (Anime.js aesthetic) */}
       <div className="bottom-scrubber-dock">
-        <TimelineScrubber activeSection="hero" />
+        <TimelineScrubber activeSection={activeChapter} />
       </div>
-
-      {/* Footer */}
-      <Footer />
 
       {/* Developer CLI Terminal Modal */}
       <DeveloperTerminal
@@ -153,9 +154,34 @@ export function App() {
           border-radius: var(--radius-xs);
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
+          .bottom-scrubber-dock {
+            bottom: 0.75rem;
+            left: 0.75rem;
+          }
+
+          .floating-terminal-trigger {
+            bottom: 0.75rem;
+            right: 0.75rem;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.7rem;
+          }
+
           .floating-terminal-trigger .kbd-badge {
             display: none;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .bottom-scrubber-dock {
+            bottom: 0.6rem;
+            left: 0.6rem;
+          }
+
+          .floating-terminal-trigger {
+            bottom: 0.6rem;
+            right: 0.6rem;
+            padding: 0.35rem 0.6rem;
           }
         }
       `}</style>
