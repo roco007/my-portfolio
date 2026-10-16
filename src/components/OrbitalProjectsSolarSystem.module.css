@@ -139,7 +139,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 5;
+  z-index: 10;
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -152,8 +152,30 @@
 }
 
 /* --------------------------------------------------------------------------
-   TILES 3D STAGE (Only 3-5 tiles rendered across the curved front arc)
+   TILES 3D STAGES (Orbiting In Front and Behind the Globe)
    -------------------------------------------------------------------------- */
+.backTilesStage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.frontTilesStage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  z-index: 20;
+  pointer-events: none;
+}
+
 .tilesStage {
   position: absolute;
   top: 50%;
@@ -179,23 +201,24 @@
   backface-visibility: hidden;
   will-change: transform, opacity;
   cursor: pointer;
-  background: rgba(22, 21, 20, 0.94);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(16, 15, 14, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-md, 10px);
   overflow: hidden;
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.8),
+    0 12px 32px rgba(0, 0, 0, 0.65),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
 .curvedProjectTile:hover {
   border-color: #00ffaa;
+  background: rgba(20, 19, 18, 0.85);
   box-shadow:
     0 0 24px rgba(0, 255, 170, 0.45),
     0 18px 40px rgba(0, 0, 0, 0.9);
@@ -217,12 +240,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.35rem 0.75rem;
-  background: rgba(14, 13, 12, 0.96);
+  background: rgba(14, 13, 12, 0.92);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-family: var(--font-mono, monospace);
   font-size: 0.68rem;
   position: relative;
   z-index: 2;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .tilePlanetId {
@@ -239,7 +264,7 @@
   width: 100%;
   height: 81px;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tileImageThumb {
@@ -272,10 +297,15 @@
   display: flex;
   flex-direction: column;
   gap: 0.28rem;
-  background: rgba(26, 25, 24, 0.96);
+  background: transparent;
   flex: 1;
   position: relative;
   z-index: 2;
+  transition: background 0.25s ease;
+}
+
+.curvedProjectTile:hover .tileBody {
+  background: rgba(18, 17, 16, 0.65);
 }
 
 .tileTitleRow {
@@ -294,6 +324,7 @@
   text-overflow: ellipsis;
   margin: 0;
   flex: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.85);
 }
 
 .tileCategoryDot {
@@ -321,12 +352,14 @@
 .tileDescSnippet {
   font-size: 0.72rem;
   line-height: 1.4;
-  color: var(--text-tertiary, #999590);
+  color: #e2ded9;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-weight: 500;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.9);
 }
 
 /* --------------------------------------------------------------------------

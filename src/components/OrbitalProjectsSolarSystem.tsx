@@ -240,136 +240,175 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
         role="region"
         aria-label="3D Curved Projects Arena"
       >
-        {/* Central 3D Cybernetic Globe: ROTATING AROUND ITS OWN AXIS */}
-        <div className={styles.sunCoreContainer}>
-          <CyberneticGlobe3D
-            rotationAngle={sunRotationAngle}
-            activeProjectIndex={activeIndex}
-            totalProjects={total}
-            activeProjectTitle={activeProject?.title || ''}
-          />
-        </div>
-
         {/* 
-          Curved Project Tiles:
-          Strictly non-overlapping spacing (235px gap vs 164px card width),
-          curving around the 3D globe's contour on left and right edges.
+          True 3D Orbital Projects:
+          Cards orbit the Cybernetic Globe in a circular trajectory:
+          - As cards curve towards the back (z < 0), they slip behind the globe (occluded by the sphere)
+          - As cards curve around into the front (z >= 0), they emerge into view
         */}
-        <div className={styles.tilesStage}>
-          {filteredProjects.map((project, i) => {
-            if (total === 0) return null;
+        {(() => {
+          // Compact orbit hugging the globe (globe sphere R = 177 desktop, ~120 mobile)
+          const Rx = isMobile ? 142 : 212;
+          const Rz = isMobile ? 88 : 142;
+          // Step angle ~84-86 deg: cards spaced evenly around the 3D orbit with zero overlap
+          const stepAngleRad = (isMobile ? 86 : 84) * (Math.PI / 180);
+          const baseScale = isMobile ? 0.72 : 1.02;
 
-            // Normalized circular offset: d is in range [-total/2, total/2]
-            let d = ((i - scrollOffset) % total + total) % total;
-            if (d > total / 2) {
-              d -= total;
-            }
+          const tiles = filteredProjects
+            .map((project, i) => {
+              if (total === 0) return null;
 
-            // Strictly filter out tiles beyond the visible front arc: only 3 active cards visible!
-            if (Math.abs(d) > 1.8) {
-              return null;
-            }
+              // Normalized circular offset: d is in range [-total/2, total/2]
+              let d = ((i - scrollOffset) % total + total) % total;
+              if (d > total / 2) {
+                d -= total;
+              }
 
-            // Responsive horizontal position: 350px on desktop, 185px on mobile to guarantee ZERO overlap
-            const spacingX = isMobile ? 185 : 350;
-            const x = d * spacingX;
+              // Visible range: card orbits from behind the left side, across the front, and behind the right side
+              if (Math.abs(d) > 1.85) {
+                return null;
+              }
 
-            // Vertical position: lifted directly onto the centre line of the 3D globe
-            const y = 0;
+              const theta = d * stepAngleRad;
+              const x = Rx * Math.sin(theta);
+              const z = Rz * Math.cos(theta);
+              const y = 0; // Centered level on the globe's equator
 
-            // Depth Z: center card is forward, curving ends drop back into depth alongside the globe
-            const depthFactor = isMobile ? 55 : 85;
-            const z = (isMobile ? 38 : 55) - Math.pow(Math.abs(d), 1.5) * depthFactor;
+              const thetaDeg = theta * (180 / Math.PI);
+              // Angle front face towards viewer with 3D curvature around sphere
+              const rotY = Math.max(-56, Math.min(56, thetaDeg * 0.65));
 
-            // 3D Curvature Angle (rotateY):
-            // Center is 0deg. As card moves to left (d < 0), outer edge curves back (rotY < 0, up to -50deg).
-            // As card enters from right (d > 0), outer edge curves back (rotY > 0, up to +50deg).
-            const rotY = Math.max(-50, Math.min(50, d * (isMobile ? 32 : 36)));
+              // Perspective scale: forward cards are larger, backward cards smaller
+              const depthScale = 0.8 + 0.2 * Math.max(-1, Math.min(1, z / Rz));
+              const scale = baseScale * depthScale;
 
-            // Level alignment along center line
-            const rotZ = 0;
+              // Opacity: stays 100% solid while in front and while curving around the horizon;
+              // fades only when deep behind the globe (|d| > 1.35)
+              const opacity =
+                Math.abs(d) <= 1.35
+                  ? 1
+                  : Math.max(0, 1 - (Math.abs(d) - 1.35) / 0.45);
 
-            // Responsive scale: 1.02 on desktop, 0.72 on mobile
-            const baseScale = isMobile ? 0.72 : 1.02;
-            const scale = Math.max(isMobile ? 0.52 : 0.70, baseScale - Math.abs(d) * (isMobile ? 0.14 : 0.18));
+              const catClass =
+                project.category === 'ai'
+                  ? styles.catAi
+                  : project.category === 'utility'
+                  ? styles.catUtil
+                  : styles.catInteract;
 
-            // Opacity: solid in center, fading gracefully at the outer perimeter edges
-            const opacity =
-              Math.abs(d) <= 1.05
-                ? 1
-                : Math.max(0, 1 - (Math.abs(d) - 1.05) / 0.75);
+              const shadowIntensity = Math.min(1, Math.pow(Math.abs(d) / 1.5, 2));
+              const isBehind = z < 0;
 
-            // Layering: center card in front (z-index 25), outer cards behind (z-index 10)
-            const zIndex = Math.abs(d) < 0.6 ? 25 : 10;
+              return {
+                project,
+                i,
+                d,
+                x,
+                y,
+                z,
+                rotY,
+                scale,
+                opacity,
+                catClass,
+                shadowIntensity,
+                isBehind,
+              };
+            })
+            .filter(Boolean) as Array<{
+              project: Project;
+              i: number;
+              d: number;
+              x: number;
+              y: number;
+              z: number;
+              rotY: number;
+              scale: number;
+              opacity: number;
+              catClass: string;
+              shadowIntensity: number;
+              isBehind: boolean;
+            }>;
 
-            const catClass =
-              project.category === 'ai'
-                ? styles.catAi
-                : project.category === 'utility'
-                ? styles.catUtil
-                : styles.catInteract;
-
-            // Shadow gradient intensity at curving edges
-            const shadowIntensity = Math.min(1, Math.pow(Math.abs(d) / 1.6, 2));
-
-            return (
+          const renderTile = (tile: (typeof tiles)[0]) => (
+            <div
+              key={tile.project.id}
+              className={styles.curvedProjectTile}
+              style={{
+                transform: `translate3d(${tile.x.toFixed(1)}px, ${tile.y.toFixed(1)}px, ${tile.z.toFixed(1)}px) rotateY(${tile.rotY.toFixed(1)}deg) scale(${tile.scale.toFixed(3)})`,
+                opacity: tile.opacity.toFixed(2),
+              }}
+              onPointerDown={(e) => {
+                dragStartXRef.current = e.clientX;
+                hasMovedRef.current = false;
+              }}
+              onClick={() => {
+                if (!hasMovedRef.current) {
+                  setSelectedProject(tile.project);
+                }
+              }}
+              title={`Click to inspect ${tile.project.title}`}
+            >
+              {/* Dynamic Curvature Edge Shadow: deepens when bending around globe */}
               <div
-                key={project.id}
-                className={styles.curvedProjectTile}
+                className={styles.tileCurvatureShadow}
                 style={{
-                  transform: `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateY(${rotY.toFixed(1)}deg) rotateZ(${rotZ.toFixed(1)}deg) scale(${scale.toFixed(3)})`,
-                  opacity: opacity.toFixed(2),
-                  zIndex,
+                  opacity: tile.shadowIntensity.toFixed(2),
+                  background:
+                    tile.d < 0
+                      ? 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, transparent 80%)'
+                      : 'linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, transparent 80%)',
                 }}
-                onPointerDown={(e) => {
-                  dragStartXRef.current = e.clientX;
-                  hasMovedRef.current = false;
-                }}
-                onClick={() => {
-                  if (!hasMovedRef.current) {
-                    setSelectedProject(project);
-                  }
-                }}
-                title={`Click to inspect ${project.title}`}
-              >
-                {/* Dynamic Curvature Edge Shadow: deepens when bending around disc ends */}
-                <div
-                  className={styles.tileCurvatureShadow}
-                  style={{
-                    opacity: shadowIntensity.toFixed(2),
-                    background:
-                      d < 0
-                        ? 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, transparent 80%)'
-                        : 'linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, transparent 80%)',
-                  }}
-                />
+              />
 
-                <div className={styles.tileHeader}>
-                  <span className={styles.tilePlanetId}>[{String(i + 1).padStart(2, '0')}]</span>
-                  <span className={styles.tileSysId}>{project.sysId}</span>
-                </div>
-
-                <div className={styles.tileImageWrapper}>
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className={styles.tileImageThumb}
-                    loading="lazy"
-                  />
-                  <div className={styles.tileScanlineOverlay} />
-                </div>
-
-                <div className={styles.tileBody}>
-                  <div className={styles.tileTitleRow}>
-                    <h4 className={styles.tileTitle}>{project.title}</h4>
-                    <span className={`${styles.tileCategoryDot} ${catClass}`} />
-                  </div>
-                  <p className={styles.tileDescSnippet}>{project.description}</p>
-                </div>
+              <div className={styles.tileHeader}>
+                <span className={styles.tilePlanetId}>[{String(tile.i + 1).padStart(2, '0')}]</span>
+                <span className={styles.tileSysId}>{tile.project.sysId}</span>
               </div>
-            );
-          })}
-        </div>
+
+              <div className={styles.tileImageWrapper}>
+                <img
+                  src={tile.project.image}
+                  alt={tile.project.title}
+                  className={styles.tileImageThumb}
+                  loading="lazy"
+                />
+                <div className={styles.tileScanlineOverlay} />
+              </div>
+
+              <div className={styles.tileBody}>
+                <div className={styles.tileTitleRow}>
+                  <h4 className={styles.tileTitle}>{tile.project.title}</h4>
+                  <span className={`${styles.tileCategoryDot} ${tile.catClass}`} />
+                </div>
+                <p className={styles.tileDescSnippet}>{tile.project.description}</p>
+              </div>
+            </div>
+          );
+
+          return (
+            <>
+              {/* Back Stage: Tiles revolving BEHIND the 3D globe (z < 0) */}
+              <div className={styles.backTilesStage}>
+                {tiles.filter((t) => t.isBehind).map(renderTile)}
+              </div>
+
+              {/* Central 3D Cybernetic Globe */}
+              <div className={styles.sunCoreContainer}>
+                <CyberneticGlobe3D
+                  rotationAngle={sunRotationAngle}
+                  activeProjectIndex={activeIndex}
+                  totalProjects={total}
+                  activeProjectTitle={activeProject?.title || ''}
+                />
+              </div>
+
+              {/* Front Stage: Tiles revolving IN FRONT of the 3D globe (z >= 0) */}
+              <div className={styles.frontTilesStage}>
+                {tiles.filter((t) => !t.isBehind).map(renderTile)}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Detailed Project Inspector: Appears when a tile IS clicked on */}
