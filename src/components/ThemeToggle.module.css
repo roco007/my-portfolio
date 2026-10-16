@@ -1,0 +1,51 @@
+.toggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-dim);
+  color: var(--text-primary);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toggleBtn:hover {
+  border-color: var(--border-subtle);
+  background: var(--bg-card-hover);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 12px -2px rgba(var(--accent-cyan-rgb), 0.25);
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconSun {
+  color: #f59e0b;
+  transition: transform var(--transition-normal);
+}
+
+.iconMoon {
+  color: var(--accent-cyan);
+  transition: transform var(--transition-normal);
+}
+
+.toggleBtn:hover .iconSun {
+  transform: rotate(45deg);
+}
+
+.toggleBtn:hover .iconMoon {
+  transform: rotate(-20deg);
+}
+
+.label {
+  display: inline-block;
+}

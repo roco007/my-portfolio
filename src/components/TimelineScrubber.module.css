@@ -1,0 +1,65 @@
+.scrubberWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: rgba(33, 32, 31, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-full);
+  padding: 0.35rem 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.activeLabel {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--hex-fg-3);
+  text-transform: uppercase;
+  min-width: 70px;
+}
+
+.scrubberTrack {
+  width: 140px;
+  height: 18px;
+  background: var(--hex-bg-3);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tick {
+  width: 1px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.majorTick {
+  height: 11px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.redNeedle {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 2.5px;
+  background: var(--hex-red-1);
+  border-radius: 1px;
+  box-shadow: 0 0 8px var(--hex-red-1);
+  transform: translateX(-50%);
+  transition: left 0.08s ease-out;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .scrubberTrack {
+    width: 90px;
+  }
+}

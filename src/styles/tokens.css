@@ -1,0 +1,139 @@
+/* ==========================================================================
+   Anime.js Design System & Color Tokens
+   Faithfully matching https://animejs.com/ aesthetic
+   ========================================================================== */
+
+:root {
+  /* Warm Obsidian / Charcoal Palette (Anime.js Primary Dark) */
+  --hex-black-1: #252423;
+  --hex-black-2: #21201f;
+  --hex-black-3: #1a1918;
+  --hex-black-4: #151413;
+
+  --hex-bg-1: #252423;
+  --hex-bg-2: #2a2928;
+  --hex-bg-3: #302e2d;
+  --hex-bg-4: #353432;
+  --hex-bg-5: #3a3938;
+  --hex-bg-6: #3f3e3d;
+  --hex-bg-7: #454342;
+  --hex-bg-8: #4a4847;
+
+  /* Warm Ivory / Cream Foreground */
+  --hex-fg-1: #f6f4f2;
+  --hex-fg-2: #d5d3d1;
+  --hex-fg-3: #b4b1af;
+  --hex-fg-4: #93908d;
+  --hex-fg-5: #615e5b;
+  --hex-fg-6: #484543;
+  --hex-fg-7: #393734;
+  --hex-fg-8: #2c2a28;
+
+  /* Iconic Anime.js Signature Accents */
+  --hex-red-1: #ff4b4b;
+  --hex-red-2: #d44343;
+  --hex-corail-1: #ff7d36;
+  --hex-corail-2: #d46b32;
+  --hex-orange-1: #ffa828;
+  --hex-orange-2: #d48e27;
+  --hex-yellow-1: #ffcc2a;
+  --hex-yellow-2: #d4ab28;
+  --hex-citrus-1: #f9f640;
+  --hex-lime-1: #b7ff54;
+  --hex-green-1: #8dff55;
+  --hex-green-2: #78d34b;
+  --hex-turquoise-1: #00ffaa;
+  --hex-turquoise-2: #07d38f;
+  --hex-cyan-1: #26f2d5;
+  --hex-cyan-2: #26c9b2;
+  --hex-sky-1: #05dbe9;
+  --hex-sega-1: #33b3f1;
+  --hex-king-1: #4d9cff;
+  --hex-indigo-1: #7c85ff;
+  --hex-lavender-1: #a369ff;
+  --hex-purple-1: #c06ddf;
+  --hex-magenta-1: #e962bf;
+  --hex-pink-1: #ff718b;
+
+  /* Semantic Theme Variables mapped to Anime.js colors */
+  --bg-primary: var(--hex-bg-1);
+  --bg-secondary: var(--hex-bg-2);
+  --bg-tertiary: var(--hex-bg-3);
+  --bg-card: var(--hex-bg-2);
+  --bg-card-hover: var(--hex-bg-3);
+  --bg-elevated: var(--hex-bg-3);
+  --bg-light-section: #cccac8;
+  --bg-light-text: #252423;
+
+  --border-dim: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.15);
+  --border-focus: var(--hex-red-1);
+
+  --text-primary: var(--hex-fg-1);
+  --text-secondary: var(--hex-fg-2);
+  --text-tertiary: var(--hex-fg-3);
+  --text-muted: var(--hex-fg-4);
+
+  --accent-red: var(--hex-red-1);
+  --accent-cyan: var(--hex-cyan-1);
+  --accent-turquoise: var(--hex-turquoise-1);
+  --accent-green: var(--hex-green-1);
+  --accent-orange: var(--hex-orange-1);
+  --accent-yellow: var(--hex-yellow-1);
+  --accent-sega: var(--hex-sega-1);
+  --accent-purple: var(--hex-lavender-1);
+
+  /* RGB channels for transparent glows */
+  --accent-red-rgb: 255, 75, 75;
+  --accent-cyan-rgb: 38, 242, 213;
+  --accent-turquoise-rgb: 0, 255, 170;
+  --accent-emerald-rgb: 141, 255, 85;
+  --accent-violet-rgb: 163, 105, 255;
+  --accent-orange-rgb: 255, 168, 40;
+  --accent-sega-rgb: 51, 179, 241;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, Monaco, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Pill & Box Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --container-max: 1360px;
+  --container-padding: clamp(1.25rem, 5vw, 3.5rem);
+  --header-height: 4.5rem;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-smooth: 450ms var(--ease-out-expo);
+}
+
+/* Light Mode Adaptation (matching animejs light sections) */
+[data-theme='light'] {
+  --bg-primary: #f6f4f2;
+  --bg-secondary: #eceae8;
+  --bg-tertiary: #dfdcda;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fcfbfa;
+  --bg-elevated: #ffffff;
+  --bg-light-section: #252423;
+  --bg-light-text: #f6f4f2;
+
+  --border-dim: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.15);
+  --border-focus: var(--hex-red-1);
+
+  --text-primary: #252423;
+  --text-secondary: #5b5855;
+  --text-tertiary: #706d6a;
+  --text-muted: #85827e;
+}

@@ -1,0 +1,197 @@
+.timelineWrapper {
+  position: relative;
+  padding-left: 2.5rem;
+}
+
+.timelineTrack {
+  position: absolute;
+  top: 1rem;
+  bottom: 1rem;
+  left: 0.85rem;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--accent-cyan) 0%,
+    var(--accent-violet) 50%,
+    rgba(var(--accent-cyan-rgb), 0.1) 100%
+  );
+}
+
+.entriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.timelineEntry {
+  position: relative;
+}
+
+.timelineBeacon {
+  position: absolute;
+  left: -2.5rem;
+  top: 1.5rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  border: 2px solid var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(var(--accent-cyan-rgb), 0.5);
+  transform: translateX(-50%);
+}
+
+.beaconInner {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+}
+
+.entryCard {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.roleHeader {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 0.4rem;
+}
+
+.roleTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.orgBadge {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.775rem;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.stepNumber {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+.summaryText {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.achievementsBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background: var(--bg-tertiary);
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-dim);
+}
+
+.achievementsHeading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 0.05em;
+}
+
+.arrowIcon {
+  color: var(--accent-cyan);
+}
+
+.achievementsList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.achievementItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.checkIcon {
+  color: var(--accent-emerald);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.techStack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+}
+
+.techChip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-dim);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-xs);
+}
+
+@media (max-width: 640px) {
+  .timelineWrapper {
+    padding-left: 1.5rem;
+  }
+
+  .timelineTrack {
+    left: 0;
+  }
+
+  .timelineBeacon {
+    left: 0;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+  }
+}

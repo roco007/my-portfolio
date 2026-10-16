@@ -1,0 +1,330 @@
+.labSection {
+  padding: 5rem 0;
+  position: relative;
+  border-top: 1px solid var(--border-dim);
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--hex-black-2);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* Header */
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 650px;
+}
+
+.sectionTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--hex-orange-1);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.sectionTagDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hex-orange-1);
+  box-shadow: 0 0 8px var(--hex-orange-1);
+}
+
+.sectionTitle {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--hex-fg-1);
+  margin-bottom: 0.85rem;
+}
+
+.sectionDesc {
+  font-size: 1.05rem;
+  color: var(--hex-fg-3);
+  line-height: 1.6;
+}
+
+/* Stage Grid */
+.stageGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 4vw, 4rem);
+}
+
+/* Left Dial */
+.dialWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dialSvg {
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.5));
+}
+
+.glowAmber {
+  filter: drop-shadow(0 0 8px #ffa828);
+}
+
+/* Right Controls */
+.controlsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.controlLabel {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--hex-fg-4);
+  letter-spacing: 0.08em;
+}
+
+.presetsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.presetBtn {
+  background: var(--hex-bg-2);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  color: var(--hex-fg-2);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.55rem 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.presetBtn:hover {
+  background: var(--hex-bg-3);
+  border-color: var(--border-subtle);
+  color: var(--hex-fg-1);
+}
+
+.presetActive {
+  background: var(--hex-bg-3);
+  border-color: var(--hex-orange-1);
+  color: var(--hex-orange-1);
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(255, 168, 40, 0.2);
+}
+
+/* Playback Row */
+.playbackRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.playbackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--hex-bg-2);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  color: var(--hex-fg-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.playbackBtn:hover {
+  background: var(--hex-bg-3);
+  border-color: var(--border-subtle);
+  color: var(--hex-fg-1);
+}
+
+.liveFpsBadge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--hex-green-1);
+}
+
+.fpsDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hex-green-1);
+  box-shadow: 0 0 6px var(--hex-green-1);
+}
+
+/* Code Card */
+.codeCard {
+  background: var(--hex-black-3);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  font-family: var(--font-mono);
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.codeCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 0.65rem;
+}
+
+.codeLangTag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--hex-fg-4);
+  letter-spacing: 0.08em;
+}
+
+.copyCodeBtn {
+  background: transparent;
+  border: none;
+  color: var(--hex-fg-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.2rem;
+  transition: color var(--transition-fast);
+}
+
+.copyCodeBtn:hover {
+  color: var(--hex-fg-1);
+}
+
+.copiedText {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--hex-green-1);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.codeContent {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--hex-fg-2);
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* Syntax Highlighting */
+.keyword {
+  color: var(--hex-sega-1);
+  font-weight: 600;
+}
+
+.property {
+  color: var(--hex-orange-1);
+}
+
+.number {
+  color: var(--hex-turquoise-1);
+}
+
+.string {
+  color: var(--hex-green-1);
+}
+
+.boolean {
+  color: var(--hex-red-1);
+}
+
+.punctuation {
+  color: var(--hex-fg-4);
+}
+
+/* Timeline Scrubber */
+.scrubberContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.scrubberHeader {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--hex-fg-4);
+}
+
+.scrubberTime {
+  color: var(--hex-red-1);
+  font-weight: 700;
+}
+
+.scrubberTrack {
+  height: 22px;
+  background: var(--hex-bg-2);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tick {
+  width: 1px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.majorTick {
+  height: 14px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.needle {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  background: var(--hex-red-1);
+  border-radius: 2px;
+  box-shadow: 0 0 10px var(--hex-red-1);
+  transform: translateX(-50%);
+  transition: left 0.05s linear;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .stageGrid {
+    grid-template-columns: 1fr;
+  }
+}
