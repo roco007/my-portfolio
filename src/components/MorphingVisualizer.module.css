@@ -227,8 +227,8 @@
   inset: -60px;
   width: calc(100% + 120px);
   height: calc(100% + 120px);
-  pointer-events: none;
-  z-index: 50;
+  pointer-events: none !important;
+  z-index: 2;
   overflow: visible;
   transition: opacity 0.4s ease;
 }
@@ -255,8 +255,7 @@
   letter-spacing: 0.08em;
   fill: #f6f4f2;
   transition: all 0.2s ease;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 .leaderTagSub {
@@ -541,6 +540,13 @@
   .scene3D {
     transform: scale(0.72);
     transform-origin: center center;
+  }
+
+  .leaderLinesSvg {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none !important;
   }
 }
 

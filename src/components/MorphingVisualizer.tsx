@@ -279,7 +279,7 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
         className={styles.leaderLinesSvg}
         style={{
           opacity: leaderOpacity,
-          pointerEvents: leaderOpacity > 0.4 ? 'auto' : 'none',
+          pointerEvents: 'none',
         }}
         viewBox="0 0 640 640"
       >

@@ -21,6 +21,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const targetProgressRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
+  const autoScrollRafRef = useRef<number | null>(null);
 
   // Rotary disc synchronized state driven by horizontal project cards scroll
   const [discRotationAngle, setDiscRotationAngle] = useState<number>(0);
@@ -81,6 +82,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      if (autoScrollRafRef.current) cancelAnimationFrame(autoScrollRafRef.current);
     };
   }, [onProgressChange]);
 
@@ -96,11 +98,48 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
   };
 
   const scrollToProgress = (ratio: number) => {
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({
-      top: ratio * maxScroll,
-      behavior: 'smooth',
-    });
+    const scrollEl = document.scrollingElement || document.documentElement || document.body;
+    const maxScroll = Math.max(0, scrollEl.scrollHeight - window.innerHeight);
+    const targetY = Math.max(0, Math.min(ratio * maxScroll, maxScroll));
+    const startY = window.scrollY || window.pageYOffset || 0;
+    const distance = targetY - startY;
+
+    if (Math.abs(distance) < 4) return;
+
+    if (autoScrollRafRef.current) {
+      cancelAnimationFrame(autoScrollRafRef.current);
+      autoScrollRafRef.current = null;
+    }
+
+    try {
+      window.scrollTo({
+        top: targetY,
+        behavior: 'smooth',
+      });
+    } catch {
+      window.scrollTo(0, targetY);
+    }
+
+    // High precision rAF easing fallback for mobile touch momentum
+    const startTime = performance.now();
+    const duration = 650;
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const animateScroll = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+      window.scrollTo(0, startY + distance * eased);
+
+      if (progress < 1) {
+        autoScrollRafRef.current = requestAnimationFrame(animateScroll);
+      } else {
+        autoScrollRafRef.current = null;
+      }
+    };
+
+    autoScrollRafRef.current = requestAnimationFrame(animateScroll);
   };
 
   // --------------------------------------------------------------------------
@@ -142,7 +181,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               className={styles.chapterPanel}
               style={{
                 opacity: op0,
-                pointerEvents: op0 > 0.4 ? 'auto' : 'none',
+                pointerEvents: op0 > 0.1 ? 'auto' : 'none',
                 transform: `translateY(calc(-50% + ${ty0.toFixed(1)}px))`,
               }}
             >
@@ -213,7 +252,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               className={styles.chapterPanel}
               style={{
                 opacity: op1,
-                pointerEvents: op1 > 0.4 ? 'auto' : 'none',
+                pointerEvents: op1 > 0.1 ? 'auto' : 'none',
                 transform: `translateY(calc(-50% + ${ty1.toFixed(1)}px))`,
               }}
             >
@@ -270,7 +309,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               className={styles.chapterPanel}
               style={{
                 opacity: op2,
-                pointerEvents: op2 > 0.4 ? 'auto' : 'none',
+                pointerEvents: op2 > 0.1 ? 'auto' : 'none',
                 transform: `translateY(calc(-50% + ${ty2.toFixed(1)}px))`,
               }}
             >
@@ -328,7 +367,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               className={styles.chapterPanel}
               style={{
                 opacity: op3,
-                pointerEvents: op3 > 0.4 ? 'auto' : 'none',
+                pointerEvents: op3 > 0.1 ? 'auto' : 'none',
                 transform: `translateY(calc(-50% + ${ty3.toFixed(1)}px))`,
               }}
             >
@@ -391,7 +430,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               className={styles.chapterPanel}
               style={{
                 opacity: op4,
-                pointerEvents: op4 > 0.4 ? 'auto' : 'none',
+                pointerEvents: op4 > 0.1 ? 'auto' : 'none',
                 transform: `translateY(calc(-50% + ${ty4.toFixed(1)}px))`,
               }}
             >
