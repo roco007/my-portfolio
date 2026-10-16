@@ -154,7 +154,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               </div>
 
               <h1 className={styles.headline}>
-                <span>Architecting1</span>
+                <span>Architecting</span>
                 <br />
                 <span>intelligent</span>
                 <span className={styles.headlineLineHighlight}>systems.</span>
