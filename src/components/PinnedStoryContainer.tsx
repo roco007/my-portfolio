@@ -1,9 +1,42 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { ArrowDown, Copy, Check, Terminal, Play, Mail, Github, Linkedin } from 'lucide-react';
+import { ArrowDown, Copy, Check, Terminal, Play, Mail, Github, Linkedin, Instagram, ExternalLink } from 'lucide-react';
 import { PERSONAL_INFO, SOCIAL_LINKS, PROJECTS } from '../data/portfolio';
 import { MorphingVisualizer } from './MorphingVisualizer';
 import { OrbitalProjectsSolarSystem } from './OrbitalProjectsSolarSystem';
 import styles from './PinnedStoryContainer.module.css';
+
+const getSocialIcon = (platform: string) => {
+  switch (platform) {
+    case 'github':
+      return <Github size={13} />;
+    case 'linkedin':
+      return <Linkedin size={13} />;
+    case 'x':
+      return (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      );
+    case 'telegram':
+      return (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .36z" />
+        </svg>
+      );
+    case 'whatsapp':
+      return (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17.472 14.382c-.301-.15-1.782-.88-2.058-.98-.276-.101-.477-.15-.678.15-.2.302-.778.98-.954 1.181-.176.2-.351.226-.653.075-.301-.15-1.272-.469-2.424-1.496-.896-.799-1.501-1.786-1.677-2.087-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.2-.301.301-.502.1-.2.05-.376-.025-.527-.075-.15-.678-1.632-.929-2.236-.244-.588-.492-.508-.678-.518-.176-.009-.376-.011-.577-.011-.2 0-.527.075-.803.376-.276.301-1.054 1.03-1.054 2.512 0 1.482 1.079 2.914 1.23 3.115.15.2 2.123 3.242 5.143 4.547.718.311 1.279.497 1.716.636.721.23 1.377.197 1.896.12.579-.087 1.782-.728 2.033-1.431.251-.703.251-1.306.176-1.431-.075-.125-.276-.2-.577-.35zM12.042 21.928c-1.787 0-3.535-.48-5.07-1.391l-.364-.216-3.768.988 1.006-3.673-.237-.377A9.88 9.88 0 012.16 12.04c0-5.46 4.44-9.9 9.897-9.9 2.645 0 5.131 1.03 6.999 2.902a9.85 9.85 0 012.898 6.998c0 5.462-4.442 9.902-9.912 9.902zm7.07-16.97A9.953 9.953 0 0012.042 2C6.505 2 2 6.506 2 12.042c0 1.77.462 3.498 1.338 5.018L2 22l5.097-1.337a9.99 9.99 0 004.945 1.289h.005c5.536 0 10.042-4.506 10.042-10.042 0-2.684-1.045-5.207-2.977-7.052z"/>
+        </svg>
+      );
+    case 'instagram':
+      return <Instagram size={13} />;
+    case 'email':
+      return <Mail size={13} />;
+    default:
+      return null;
+  }
+};
 
 interface PinnedStoryContainerProps {
   onOpenTerminal: () => void;
@@ -427,7 +460,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 CHAPTER 4: UPLINK // Motion Lab & Direct Channel
                 ----------------------------------------------------------- */}
             <div
-              className={styles.chapterPanel}
+              className={`${styles.chapterPanel} ${styles.chapter4Panel}`}
               style={{
                 opacity: op4,
                 pointerEvents: op4 > 0.1 ? 'auto' : 'none',
@@ -456,29 +489,10 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 <a
                   href={`mailto:${PERSONAL_INFO.email}`}
                   className={styles.exploreBtn}
+                  title={`Send email directly to ${PERSONAL_INFO.email}`}
                 >
                   <Mail size={14} />
                   <span>SEND TRANSMISSION</span>
-                </a>
-
-                <a
-                  href={SOCIAL_LINKS.find((s) => s.platform === 'github')?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.terminalBtn}
-                >
-                  <Github size={14} />
-                  <span>GITHUB</span>
-                </a>
-
-                <a
-                  href={SOCIAL_LINKS.find((s) => s.platform === 'linkedin')?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.terminalBtn}
-                >
-                  <Linkedin size={14} />
-                  <span>LINKEDIN</span>
                 </a>
 
                 <button
@@ -490,6 +504,40 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                   <Play size={12} />
                   <span>REPLAY INTRO</span>
                 </button>
+              </div>
+
+              {/* Verified Social Media Uplinks Grid */}
+              <div className={styles.socialSection}>
+                <div className={styles.socialHeader}>
+                  <span className={styles.socialHeaderLabel}>VERIFIED SOCIAL NETWORKS</span>
+                  <span className={styles.socialHeaderCount}>
+                    <span className={`${styles.statusDot} ${styles.statusDotGreen}`} />
+                    <span>6 CHANNELS ONLINE</span>
+                  </span>
+                </div>
+
+                <div className={styles.socialGrid}>
+                  {SOCIAL_LINKS.filter((s) => s.platform !== 'email').map((link) => (
+                    <a
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.socialCard}
+                      title={`${link.name}: ${link.handle}`}
+                      aria-label={`Open ${link.name} (${link.handle}) in new tab`}
+                    >
+                      <span className={styles.socialIcon}>
+                        {getSocialIcon(link.platform)}
+                      </span>
+                      <div className={styles.socialMeta}>
+                        <span className={styles.socialName}>{link.name}</span>
+                        <span className={styles.socialHandle}>{link.handle}</span>
+                      </div>
+                      <ExternalLink size={11} className={styles.socialArrow} />
+                    </a>
+                  ))}
+                </div>
               </div>
 
               <div className={styles.colophonLine}>
