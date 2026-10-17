@@ -84,6 +84,118 @@
   overflow: visible;
 }
 
+/* Animated Diamond & Raster inside Front Bezel */
+.diamondWrapper {
+  transform-origin: 160px 160px;
+  animation: diamondBreathe 4.2s ease-in-out infinite alternate;
+}
+
+@keyframes diamondBreathe {
+  0% {
+    transform: rotate(45deg) scale(0.96);
+    filter: drop-shadow(0 0 6px rgba(255, 75, 75, 0.45));
+  }
+  50% {
+    transform: rotate(46.5deg) scale(1.03);
+    filter: drop-shadow(0 0 18px rgba(255, 75, 75, 0.85));
+  }
+  100% {
+    transform: rotate(43.5deg) scale(0.98);
+    filter: drop-shadow(0 0 10px rgba(255, 75, 75, 0.6));
+  }
+}
+
+/* Oscilloscope Glowing Wave Line */
+.oscilloscopeLine {
+  fill: none;
+  stroke: rgba(255, 75, 75, 0.85);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgba(255, 75, 75, 0.8));
+}
+
+.oscilloscopeLineGlow {
+  fill: none;
+  stroke: rgba(255, 75, 75, 0.35);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: blur(2px);
+}
+
+/* Wave Dots */
+.oscilloscopeDot {
+  fill: #ff4b4b;
+  filter: drop-shadow(0 0 4px rgba(255, 75, 75, 0.95));
+  will-change: cy, r, fill-opacity;
+}
+
+/* Inner Rotating Mechanical Reticle Ring */
+.innerReticleArc {
+  transform-origin: 160px 160px;
+  animation: spinInnerReticle 24s linear infinite;
+}
+
+@keyframes spinInnerReticle {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.innerReticleArcReverse {
+  transform-origin: 160px 160px;
+  animation: spinInnerReticleRev 18s linear infinite;
+}
+
+@keyframes spinInnerReticleRev {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* Center Core Heartbeat Pulse */
+.innerCorePulse {
+  animation: coreHeartbeat 2.4s ease-in-out infinite;
+  transform-origin: 160px 160px;
+}
+
+@keyframes coreHeartbeat {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(255, 75, 75, 1));
+  }
+}
+
+.innerCoreRingPulse {
+  animation: coreRingRipple 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  transform-origin: 160px 160px;
+}
+
+@keyframes coreRingRipple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+    stroke-width: 1.5;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+    stroke-width: 0.5;
+  }
+}
+
 /* Layer 1: Optical Reticle Layer */
 .ringOpticalReticle {
   background: radial-gradient(circle, rgba(38, 242, 213, 0.1) 0%, rgba(21, 20, 19, 0.95) 75%);

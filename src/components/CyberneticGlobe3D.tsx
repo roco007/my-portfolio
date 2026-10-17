@@ -1,13 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import styles from './CyberneticGlobe3D.module.css';
 
-interface CyberneticGlobe3DProps {
-  rotationAngle?: number;
-  activeProjectIndex: number;
-  totalProjects: number;
-  activeProjectTitle: string;
-}
-
 // 3D Cybernetic nodes distributed across world coordinates (lat, lon in degrees)
 const CYBER_NODES = [
   // North America
@@ -57,12 +50,27 @@ const CYBER_NODES = [
   { lat: 70.0, lon: 40.0, name: '', color: '#33b3f1' },
 ];
 
-export const CyberneticGlobe3D: React.FC<CyberneticGlobe3DProps> = ({
+export interface CyberneticGlobe3DProps {
+  id?: string;
+  rotationAngle?: number;
+  activeProjectIndex?: number;
+  totalProjects?: number;
+  activeProjectTitle?: string;
+  systemTag?: string;
+  unitLabel?: string;
+  orbitOrientation?: 'horizontal' | 'vertical';
+}
+
+export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlobe3DProps>(({
+  id,
   rotationAngle = 0,
-  activeProjectIndex,
-  totalProjects,
-  activeProjectTitle,
-}) => {
+  activeProjectIndex = 0,
+  totalProjects = 1,
+  activeProjectTitle = '',
+  systemTag = '3D PLANETARY CORE // AXIAL TILT 23.4°',
+  unitLabel = 'ACTIVE UNIT',
+  orbitOrientation = 'horizontal',
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spinRef = useRef<number>(0);
 
@@ -152,9 +160,9 @@ export const CyberneticGlobe3D: React.FC<CyberneticGlobe3DProps> = ({
         let first = true;
         for (let i = 0; i <= ringSteps; i++) {
           const theta = (i / ringSteps) * Math.PI * 2;
-          const x0 = rRing * Math.cos(theta);
-          const y0 = 0; // Equatorial plane
-          const z0 = rRing * Math.sin(theta);
+          const x0 = orbitOrientation === 'vertical' ? 0 : rRing * Math.cos(theta);
+          const y0 = orbitOrientation === 'vertical' ? rRing * Math.sin(theta) : 0;
+          const z0 = orbitOrientation === 'vertical' ? rRing * Math.cos(theta) : rRing * Math.sin(theta);
           const p = project3D(x0, y0, z0);
 
           if (p.z < 0) {
@@ -385,9 +393,9 @@ export const CyberneticGlobe3D: React.FC<CyberneticGlobe3DProps> = ({
         let first = true;
         for (let i = 0; i <= ringSteps; i++) {
           const theta = (i / ringSteps) * Math.PI * 2;
-          const x0 = rRing * Math.cos(theta);
-          const y0 = 0;
-          const z0 = rRing * Math.sin(theta);
+          const x0 = orbitOrientation === 'vertical' ? 0 : rRing * Math.cos(theta);
+          const y0 = orbitOrientation === 'vertical' ? rRing * Math.sin(theta) : 0;
+          const z0 = orbitOrientation === 'vertical' ? rRing * Math.cos(theta) : rRing * Math.sin(theta);
           const p = project3D(x0, y0, z0);
 
           if (p.z >= 0) {
@@ -430,7 +438,7 @@ export const CyberneticGlobe3D: React.FC<CyberneticGlobe3DProps> = ({
   }, [rotationAngle]);
 
   return (
-    <div className={styles.globeContainer} aria-label="3D Rotating Cybernetic Globe">
+    <div ref={ref} id={id} className={styles.globeContainer} aria-label="3D Rotating Cybernetic Globe">
       {/* Outer ambient glow ring */}
       <div className={styles.globeAmbientRing} />
 
@@ -440,10 +448,10 @@ export const CyberneticGlobe3D: React.FC<CyberneticGlobe3DProps> = ({
       {/* Futuristic Telemetry Tag */}
       <div className={styles.telemetryTag}>
         <span className={styles.encoderLabel}>
-          3D PLANETARY CORE // AXIAL TILT 23.4&deg;
+          {systemTag}
         </span>
         <span className={styles.projectIndex}>
-          ACTIVE UNIT [{String(activeProjectIndex + 1).padStart(2, '0')} / {String(totalProjects).padStart(2, '0')}]
+          {unitLabel} [{String(activeProjectIndex + 1).padStart(2, '0')} / {String(totalProjects).padStart(2, '0')}]
         </span>
         <span className={styles.projectTitleTruncated}>
           {activeProjectTitle}
@@ -451,4 +459,6 @@ export const CyberneticGlobe3D: React.FC<CyberneticGlobe3DProps> = ({
       </div>
     </div>
   );
-};
+});
+
+CyberneticGlobe3D.displayName = 'CyberneticGlobe3D';

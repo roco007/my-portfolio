@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ArrowDown, Copy, Check, Terminal, Play, Mail, Github, Linkedin, Instagram, ExternalLink } from 'lucide-react';
-import { PERSONAL_INFO, SOCIAL_LINKS, PROJECTS } from '../data/portfolio';
+import { PERSONAL_INFO, SOCIAL_LINKS, PROJECTS, SocialLink } from '../data/portfolio';
 import { MorphingVisualizer } from './MorphingVisualizer';
 import { OrbitalProjectsSolarSystem } from './OrbitalProjectsSolarSystem';
+import { OrbitalSocialSolarSystem } from './OrbitalSocialSolarSystem';
 import styles from './PinnedStoryContainer.module.css';
 
 const getSocialIcon = (platform: string) => {
@@ -55,6 +56,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
   const targetProgressRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
   const autoScrollRafRef = useRef<number | null>(null);
+  const prevChapterRef = useRef<string>('HEADING');
 
   // Rotary disc synchronized state driven by horizontal project cards scroll
   const [discRotationAngle, setDiscRotationAngle] = useState<number>(0);
@@ -71,6 +73,15 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
     },
     []
   );
+
+  // Active social channel synchronized state driven by vertical top-to-bottom orbital globe
+  const socialChannels = SOCIAL_LINKS.filter((s) => s.platform !== 'email');
+  const [activeSocialIndex, setActiveSocialIndex] = useState<number>(0);
+  const activeSocialChannel = socialChannels[activeSocialIndex] || socialChannels[0];
+
+  const handleSocialChannelSelect = useCallback((_channel: SocialLink, index: number) => {
+    setActiveSocialIndex(index);
+  }, []);
 
   // Scroll listener with requestAnimationFrame lerp
   useEffect(() => {
@@ -105,7 +116,10 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
       else if (current > 0.70 && current <= 0.88) chapter = 'SYSTEMS';
       else if (current > 0.88) chapter = 'UPLINK';
 
-      onProgressChange?.(current, chapter);
+      if (prevChapterRef.current !== chapter) {
+        prevChapterRef.current = chapter;
+        onProgressChange?.(current, chapter);
+      }
 
       rafIdRef.current = requestAnimationFrame(updateProgress);
     };
@@ -506,37 +520,39 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 </button>
               </div>
 
-              {/* Verified Social Media Uplinks Grid */}
-              <div className={styles.socialSection}>
-                <div className={styles.socialHeader}>
-                  <span className={styles.socialHeaderLabel}>VERIFIED SOCIAL NETWORKS</span>
-                  <span className={styles.socialHeaderCount}>
-                    <span className={`${styles.statusDot} ${styles.statusDotGreen}`} />
-                    <span>6 CHANNELS ONLINE</span>
+              {/* Active Polar Satellite Uplink Card */}
+              <div className={styles.activeSatelliteCard}>
+                <div className={styles.activeSatelliteHeader}>
+                  <div className={styles.activeSatelliteHeaderLeft}>
+                    <span className={`${styles.statusDot} ${styles.statusDotCyan}`} />
+                    <span className={styles.activeSatelliteTitle}>ACTIVE POLAR SATELLITE</span>
+                  </div>
+                  <span className={styles.activeSatelliteCount}>
+                    [0{activeSocialIndex + 1} / 0{socialChannels.length}]
                   </span>
                 </div>
 
-                <div className={styles.socialGrid}>
-                  {SOCIAL_LINKS.filter((s) => s.platform !== 'email').map((link) => (
-                    <a
-                      key={link.platform}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.socialCard}
-                      title={`${link.name}: ${link.handle}`}
-                      aria-label={`Open ${link.name} (${link.handle}) in new tab`}
-                    >
-                      <span className={styles.socialIcon}>
-                        {getSocialIcon(link.platform)}
-                      </span>
-                      <div className={styles.socialMeta}>
-                        <span className={styles.socialName}>{link.name}</span>
-                        <span className={styles.socialHandle}>{link.handle}</span>
-                      </div>
-                      <ExternalLink size={11} className={styles.socialArrow} />
-                    </a>
-                  ))}
+                <div className={styles.activeSatelliteBody}>
+                  <div className={styles.activeSatelliteIconWrapper}>
+                    {getSocialIcon(activeSocialChannel.platform)}
+                  </div>
+                  <div className={styles.activeSatelliteInfo}>
+                    <div className={styles.activeSatelliteNameRow}>
+                      <span className={styles.activeSatelliteName}>{activeSocialChannel.name}</span>
+                      <span className={styles.activeSatelliteLiveBadge}>POLAR.ORBIT</span>
+                    </div>
+                    <span className={styles.activeSatelliteHandle}>{activeSocialChannel.handle}</span>
+                  </div>
+                  <a
+                    href={activeSocialChannel.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.activeSatelliteLaunchBtn}
+                    title={`Launch ${activeSocialChannel.name} (${activeSocialChannel.handle})`}
+                  >
+                    <span>LAUNCH</span>
+                    <ExternalLink size={11} />
+                  </a>
                 </div>
               </div>
 
@@ -550,13 +566,13 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
             </div>
           </div>
 
-          {/* Right Column: 3D Transforming Visualizer & Chapter 3 Horizontal Deck */}
+          {/* Right Column: 3D Transforming Visualizer, Chapter 3 Projects Deck & Chapter 4 Social Solar System */}
           <div className={styles.rightColumn}>
             <div
               className={styles.visualizerLayer}
               style={{
-                opacity: Math.max(0, 1 - op3 * 1.5),
-                pointerEvents: op3 > 0.4 ? 'none' : 'auto',
+                opacity: Math.max(0, 1 - (op3 + op4) * 1.5),
+                pointerEvents: (op3 > 0.4 || op4 > 0.4) ? 'none' : 'auto',
               }}
             >
               <MorphingVisualizer
@@ -570,10 +586,28 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               style={{
                 opacity: op3,
                 pointerEvents: op3 > 0.4 ? 'auto' : 'none',
+                display: op3 > 0.02 ? 'block' : 'none',
+                zIndex: op3 > 0.4 ? 12 : 5,
                 transform: `translateY(${(1 - op3) * 20}px)`,
               }}
             >
               <OrbitalProjectsSolarSystem onRotate={handleProjectRotate} />
+            </div>
+
+            <div
+              className={styles.socialDeckLayer}
+              style={{
+                opacity: op4,
+                pointerEvents: op4 > 0.4 ? 'auto' : 'none',
+                display: op4 > 0.02 ? 'flex' : 'none',
+                zIndex: op4 > 0.4 ? 15 : 4,
+                transform: `translateY(${(1 - op4) * 20}px)`,
+              }}
+            >
+              <OrbitalSocialSolarSystem
+                onChannelSelect={handleSocialChannelSelect}
+                isActive={op4 > 0.3}
+              />
             </div>
           </div>
         </div>

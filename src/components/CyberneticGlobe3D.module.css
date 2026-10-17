@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: center;
   user-select: none;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* Outer Ambient Radial Glow Ring */

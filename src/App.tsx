@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Terminal } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { AmbientCanvas } from './components/AmbientCanvas';
@@ -44,9 +44,9 @@ export function App() {
     }
   };
 
-  const handleProgressChange = (_progress: number, chapter: string) => {
-    setActiveChapter(chapter);
-  };
+  const handleProgressChange = useCallback((_progress: number, chapter: string) => {
+    setActiveChapter((prev) => (prev === chapter ? prev : chapter));
+  }, []);
 
   return (
     <>

@@ -1,0 +1,379 @@
+/* --------------------------------------------------------------------------
+   3D ORBITAL SOCIAL MEDIA SOLAR SYSTEM (Top-to-Bottom Revolution)
+   -------------------------------------------------------------------------- */
+
+.socialSolarWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  z-index: 10;
+  user-select: none;
+  overflow: visible;
+}
+
+/* --------------------------------------------------------------------------
+   HEADER BAR: SATELLITE CHIPS & STATUS PILL
+   -------------------------------------------------------------------------- */
+.headerBar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem;
+  box-sizing: border-box;
+  z-index: 30;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.28rem 0.6rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+}
+
+.filterChip:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.filterChipActive {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+}
+
+.orbitStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(21, 20, 19, 0.85);
+  border: 1px solid var(--border-subtle);
+  padding: 0.28rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.orbitIconSpin {
+  display: inline-flex;
+  animation: beaconPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes beaconPulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3D SOLAR ARENA (Perspective & Layers)
+   -------------------------------------------------------------------------- */
+.solarArena {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  cursor: grab;
+  touch-action: pan-x;
+  overflow: visible;
+}
+
+.solarArena:active {
+  cursor: grabbing;
+}
+
+/* Back Stage: Behind the 3D globe (z < 0) */
+.backTilesStage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  z-index: 5;
+}
+
+/* Central 3D Cybernetic Globe */
+.sunCoreContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.sunCoreContainer > * {
+  pointer-events: auto;
+}
+
+/* Front Stage: In front of the 3D globe (z >= 0) */
+.frontTilesStage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  z-index: 15;
+}
+
+/* --------------------------------------------------------------------------
+   SATELLITE SOCIAL MEDIA TILES (Company Symbols Only)
+   -------------------------------------------------------------------------- */
+.socialSatelliteTile {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 66px;
+  height: 66px;
+  margin-top: -33px;
+  margin-left: -33px;
+  border-radius: 16px;
+  background: rgba(21, 20, 19, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  will-change: transform, opacity;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.socialSatelliteTile:hover {
+  transform-origin: center center;
+}
+
+.tileCornerGlow {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  pointer-events: none;
+  opacity: 0.65;
+  transition: opacity 0.25s ease;
+}
+
+.socialSatelliteTile:hover .tileCornerGlow {
+  opacity: 1;
+}
+
+.symbolWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+  z-index: 2;
+}
+
+.socialSatelliteTile:hover .symbolWrapper {
+  transform: scale(1.15);
+}
+
+.beaconBadge {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.floatingTooltip {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid var(--accent-cyan);
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  animation: tooltipFade 0.2s ease-out;
+  z-index: 30;
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   FOOTER NAVIGATION STEP CONTROLS (Up / Down)
+   -------------------------------------------------------------------------- */
+.footerNav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem;
+  box-sizing: border-box;
+  z-index: 30;
+}
+
+.navControls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stepBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+}
+
+.stepBtn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.orbitHint {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE DESIGN (Mobile < 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .socialSolarWrapper {
+    min-height: 320px;
+  }
+
+  .headerBar {
+    padding: 0.15rem 0.25rem;
+    gap: 0.35rem;
+  }
+
+  .filterChip {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .orbitStatusPill {
+    font-size: 0.56rem;
+    padding: 0.2rem 0.55rem;
+  }
+
+  .solarArena {
+    min-height: 280px;
+  }
+
+  .socialSatelliteTile {
+    width: 48px;
+    height: 48px;
+    margin-top: -24px;
+    margin-left: -24px;
+    border-radius: 12px;
+  }
+
+  .beaconBadge {
+    display: none;
+  }
+
+  .floatingTooltip {
+    font-size: 0.52rem;
+    top: -20px;
+  }
+
+  .footerNav {
+    padding: 0.15rem 0.25rem;
+    gap: 0.35rem;
+  }
+
+  .stepBtn {
+    font-size: 0.62rem;
+    padding: 0.25rem 0.55rem;
+  }
+
+  .orbitHint {
+    font-size: 0.52rem;
+  }
+}

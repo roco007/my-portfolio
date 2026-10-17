@@ -15,6 +15,64 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
   const [activeEasing, setActiveEasing] = useState<string>('outElastic(1, 0.5)');
   const orbRef = useRef<HTMLDivElement | null>(null);
 
+  // Oscilloscope Wave Live Animation Refs
+  const wavePathRef = useRef<SVGPathElement | null>(null);
+  const wavePathGlowRef = useRef<SVGPathElement | null>(null);
+  const dotsRef = useRef<(SVGCircleElement | null)[]>([]);
+
+  const NUM_DOTS = 22;
+  const START_X = 64;
+  const END_X = 256;
+  const STEP_X = (END_X - START_X) / (NUM_DOTS - 1);
+
+  // Continuous live oscilloscope wave animation at all times when on display
+  useEffect(() => {
+    let animId: number;
+    const startTime = performance.now();
+
+    const renderWave = (now: number) => {
+      const elapsed = (now - startTime) / 1000;
+
+      let pathD = '';
+
+      for (let i = 0; i < NUM_DOTS; i++) {
+        const x = START_X + i * STEP_X;
+        // Natural multi-frequency harmonic traveling wave
+        const primary = Math.sin(i * 0.42 - elapsed * 3.4) * 12.5;
+        const secondary = Math.cos(i * 0.21 + elapsed * 2.1) * 4.5;
+        const tertiary = Math.sin(elapsed * 1.2) * 2;
+        const y = 160 + primary + secondary + tertiary;
+
+        const circleEl = dotsRef.current[i];
+        if (circleEl) {
+          circleEl.setAttribute('cy', y.toFixed(2));
+          const r = 2.4 + Math.abs(primary) * 0.08;
+          circleEl.setAttribute('r', r.toFixed(2));
+          const op = 0.55 + Math.sin(i * 0.42 - elapsed * 3.4) * 0.4;
+          circleEl.setAttribute('fill-opacity', Math.max(0.35, Math.min(1, op)).toFixed(2));
+        }
+
+        if (i === 0) {
+          pathD = `M ${x.toFixed(1)} ${y.toFixed(1)}`;
+        } else {
+          pathD += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+        }
+      }
+
+      if (wavePathRef.current) {
+        wavePathRef.current.setAttribute('d', pathD);
+      }
+      if (wavePathGlowRef.current) {
+        wavePathGlowRef.current.setAttribute('d', pathD);
+      }
+
+      animId = requestAnimationFrame(renderWave);
+    };
+
+    animId = requestAnimationFrame(renderWave);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
   // Rotation and Z-extrusions based on progress
   let rotX = 0;
   let rotY = 0;
@@ -207,8 +265,16 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              <pattern id="frontRaster" width="8" height="4" patternUnits="userSpaceOnUse">
-                <line x1="0" y1="2" x2="8" y2="2" stroke="#ff4b4b" strokeWidth="1.5" opacity="0.65" />
+              <pattern id="frontRaster" width="8" height="6" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="3" x2="8" y2="3" stroke="#ff4b4b" strokeWidth="1.5" opacity="0.65" />
+                <animateTransform
+                  attributeName="patternTransform"
+                  type="translate"
+                  from="0,0"
+                  to="0,6"
+                  dur="0.85s"
+                  repeatCount="indefinite"
+                />
               </pattern>
             </defs>
 
@@ -240,30 +306,65 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
               );
             })}
 
-            {/* Center diamond raster */}
-            <rect
-              x="115"
-              y="115"
-              width="90"
-              height="90"
-              rx="16"
-              fill="url(#frontRaster)"
-              stroke="#ff4b4b"
-              strokeWidth="1.8"
-              transform="rotate(45 160 160)"
-            />
+            {/* Inner Rotating Mechanical Reticle Rings */}
+            <g className={styles.innerReticleArc}>
+              <circle
+                cx="160"
+                cy="160"
+                r="72"
+                fill="none"
+                stroke="rgba(0, 255, 170, 0.2)"
+                strokeWidth="1.2"
+                strokeDasharray="8 12"
+              />
+            </g>
+            <g className={styles.innerReticleArcReverse}>
+              <circle
+                cx="160"
+                cy="160"
+                r="64"
+                fill="none"
+                stroke="rgba(255, 75, 75, 0.22)"
+                strokeWidth="1"
+                strokeDasharray="4 16"
+              />
+            </g>
 
-            {/* Animated sine dots */}
-            {Array.from({ length: 16 }).map((_, i) => {
-              const x = 70 + i * 11;
-              const y = 138 + Math.sin(i * 0.45) * 10;
+            {/* Center diamond raster with breathing neon animation */}
+            <g className={styles.diamondWrapper}>
+              <rect
+                x="115"
+                y="115"
+                width="90"
+                height="90"
+                rx="16"
+                fill="url(#frontRaster)"
+                stroke="#ff4b4b"
+                strokeWidth="1.8"
+              />
+            </g>
+
+            {/* Pulsing Core Heartbeat Elements */}
+            <circle cx="160" cy="160" r="3.2" fill="#ff4b4b" className={styles.innerCorePulse} />
+            <circle cx="160" cy="160" r="8" fill="none" stroke="#ff4b4b" className={styles.innerCoreRingPulse} />
+
+            {/* Live Undulating Oscilloscope Sine Wave Lines */}
+            <path ref={wavePathGlowRef} className={styles.oscilloscopeLineGlow} />
+            <path ref={wavePathRef} className={styles.oscilloscopeLine} />
+
+            {/* Live Undulating Oscilloscope Dots */}
+            {Array.from({ length: NUM_DOTS }).map((_, i) => {
+              const x = START_X + i * STEP_X;
               return (
                 <circle
                   key={i}
-                  cx={x}
-                  cy={y}
+                  ref={(el) => {
+                    dotsRef.current[i] = el;
+                  }}
+                  cx={x.toFixed(1)}
+                  cy="160"
                   r="2.8"
-                  fill="#ff4b4b"
+                  className={styles.oscilloscopeDot}
                 />
               );
             })}

@@ -60,12 +60,14 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
   // Rotation angle of the 3D turntable (in degrees)
   const sunRotationAngle = total > 0 ? (scrollOffset / total) * 360 * 2 : 0;
 
-  // Sync telemetry with parent container
+  // Sync telemetry with parent container ONLY when activeIndex changes
+  const prevReportedIndexRef = useRef<number>(-1);
   useEffect(() => {
-    if (activeProject) {
+    if (activeProject && prevReportedIndexRef.current !== activeIndex) {
+      prevReportedIndexRef.current = activeIndex;
       onRotate?.(sunRotationAngle, activeIndex, activeProject.title);
     }
-  }, [sunRotationAngle, activeIndex, activeProject, onRotate]);
+  }, [activeIndex, activeProject, sunRotationAngle, onRotate]);
 
   // Continuous slow-pace auto-motion
   // Pauses ONLY when a tile is clicked on or during manual dragging
@@ -96,13 +98,19 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
     if (!el) return;
 
     const handleWheel = (e: WheelEvent) => {
-      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      if (Math.abs(delta) > 2) {
-        e.preventDefault();
-        setScrollOffset((prev) => {
-          const next = prev + delta * 0.0035;
-          return total > 0 ? ((next % total) + total) % total : 0;
-        });
+      // Prioritize horizontal delta if user is swiping horizontally or holding shift
+      const isHorizontalIntent = Math.abs(e.deltaX) > 1 || e.shiftKey;
+      const isHorizontalDominant = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+
+      if (isHorizontalIntent || isHorizontalDominant) {
+        const delta = Math.abs(e.deltaX) > 0 ? e.deltaX : e.deltaY;
+        if (Math.abs(delta) > 1) {
+          e.preventDefault();
+          setScrollOffset((prev) => {
+            const next = prev + delta * 0.0035;
+            return total > 0 ? ((next % total) + total) % total : 0;
+          });
+        }
       }
     };
 
