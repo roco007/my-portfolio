@@ -8,6 +8,8 @@ interface OrbitalSocialSolarSystemProps {
   onChannelSelect?: (channel: SocialLink, index: number) => void;
   onRotate?: (angle: number, activeIndex: number, activeTitle: string) => void;
   isActive?: boolean;
+  globeOpacity?: number;
+  chromeOpacity?: number;
 }
 
 // Brand metadata for the 6 social channels (colors, glows, symbols)
@@ -86,6 +88,8 @@ export const OrbitalSocialSolarSystem: React.FC<OrbitalSocialSolarSystemProps> =
   onChannelSelect,
   onRotate,
   isActive = true,
+  globeOpacity = 1,
+  chromeOpacity = 1,
 }) => {
   // Use the 6 social media channels from portfolio data
   const socialChannels = SOCIAL_LINKS.filter((s) => s.platform !== 'email');
@@ -243,6 +247,8 @@ export const OrbitalSocialSolarSystem: React.FC<OrbitalSocialSolarSystemProps> =
   // Pauses ONLY when cursor is within the globe or during manual drag
   // "outside it the buttons keep moving slowly in one direction as the project tiles do."
   useEffect(() => {
+    if (!isActive) return;
+
     let lastTime = performance.now();
 
     const loop = (time: number) => {
@@ -261,7 +267,7 @@ export const OrbitalSocialSolarSystem: React.FC<OrbitalSocialSolarSystemProps> =
     return () => {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
-  }, [isCursorWithinGlobe, total]);
+  }, [isActive, isCursorWithinGlobe, total]);
 
   // Global window capture wheel listener:
   // "when my cursor is within the globe and scrolling up/down then the entire page must not scroll up/down but just the social media buttons must move"
@@ -373,7 +379,11 @@ export const OrbitalSocialSolarSystem: React.FC<OrbitalSocialSolarSystemProps> =
   };
 
   return (
-    <div className={styles.socialSolarWrapper} aria-label="3D Orbital Social Media Satellites">
+    <div
+      className={styles.socialSolarWrapper}
+      aria-label="3D Orbital Social Media Satellites"
+      style={{ '--chapter-chrome-opacity': chromeOpacity } as React.CSSProperties}
+    >
       {/* Header Bar: Status & Direct Jump Chips */}
       <div className={styles.headerBar}>
         <div className={styles.filterGroup}>
@@ -508,7 +518,7 @@ export const OrbitalSocialSolarSystem: React.FC<OrbitalSocialSolarSystemProps> =
 
           const renderTile = (tile: (typeof tiles)[0]) => {
             const isHover = hoveredIndex === tile.i;
-            const iconSize = isMobile ? 22 : 28;
+            const iconSize = isMobile ? 26 : 34;
 
             return (
               <div
@@ -586,17 +596,21 @@ export const OrbitalSocialSolarSystem: React.FC<OrbitalSocialSolarSystemProps> =
               </div>
 
               {/* Central 3D Cybernetic Globe in Polar Orientation */}
-              <div className={styles.sunCoreContainer}>
+              <div className={styles.sunCoreContainer} style={{ opacity: globeOpacity }}>
                 <CyberneticGlobe3D
                   ref={globeContainerRef}
                   id="contact-polar-globe"
-                  rotationAngle={rotationAngle}
+                  // Keep the Earth rotation independent from wheel/drag input
+                  // that advances social satellites around the polar orbit.
+                  rotationAngle={0}
+                  isAnimating={isActive || globeOpacity > 0.01}
                   activeProjectIndex={activeIndex}
                   totalProjects={total}
                   activeProjectTitle={`${activeChannel?.name || ''} // ${activeChannel?.handle || ''}`}
                   systemTag="SATELLITE CORE // POLAR ORBIT"
                   unitLabel="ACTIVE CH"
                   orbitOrientation="vertical"
+                  showLandmass
                 />
               </div>
 

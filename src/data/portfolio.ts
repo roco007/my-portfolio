@@ -57,7 +57,13 @@ export interface ExperienceItem {
   role: string;
   organization: string;
   period: string;
-  location: string;
+  location?: string;
+  globeLocation: {
+    latitude: number;
+    longitude: number;
+    label: string;
+    isRemote?: boolean;
+  };
   summary: string;
   achievements: string[];
   technologies: string[];
@@ -479,32 +485,46 @@ export const PROJECTS: Project[] = [
 export const EXPERIENCE: ExperienceItem[] = [
   {
     id: 'exp-1',
-    role: 'Full-Stack Software Engineer & AI Systems Architect',
-    organization: 'Independent Engineering & Open Source',
-    period: '2023 - Present',
-    location: 'Mumbai, India (Remote)',
-    summary: 'Architecting and deploying autonomous multi-agent evaluation frameworks, offline-first developer productivity utilities, and high-performance React/TypeScript applications.',
+    role: 'Software Engineer',
+    organization: 'Deloitte USI',
+    period: 'May 2026 - Present',
+    location: 'Remote',
+    globeLocation: {
+      latitude: 0,
+      longitude: 0,
+      label: 'REMOTE',
+      isRemote: true,
+    },
+    summary: 'Contributing to AI-driven development of internal tools using GitHub Copilot, Angular, and C#.',
     achievements: [
-      'Engineered and launched 14+ production web applications serving developers, brokers, and founders.',
-      'Developed HH Judge AI, an autonomous multi-agent system simulating elite hacker house judging panels with AST code inspection.',
-      'Constructed DocuRelease AI integrating GitHub webhooks with Google Gemini 2.5 Pro for automated release documentation.',
-      'Built CSS-to-Tailwind, a privacy-first offline converter supporting bidirectional translation and Tailwind v4 mapping.'
+      'Use GitHub Copilot to support AI-assisted software development workflows.',
+      'Contribute to internal tool development using Angular and C#.',
+      'Assist with building and evolving AI-driven internal tools for Deloitte USI teams.'
     ],
-    technologies: ['TypeScript', 'React 19', 'Next.js', 'Google Gemini', 'Anime.js', 'Tailwind CSS', 'FastAPI']
+    technologies: ['GitHub Copilot', 'Angular', 'C#']
   },
   {
     id: 'exp-2',
-    role: 'Frontend & Interactive Web Developer',
-    organization: 'Digital Solutions & Creative Tech',
-    period: '2021 - 2023',
+    role: 'Software Engineer',
+    organization: 'FlexiLoans',
+    period: 'June 2022 - May 2026',
     location: 'Mumbai, India',
-    summary: 'Specialized in building high-fidelity client-side interfaces, WebGL simulations, responsive design systems, and developer tools.',
+    globeLocation: {
+      latitude: 19.076,
+      longitude: 72.8777,
+      label: 'MUMBAI, INDIA',
+    },
+    summary: 'Built backend automation and configuration systems for lending operations, including bank-statement analysis, data validation, and AWS-backed services.',
     achievements: [
-      'Engineered Interactive Solar System in Three.js and Vite, achieving smooth 60fps celestial orbital mechanics in browsers.',
-      'Developed FaithQuest, a location-based mobile-responsive web game featuring proximity radar navigation and real-time mapping.',
-      'Established modular design systems, ensuring 100% WCAG accessibility, sub-100ms interaction latency, and fluid microinteractions.'
+      'Integrated third-party PDF processors to ingest analyzed bank-statement PDFs for lending workflows.',
+      'Built backend pipelines to parse, normalize, and validate transactions, balances, and income indicators.',
+      'Implemented rule-based mechanisms to dynamically evaluate system health and resource allocation.',
+      'Built data aggregation, tagging, and workflow automation frameworks to identify system issues and reduce manual incident-management work.',
+      'Designed role-based configuration frameworks and digital forms for complex business rules and granular access control.',
+      'Managed backend-service lifecycles with AWS S3 and CloudWatch.',
+      'Improved policy and version management with contextual tooltips and dropdown quick actions.'
     ],
-    technologies: ['JavaScript / ES6+', 'Three.js', 'React', 'HTML5 Canvas', 'REST APIs', 'CSS3 / WAAPI']
+    technologies: ['AWS S3', 'Amazon CloudWatch', 'Third-party PDF processing']
   }
 ];
 

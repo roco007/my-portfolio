@@ -7,10 +7,21 @@ import styles from './OrbitalProjectsSolarSystem.module.css';
 
 interface OrbitalProjectsSolarSystemProps {
   onRotate?: (angle: number, activeIndex: number, activeTitle: string) => void;
+  isActive?: boolean;
+  globeOpacity?: number;
+  chromeOpacity?: number;
+  entryProgress?: number;
 }
+
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const easeOutCubic = (v: number) => 1 - Math.pow(1 - v, 3);
 
 export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProps> = ({
   onRotate,
+  isActive = true,
+  globeOpacity = 1,
+  chromeOpacity = 1,
+  entryProgress = 1,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<ProjectCategory>('all');
   const [scrollOffset, setScrollOffset] = useState<number>(0);
@@ -72,6 +83,8 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
   // Continuous slow-pace auto-motion
   // Pauses ONLY when a tile is clicked on or during manual dragging
   useEffect(() => {
+    if (!isActive) return;
+
     let lastTime = performance.now();
 
     const loop = (time: number) => {
@@ -90,7 +103,7 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
     return () => {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
-  }, [selectedProject, total]);
+  }, [isActive, selectedProject, total]);
 
   // Mouse wheel & trackpad horizontal scroll support
   useEffect(() => {
@@ -159,10 +172,28 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
   const countUtil = PROJECTS.filter((p) => p.category === 'utility').length;
   const countInteract = PROJECTS.filter((p) => p.category === 'interactive').length;
 
+  // Dynamic entry & physical transformation from Skills
+  const ep = clamp01(entryProgress);
+  const globeScale = 0.38 + 0.62 * easeOutCubic(ep);
+  const shockwaveScale = (0.35 + 2.4 * easeOutCubic(ep)).toFixed(3);
+  const shockwaveOpacity = (Math.sin(ep * Math.PI) * 0.85).toFixed(2);
+  const chromeSlide = (1 - easeOutCubic(clamp01((ep - 0.35) / 0.65))) * 18;
+  const chromeAlpha = chromeOpacity * easeOutCubic(clamp01((ep - 0.3) / 0.7));
+
   return (
-    <div className={styles.solarSystemWrapper} aria-label="3D Curved Projects Carousel">
+    <div
+      className={styles.solarSystemWrapper}
+      aria-label="3D Curved Projects Carousel"
+      style={{ '--chapter-chrome-opacity': chromeOpacity } as React.CSSProperties}
+    >
       {/* Header Bar: Category Filters & Orbit Status */}
-      <div className={styles.headerBar}>
+      <div
+        className={styles.headerBar}
+        style={{
+          transform: `translateY(-${chromeSlide.toFixed(1)}px)`,
+          opacity: chromeAlpha.toFixed(2),
+        }}
+      >
         <div className={styles.filterGroup}>
           <button
             type="button"
@@ -255,12 +286,16 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
           - As cards curve around into the front (z >= 0), they emerge into view
         */}
         {(() => {
+          // Dynamic orbital expansion as the systems unfurl from the central core
+          const orbitExpand = easeOutCubic(clamp01((ep - 0.12) / 0.88));
           // Compact orbit hugging the globe (globe sphere R = 177 desktop, ~120 mobile)
-          const Rx = isMobile ? 142 : 212;
-          const Rz = isMobile ? 88 : 142;
+          const baseRx = isMobile ? 142 : 212;
+          const baseRz = isMobile ? 88 : 142;
+          const Rx = baseRx * (0.35 + 0.65 * orbitExpand);
+          const Rz = baseRz * (0.35 + 0.65 * orbitExpand);
           // Step angle ~84-86 deg: cards spaced evenly around the 3D orbit with zero overlap
           const stepAngleRad = (isMobile ? 86 : 84) * (Math.PI / 180);
-          const baseScale = isMobile ? 0.72 : 1.02;
+          const baseScale = (isMobile ? 0.72 : 1.02) * (0.38 + 0.62 * orbitExpand);
 
           const tiles = filteredProjects
             .map((project, i) => {
@@ -292,10 +327,11 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
 
               // Opacity: stays 100% solid while in front and while curving around the horizon;
               // fades only when deep behind the globe (|d| > 1.35)
-              const opacity =
+              const baseOpacity =
                 Math.abs(d) <= 1.35
                   ? 1
                   : Math.max(0, 1 - (Math.abs(d) - 1.35) / 0.45);
+              const opacity = baseOpacity * easeOutCubic(clamp01((ep - 0.18) / 0.72));
 
               const catClass =
                 project.category === 'ai'
@@ -400,13 +436,43 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
                 {tiles.filter((t) => t.isBehind).map(renderTile)}
               </div>
 
+              {/* Ignition shockwave and radial aura blooming during transition from Skills */}
+              {ep < 0.98 && (
+                <>
+                  <div
+                    className={styles.coreAuraPulse}
+                    style={{
+                      transform: `scale(${shockwaveScale})`,
+                      opacity: shockwaveOpacity,
+                    }}
+                  />
+                  <div
+                    className={styles.birthShockwave}
+                    style={{
+                      transform: `scale(${shockwaveScale})`,
+                      opacity: shockwaveOpacity,
+                    }}
+                  />
+                </>
+              )}
+
               {/* Central 3D Cybernetic Globe */}
-              <div className={styles.sunCoreContainer}>
+              <div
+                className={styles.sunCoreContainer}
+                style={{
+                  opacity: globeOpacity,
+                  transform: `translate(-50%, -50%) scale(${globeScale.toFixed(3)})`,
+                }}
+              >
                 <CyberneticGlobe3D
-                  rotationAngle={sunRotationAngle}
+                  // The globe owns a steady visual spin. Card orbit movement
+                  // must never steer, reverse, or restart the Earth itself.
+                  rotationAngle={0}
+                  isAnimating={isActive}
                   activeProjectIndex={activeIndex}
                   totalProjects={total}
                   activeProjectTitle={activeProject?.title || ''}
+                  showLandmass
                 />
               </div>
 
@@ -454,7 +520,13 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
       )}
 
       {/* Navigation Footer Controls */}
-      <div className={styles.footerNav}>
+      <div
+        className={styles.footerNav}
+        style={{
+          transform: `translateY(${chromeSlide.toFixed(1)}px)`,
+          opacity: chromeAlpha.toFixed(2),
+        }}
+      >
         <div className={styles.navControls}>
           <button
             type="button"

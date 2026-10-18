@@ -6,6 +6,7 @@
    ========================================================================== */
 
 .solarSystemWrapper {
+  --chapter-chrome-opacity: 1;
   position: relative;
   width: 100%;
   display: flex;
@@ -13,6 +14,18 @@
   gap: 0.5rem;
   box-sizing: border-box;
   user-select: none;
+}
+
+/* The chapter shell can remain mounted while its globe is handed to the next
+   section. Only the surrounding controls and cards fade in that interval. */
+.headerBar,
+.backTilesStage,
+.frontTilesStage,
+.footerNav,
+.inspectorBackdrop,
+.inspectorModal {
+  opacity: var(--chapter-chrome-opacity);
+  transition: none;
 }
 
 /* Header Bar & Category Filters */
@@ -145,10 +158,55 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  transform-origin: center center;
+  will-change: transform, opacity;
 }
 
 .sunCoreContainer > * {
   pointer-events: auto;
+}
+
+/* Genesis ignition burst and shockwave expanding on transition from Skills */
+.birthShockwave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 340px;
+  height: 340px;
+  margin-left: -170px;
+  margin-top: -170px;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 1.5px solid #00ffaa;
+  box-shadow:
+    0 0 40px rgba(0, 255, 170, 0.55),
+    inset 0 0 35px rgba(255, 75, 75, 0.35);
+  z-index: 8;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.coreAuraPulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 440px;
+  height: 440px;
+  margin-left: -220px;
+  margin-top: -220px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 170, 0.35) 0%,
+    rgba(255, 75, 75, 0.2) 35%,
+    rgba(0, 255, 170, 0.08) 55%,
+    transparent 72%
+  );
+  filter: blur(24px);
+  z-index: 7;
+  transform-origin: center center;
+  will-change: transform, opacity;
 }
 
 /* --------------------------------------------------------------------------
@@ -538,6 +596,20 @@
   .solarArena {
     height: 330px;
     min-height: 310px;
+  }
+
+  .birthShockwave {
+    width: 220px;
+    height: 220px;
+    margin-left: -110px;
+    margin-top: -110px;
+  }
+
+  .coreAuraPulse {
+    width: 280px;
+    height: 280px;
+    margin-left: -140px;
+    margin-top: -140px;
   }
 
   .headerBar {

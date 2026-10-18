@@ -1,197 +1,688 @@
-.timelineWrapper {
+.experienceSection {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.experienceSurface {
   position: relative;
-  padding-left: 2.5rem;
-}
-
-.timelineTrack {
-  position: absolute;
-  top: 1rem;
-  bottom: 1rem;
-  left: 0.85rem;
-  width: 2px;
-  background: linear-gradient(
-    180deg,
-    var(--accent-cyan) 0%,
-    var(--accent-violet) 50%,
-    rgba(var(--accent-cyan-rgb), 0.1) 100%
-  );
-}
-
-.entriesList {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+  overscroll-behavior: auto;
+  scrollbar-gutter: auto;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: clamp(0.8rem, 1.8vh, 1.25rem);
+  padding: clamp(1rem, 2.4vw, 1.75rem);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  touch-action: pan-y;
 }
 
-.timelineEntry {
-  position: relative;
+/* The arriving globe gets a short moment on its own, then the chapter unfolds
+   around it. These transitions also play cleanly in reverse on scroll-back. */
+.experienceSurface > .sectionHeader {
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(2px);
+  transition:
+    opacity 140ms ease-out,
+    transform 140ms ease-out,
+    filter 120ms ease-out;
 }
 
-.timelineBeacon {
-  position: absolute;
-  left: -2.5rem;
-  top: 1.5rem;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 50%;
-  background: var(--bg-primary);
-  border: 2px solid var(--accent-cyan);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 12px rgba(var(--accent-cyan-rgb), 0.5);
-  transform: translateX(-50%);
+.experienceSurface > .explorer {
+  opacity: 0;
+  transform: none;
+  transition: opacity 140ms ease-out;
 }
 
-.beaconInner {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent-cyan);
+.experienceSurfaceRevealed > .sectionHeader {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
 }
 
-.entryCard {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.experienceSurfaceRevealed > .explorer {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
 }
 
-.cardHeader {
+/* During chapter hand-offs, this is the only globe on screen. The surrounding
+   Experience chrome is suppressed until it has reached its destination. */
+.experienceSurfaceTransitioning > .explorer {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  transition: none;
+}
+
+.experienceSurfaceTransitioning .orbitStage {
+  overflow: visible;
+  background: none;
+}
+
+.experienceSurfaceTransitioning .orbitStage::before,
+.experienceSurfaceTransitioning .orbitStage::after,
+.experienceSurfaceTransitioning .orbitReadout,
+.experienceSurfaceTransitioning .experienceTile {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  filter: blur(4px);
+}
+
+.experienceSurfaceTransitioning .globeFrame {
+  transition: none;
+}
+
+.experienceSurfaceWithBrief {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(20rem, 0.94fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.experienceSurfaceWithBrief .sectionHeader {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.experienceSurfaceWithBrief .explorer {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+}
+
+.experienceSurfaceWithBrief .orbitStage {
+  width: 100%;
+  height: 100%;
+  min-height: 29rem;
+  border: 1px solid var(--border-dim);
+  background:
+    radial-gradient(circle at center, rgba(var(--accent-cyan-rgb), 0.09), transparent 47%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 52%);
+}
+
+.experienceSurfaceWithBrief .globeFrame {
+  transform: translate(-50%, -50%) scale(0.72);
+}
+
+.sectionHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.roleHeader {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-bottom: 0.4rem;
-}
-
-.roleTitle {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.orgBadge {
+.eyebrow,
+.orbitStatus,
+.organization,
+.metaItem dt,
+.detailsHeading,
+.tilePeriod,
+.orbitReadout {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
   color: var(--accent-cyan);
-}
-
-.metaRow {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
-  font-size: 0.775rem;
-}
-
-.metaItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.stepNumber {
-  font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  color: var(--text-tertiary);
-  opacity: 0.5;
+  margin-bottom: 0.35rem;
 }
 
-.summaryText {
-  font-size: 0.95rem;
+.sectionTitle {
+  color: var(--text-primary);
+  font-size: clamp(1.5rem, 3vw, 2.35rem);
+  line-height: 1.08;
+}
+
+.sectionIntro {
+  max-width: 44rem;
+  margin-top: 0.45rem;
   color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.achievementsBox {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  background: var(--bg-tertiary);
-  padding: 1.25rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-dim);
-}
-
-.achievementsHeading {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--font-mono);
-  font-size: 0.725rem;
-  font-weight: 700;
-  color: var(--accent-cyan);
-  letter-spacing: 0.05em;
-}
-
-.arrowIcon {
-  color: var(--accent-cyan);
-}
-
-.achievementsList {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.achievementItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: 0.9rem;
   line-height: 1.5;
 }
 
+.orbitStatus {
+  flex: none;
+  color: var(--accent-cyan);
+  font-size: 0.64rem;
+  font-weight: 800;
+  padding: 0.42rem 0.6rem;
+  background: rgba(var(--accent-cyan-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-cyan-rgb), 0.3);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.explorer {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.orbitStage {
+  position: relative;
+  width: min(100%, 58rem);
+  height: clamp(29rem, 63vh, 39rem);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(var(--accent-cyan-rgb), 0.1), transparent 47%),
+    radial-gradient(ellipse at center, rgba(var(--accent-red-rgb), 0.06), transparent 66%);
+  border-radius: var(--radius-lg);
+  isolation: isolate;
+  transition: background 360ms ease;
+}
+
+.orbitStage::before,
+.orbitStage::after {
+  position: absolute;
+  content: '';
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 1;
+  transition: opacity 160ms ease-out;
+}
+
+.orbitStage::before {
+  inset: 6% 16%;
+  border: 1px dashed rgba(var(--accent-cyan-rgb), 0.24);
+}
+
+.orbitStage::after {
+  inset: 18% 28%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.orbitReadout {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.8rem;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-tertiary);
+  font-size: 0.61rem;
+  font-weight: 800;
+  opacity: 1;
+  transition: opacity 160ms ease-out;
+}
+
+.readoutDot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 9px var(--accent-green);
+}
+
+.globeFrame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 510px;
+  height: 510px;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.85);
+  transform-origin: center;
+  z-index: 10;
+}
+
+/* The globe is visual-only here: tiles behind it must remain selectable. */
+.globeFrame,
+.globeFrame * {
+  pointer-events: none;
+}
+
+.experienceTile {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11.75rem;
+  min-height: 7.3rem;
+  margin: -3.65rem 0 0 -5.875rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.28rem;
+  padding: 0.75rem 0.85rem;
+  overflow: hidden;
+  color: var(--text-secondary);
+  text-align: left;
+  background: rgba(21, 20, 19, 0.9);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast),
+    opacity 160ms ease-out,
+    filter 140ms ease-out;
+}
+
+.experienceSurfaceRevealed .experienceTile {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.experienceTile:hover,
+.experienceTile[aria-pressed='true'] {
+  color: var(--text-primary);
+  background: rgba(35, 43, 41, 0.96);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 1px var(--accent-cyan), 0 0 26px rgba(var(--accent-cyan-rgb), 0.34), 0 16px 34px rgba(0, 0, 0, 0.65);
+}
+
+.experienceTile:focus-visible,
+.closeBriefButton:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+}
+
+.tileCompany,
+.tileRole,
+.tileLocation,
+.tilePeriod {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tileCompany {
+  color: var(--accent-cyan);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.tileRole {
+  color: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.tileLocation,
+.tilePeriod {
+  color: var(--text-tertiary);
+  font-size: 0.66rem;
+}
+
+.detailBackdrop {
+  display: contents;
+}
+
+.detailsPanel {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  gap: 1rem;
+  padding: clamp(1rem, 2.4vw, 1.5rem);
+  overflow: auto;
+  /* Keep even high-momentum wheel/trackpad gestures inside this brief. */
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-tertiary) 96%, #000000);
+  border: 1px solid rgba(var(--accent-cyan-rgb), 0.38);
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 36px rgba(var(--accent-cyan-rgb), 0.14);
+  cursor: default;
+  will-change: opacity, transform, filter;
+  animation: briefPanelEnter 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.detailsPanelClosing {
+  pointer-events: none;
+  animation: briefPanelExit 460ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+/* The brief reads as a location signal unfolding from the globe, not a modal
+   that abruptly pops over the scene. Its information arrives in a soft beat. */
+.detailsPanel > * {
+  opacity: 0;
+  animation: briefContentEnter 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.detailsPanel > :nth-child(1) { animation-delay: 150ms; }
+.detailsPanel > :nth-child(2) { animation-delay: 205ms; }
+.detailsPanel > :nth-child(3) { animation-delay: 260ms; }
+.detailsPanel > :nth-child(4) { animation-delay: 315ms; }
+.detailsPanel > :nth-child(5) { animation-delay: 370ms; }
+
+.detailsPanelClosing > * {
+  animation: none;
+  opacity: 1;
+}
+
+.closeBriefButton {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: 0.38rem;
+  min-height: 2rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(var(--accent-cyan-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-cyan-rgb), 0.3);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.closeBriefButton:hover {
+  color: var(--text-primary);
+  background: rgba(var(--accent-cyan-rgb), 0.18);
+  border-color: var(--accent-cyan);
+}
+
+.roleHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.organization {
+  color: var(--accent-cyan);
+  font-size: 0.68rem;
+  font-weight: 800;
+  margin-bottom: 0.28rem;
+}
+
+.roleTitle {
+  color: var(--text-primary);
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  line-height: 1.16;
+}
+
+.metaList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 14rem;
+  gap: 0.45rem 0.75rem;
+}
+
+.metaItem dt {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-tertiary);
+  font-size: 0.56rem;
+  font-weight: 800;
+}
+
+.metaItem dd {
+  margin-top: 0.18rem;
+  color: var(--text-secondary);
+  font-size: 0.73rem;
+  line-height: 1.35;
+}
+
+.summaryText {
+  color: var(--text-secondary);
+  font-size: 0.87rem;
+  line-height: 1.55;
+}
+
+.detailsHeading {
+  color: var(--text-primary);
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.achievementsList,
+.techStack {
+  list-style: none;
+}
+
+.achievementsList {
+  display: grid;
+  gap: 0.52rem;
+}
+
+.achievementItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.77rem;
+  line-height: 1.42;
+}
+
 .checkIcon {
-  color: var(--accent-emerald);
-  flex-shrink: 0;
-  margin-top: 3px;
+  color: var(--accent-green);
+  margin-top: 0.08rem;
 }
 
 .techStack {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.25rem;
+  gap: 0.4rem;
 }
 
 .techChip {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  background: var(--bg-tertiary);
   color: var(--text-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-dim);
-  padding: 0.25rem 0.6rem;
   border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  line-height: 1.25;
+  padding: 0.32rem 0.48rem;
 }
 
-@media (max-width: 640px) {
-  .timelineWrapper {
-    padding-left: 1.5rem;
+.screenReaderOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 960px) {
+  .experienceSurfaceWithBrief {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.92fr);
   }
 
-  .timelineTrack {
-    left: 0;
+  .experienceSurfaceWithBrief .orbitStage {
+    min-height: 25rem;
   }
 
-  .timelineBeacon {
-    left: 0;
+  .orbitStage {
+    height: clamp(25rem, 60vh, 34rem);
+  }
+}
+
+@media (max-width: 720px) {
+  .experienceSurface {
+    gap: 0.75rem;
+    padding: 0.85rem;
   }
 
-  .cardHeader {
+  .sectionHeader {
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.35rem;
+  }
+
+  .sectionIntro {
+    font-size: 0.77rem;
+    margin-top: 0.25rem;
+  }
+
+  .orbitStatus {
+    font-size: 0.56rem;
+    padding: 0.3rem 0.45rem;
+  }
+
+  .orbitStage {
+    width: 100%;
+    height: clamp(20rem, 52vh, 27rem);
+  }
+
+  .experienceSurfaceWithBrief {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .experienceSurfaceWithBrief .explorer {
+    width: 100%;
+    min-height: 0;
+    height: 185px;
+    flex: none;
+  }
+
+  .experienceSurfaceWithBrief .orbitStage {
+    height: 185px;
+    min-height: 0;
+  }
+
+  .experienceSurfaceWithBrief .globeFrame {
+    transform: translate(-50%, -50%) scale(0.38);
+  }
+
+  .experienceSurfaceWithBrief .detailsPanel {
+    flex: 1;
+    min-height: 0;
+    max-height: calc(100% - 210px);
+  }
+
+  .globeFrame {
+    transform: translate(-50%, -50%) scale(0.51);
+  }
+
+  .experienceTile {
+    width: 8.4rem;
+    min-height: 5.2rem;
+    margin: -2.6rem 0 0 -4.2rem;
+    gap: 0.15rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .tileCompany {
+    font-size: 0.73rem;
+  }
+
+  .tileRole {
+    font-size: 0.64rem;
+  }
+
+  .tileLocation,
+  .tilePeriod {
+    font-size: 0.55rem;
+  }
+
+  .orbitReadout {
+    top: 0.55rem;
+    left: 0.6rem;
+    font-size: 0.53rem;
+  }
+
+  .detailsPanel {
+    padding: 0.8rem;
+  }
+
+  .roleHeader {
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .metaList {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .roleTitle {
+    font-size: 1rem;
+  }
+
+  .summaryText,
+  .achievementItem {
+    font-size: 0.74rem;
+  }
+}
+
+@keyframes briefPanelEnter {
+  0% {
+    opacity: 0;
+    clip-path: inset(8% 96% 8% 0 round var(--radius-md));
+    transform: translateX(-12px) scale(0.975);
+    filter: blur(8px);
+  }
+  48% {
+    opacity: 1;
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round var(--radius-md));
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes briefPanelExit {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round var(--radius-md));
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(8% 96% 8% 0 round var(--radius-md));
+    transform: translateX(-12px) scale(0.975);
+    filter: blur(8px);
+  }
+}
+
+@keyframes briefContentEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detailsPanel,
+  .detailsPanelClosing {
+    animation-duration: 1ms;
   }
 }

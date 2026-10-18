@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles } from 'lucide-react';
-import { animate } from 'animejs';
+import React, { useEffect, useRef } from 'react';
 import styles from './MorphingVisualizer.module.css';
 
 interface MorphingVisualizerProps {
@@ -11,10 +9,6 @@ interface MorphingVisualizerProps {
 export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
   progress,
 }) => {
-  // Interactive Easing Lab in Motion stage
-  const [activeEasing, setActiveEasing] = useState<string>('outElastic(1, 0.5)');
-  const orbRef = useRef<HTMLDivElement | null>(null);
-
   // Oscilloscope Wave Live Animation Refs
   const wavePathRef = useRef<SVGPathElement | null>(null);
   const wavePathGlowRef = useRef<SVGPathElement | null>(null);
@@ -89,7 +83,6 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
 
   // Opacity controls for stage overlays
   let leaderOpacity = 0;
-  let radarOpacity = 0;
 
   if (progress <= 0.20) {
     // -------------------------------------------------------------
@@ -121,17 +114,17 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
     z3 = -115 * t;
     z4 = -160 * t;
     z5 = -210 * t;
-  } else if (progress <= 0.66) {
+  } else if (progress <= 0.54) {
     // -------------------------------------------------------------
-    // STAGE 2: Exploded Assembly & Technical Leader Lines
+    // STAGE 2A: Exploding into Technical Assembly at Skills chapter
     // -------------------------------------------------------------
-    const t = Math.min(Math.max((progress - 0.42) / 0.24, 0), 1); // 0 -> 1
+    const t = Math.min(Math.max((progress - 0.42) / 0.12, 0), 1); // 0 -> 1
     rotX = 64 - 36 * t; // 64 -> 28
     rotY = -22 - 18 * t; // -22 -> -40
     rotZ = 36 - 4 * t;  // 36 -> 32
     scale = 1.05 - 0.05 * t;
 
-    // Exploding apart along central axis
+    // Exploding apart along central axis to peak at p = 0.54
     z0 = 120 * t;
     z1 = -35 + 45 * t;
     z2 = -70;
@@ -139,63 +132,48 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
     z4 = -160 - 90 * t;
     z5 = -210 - 140 * t;
 
-    leaderOpacity = t < 0.15 ? t / 0.15 : t > 0.85 ? Math.max(0, (1 - t) / 0.15) : 1;
-  } else if (progress <= 0.88) {
+    leaderOpacity = t < 0.25 ? t / 0.25 : 1;
+  } else if (progress <= 0.68) {
     // -------------------------------------------------------------
-    // STAGE 3: Production Systems Hologram (Projects)
+    // STAGE 2B: Seamless Convergence from Skills into Projects Core
+    // Layers contract into a dense glowing disc aligning with Globe tilt
     // -------------------------------------------------------------
-    const t = Math.min(Math.max((progress - 0.66) / 0.22, 0), 1); // 0 -> 1
-    rotX = 28 - 18 * t; // 28 -> 10
-    rotY = -40 + 28 * t; // -40 -> -12
-    rotZ = 32 - 27 * t; // 32 -> 5
-    scale = 1;
+    const c = Math.min(Math.max((progress - 0.54) / 0.14, 0), 1); // 0 -> 1
+    // Leader lines retract cleanly first before rings slam shut
+    leaderOpacity = Math.max(0, 1 - c / 0.25);
 
-    // Cylinder parts contract smoothly back
-    const inv = Math.max(0, 1 - t * 1.5);
-    z0 = 120 * inv;
-    z1 = 10 * inv;
-    z2 = -70 * inv;
-    z3 = -160 * inv;
-    z4 = -250 * inv;
-    z5 = -350 * inv;
+    // Smooth convergence curve
+    const easeC = c * c * (3 - 2 * c);
 
-    leaderOpacity = 0;
+    // 3D rotation aligns from angled assembly (28, -40, 32) to front-facing globe tilt (10, 0, 0)
+    rotX = 28 - 18 * easeC; // 28 -> 10
+    rotY = -40 * (1 - easeC); // -40 -> 0
+    rotZ = 32 * (1 - easeC);  // 32 -> 0
+    scale = 1.0 - 0.06 * Math.sin(c * Math.PI);
+
+    // Exploded layers collapse together along the central Z-axis into a single plane
+    z0 = 120 * (1 - easeC);
+    z1 = 10 * (1 - easeC);
+    z2 = -70 * (1 - easeC);
+    z3 = -160 * (1 - easeC);
+    z4 = -250 * (1 - easeC);
+    z5 = -350 * (1 - easeC);
   } else {
     // -------------------------------------------------------------
-    // STAGE 4: Interactive Motion Lab & Terminal Radar
+    // STAGE 3 & Beyond: Settled in background behind active chapters
     // -------------------------------------------------------------
-    const t = Math.min(Math.max((progress - 0.88) / 0.12, 0), 1); // 0 -> 1
-    rotX = 10 * (1 - t);
-    rotY = -12 * (1 - t);
-    rotZ = 5 * (1 - t);
+    rotX = 10;
+    rotY = 0;
+    rotZ = 0;
     scale = 1;
-
     z0 = 0;
-    z1 = -5;
-    z2 = -10;
-    z3 = -15;
-    z4 = -20;
-    z5 = -25;
-
-    radarOpacity = t < 0.15 ? t / 0.15 : 1;
+    z1 = 0;
+    z2 = 0;
+    z3 = 0;
+    z4 = 0;
+    z5 = 0;
+    leaderOpacity = 0;
   }
-
-  // Trigger easing test animation
-  const testEasing = (easeName: string) => {
-    setActiveEasing(easeName);
-    if (!orbRef.current) return;
-    animate(orbRef.current, {
-      translateX: [0, 270, 0],
-      duration: 1200,
-      ease: easeName,
-    });
-  };
-
-  useEffect(() => {
-    if (radarOpacity > 0.5 && orbRef.current) {
-      testEasing(activeEasing);
-    }
-  }, [radarOpacity]);
 
   return (
     <div className={styles.visualizerWrapper} aria-label="3D Transforming Engine">
@@ -483,47 +461,6 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
 
       {/* Hologram overlay was moved to dedicated HorizontalProjectsDeck & RotaryProjectDisc */}
 
-      {/* -------------------------------------------------------------
-          INTERACTIVE RADAR DIAL (Stage 4: Motion Lab)
-          ------------------------------------------------------------- */}
-      <div
-        className={styles.radarDialOverlay}
-        style={{
-          opacity: radarOpacity,
-          pointerEvents: radarOpacity > 0.5 ? 'auto' : 'none',
-          transform: `scale(${0.9 + radarOpacity * 0.1})`,
-        }}
-      >
-        <div className={styles.radarDialBox}>
-          <div className={styles.radarHeader}>
-            <span className={styles.radarTitle}>KINETIC ENGINE // EASING TEST</span>
-            <Sparkles size={13} color="#00ffaa" />
-          </div>
-
-          <div className={styles.radarTrackBox}>
-            <div ref={orbRef} className={styles.radarIndicatorOrb} />
-          </div>
-
-          <div className={styles.radarEasingGrid}>
-            {[
-              { id: 'outElastic(1, 0.5)', label: 'outElastic' },
-              { id: 'inOutQuad', label: 'inOutQuad' },
-              { id: 'cubicBezier(0.16, 1, 0.3, 1)', label: 'outExpo' },
-              { id: 'steps(6)', label: 'steps(6)' },
-            ].map((ease) => (
-              <button
-                key={ease.id}
-                type="button"
-                className={`${styles.radarEasingBtn} ${activeEasing === ease.id ? styles.radarEasingBtnActive : ''}`}
-                onClick={() => testEasing(ease.id)}
-              >
-                <span>{ease.label}</span>
-                <span style={{ fontSize: '0.6rem', opacity: 0.6 }}>&gt;</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

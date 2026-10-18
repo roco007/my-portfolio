@@ -4,7 +4,30 @@ import { PERSONAL_INFO, SOCIAL_LINKS, PROJECTS, SocialLink } from '../data/portf
 import { MorphingVisualizer } from './MorphingVisualizer';
 import { OrbitalProjectsSolarSystem } from './OrbitalProjectsSolarSystem';
 import { OrbitalSocialSolarSystem } from './OrbitalSocialSolarSystem';
+import { Experience } from '../sections/Experience';
+import { STORY_CHAPTERS, getNearestStoryChapter } from '../data/storyChapters';
 import styles from './PinnedStoryContainer.module.css';
+
+const isScrollable = (el: HTMLElement | null, deltaY: number): boolean => {
+  let cur: HTMLElement | null = el;
+  while (cur && cur !== document.body && cur !== document.documentElement) {
+    if (cur.getAttribute('role') === 'dialog' || cur.classList.contains('terminal')) {
+      return true;
+    }
+    const style = window.getComputedStyle(cur);
+    const overflowY = style.overflowY;
+    if ((overflowY === 'auto' || overflowY === 'scroll') && cur.scrollHeight > cur.clientHeight + 4) {
+      if (deltaY > 0 && cur.scrollTop + cur.clientHeight < cur.scrollHeight - 4) {
+        return true;
+      }
+      if (deltaY < 0 && cur.scrollTop > 4) {
+        return true;
+      }
+    }
+    cur = cur.parentElement;
+  }
+  return false;
+};
 
 const getSocialIcon = (platform: string) => {
   switch (platform) {
@@ -57,6 +80,38 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
   const rafIdRef = useRef<number | null>(null);
   const autoScrollRafRef = useRef<number | null>(null);
   const prevChapterRef = useRef<string>('HEADING');
+  const storyContainerRef = useRef<HTMLDivElement | null>(null);
+  const rightColumnRef = useRef<HTMLDivElement | null>(null);
+  const [globeOffsetPx, setGlobeOffsetPx] = useState<number>(() => {
+    if (typeof window === 'undefined' || window.innerWidth <= 900) return 0;
+    return 260;
+  });
+
+  useEffect(() => {
+    const updateOffset = () => {
+      if (!storyContainerRef.current || !rightColumnRef.current) return;
+      const storyRect = storyContainerRef.current.getBoundingClientRect();
+      const rightRect = rightColumnRef.current.getBoundingClientRect();
+      const storyCenter = storyRect.left + storyRect.width / 2;
+      const rightCenter = rightRect.left + rightRect.width / 2;
+      const diff = Math.round(rightCenter - storyCenter);
+      setGlobeOffsetPx(Math.abs(diff) < 5 ? 0 : diff);
+    };
+
+    updateOffset();
+    window.addEventListener('resize', updateOffset);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && storyContainerRef.current) {
+      resizeObserver = new ResizeObserver(updateOffset);
+      resizeObserver.observe(storyContainerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateOffset);
+      resizeObserver?.disconnect();
+    };
+  }, []);
 
   // Rotary disc synchronized state driven by horizontal project cards scroll
   const [discRotationAngle, setDiscRotationAngle] = useState<number>(0);
@@ -83,39 +138,312 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
     setActiveSocialIndex(index);
   }, []);
 
-  // Scroll listener with requestAnimationFrame lerp
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (maxScroll > 0) {
-        targetProgressRef.current = Math.min(Math.max(scrollY / maxScroll, 0), 1);
+
+  // Section gating and momentum lock refs
+  const targetChapterIndexRef = useRef<number>(0);
+  const isAnimatingRef = useRef<boolean>(false);
+  const isLockedRef = useRef<boolean>(false);
+  const isWheelActiveRef = useRef<boolean>(false);
+  const wheelEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastWheelDeltaRef = useRef<number>(0);
+  const lastWheelDirectionRef = useRef<number>(0);
+  const accumulatedDeltaRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
+  const touchStartXRef = useRef<number>(0);
+  const touchConsumedRef = useRef<boolean>(false);
+  const touchInScrollableRef = useRef<boolean>(false);
+  const expectedScrollYRef = useRef<number>(0);
+
+  const goToChapterIndex = useCallback((index: number) => {
+    const clampedIndex = Math.min(Math.max(index, 0), STORY_CHAPTERS.length - 1);
+    targetChapterIndexRef.current = clampedIndex;
+
+    const scrollEl = document.scrollingElement || document.documentElement || document.body;
+    const maxScroll = Math.max(0, scrollEl.scrollHeight - window.innerHeight);
+    const targetY = STORY_CHAPTERS[clampedIndex].target * maxScroll;
+    const startY = window.scrollY || window.pageYOffset || 0;
+    const distance = targetY - startY;
+
+    if (Math.abs(distance) < 2) {
+      isAnimatingRef.current = false;
+      return;
+    }
+
+    if (autoScrollRafRef.current) {
+      cancelAnimationFrame(autoScrollRafRef.current);
+      autoScrollRafRef.current = null;
+    }
+
+    isAnimatingRef.current = true;
+    isLockedRef.current = true;
+
+    const startTime = performance.now();
+    const duration = 720;
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const prevScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+      const currentY = startY + distance * eased;
+      expectedScrollYRef.current = currentY;
+      window.scrollTo(0, currentY);
+
+      if (progress < 1) {
+        autoScrollRafRef.current = requestAnimationFrame(animate);
+      } else {
+        expectedScrollYRef.current = targetY;
+        window.scrollTo(0, targetY);
+        autoScrollRafRef.current = null;
+        document.documentElement.style.scrollBehavior = prevScrollBehavior;
+        isAnimatingRef.current = false;
+
+        // Release lock only after gesture momentum has subsided
+        if (!isWheelActiveRef.current) {
+          isLockedRef.current = false;
+          accumulatedDeltaRef.current = 0;
+        }
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    autoScrollRafRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  // Unified Section-by-Section Scroll Gating & Lerp Engine
+  useEffect(() => {
+    const getScrollProgress = () => {
+      const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+      const scrollEl = document.scrollingElement || document.documentElement || document.body;
+      const maxScroll = Math.max(1, scrollEl.scrollHeight - window.innerHeight);
+      return Math.min(Math.max(scrollY / maxScroll, 0), 1);
+    };
+
+    // Initialize current chapter index based on starting position
+    const initialProgress = getScrollProgress();
+    const initialChapter = getNearestStoryChapter(initialProgress);
+    const initialIndex = STORY_CHAPTERS.findIndex((c) => c.id === initialChapter.id);
+    if (initialIndex >= 0) {
+      targetChapterIndexRef.current = initialIndex;
+    }
+
+    const handleScroll = () => {
+      const currentY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+      targetProgressRef.current = getScrollProgress();
+
+      // If user clicked navbar or scrubber during animation, yield cleanly
+      if (isAnimatingRef.current && Math.abs(currentY - expectedScrollYRef.current) > 35) {
+        if (autoScrollRafRef.current) {
+          cancelAnimationFrame(autoScrollRafRef.current);
+          autoScrollRafRef.current = null;
+        }
+        isAnimatingRef.current = false;
+        document.documentElement.style.scrollBehavior = '';
+      }
+
+      if (!isAnimatingRef.current) {
+        const chapter = getNearestStoryChapter(targetProgressRef.current);
+        const idx = STORY_CHAPTERS.findIndex((c) => c.id === chapter.id);
+        if (idx >= 0) {
+          targetChapterIndexRef.current = idx;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    document.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
-    // Lerp loop for buttery 120fps motion
+    // Wheel event interceptor: strictly moves only to next or previous section
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrollable(e.target as HTMLElement, e.deltaY)) {
+        return;
+      }
+
+      // Intercept wheel so native multi-section flinging never occurs
+      e.preventDefault();
+
+      const deltaY = e.deltaY;
+      const absDelta = Math.abs(deltaY);
+
+      // Track active gesture and set 220ms debounce silence timer
+      isWheelActiveRef.current = true;
+      if (wheelEndTimerRef.current) clearTimeout(wheelEndTimerRef.current);
+      wheelEndTimerRef.current = setTimeout(() => {
+        isWheelActiveRef.current = false;
+        accumulatedDeltaRef.current = 0;
+        lastWheelDeltaRef.current = 0;
+        if (!isAnimatingRef.current) {
+          isLockedRef.current = false;
+        }
+      }, 220);
+
+      // If locked, check if intentional unlock conditions are met:
+      if (isLockedRef.current) {
+        if (!isAnimatingRef.current) {
+          const prevDir = lastWheelDirectionRef.current;
+          const currentDir = deltaY > 0 ? 1 : -1;
+
+          // Reversal: user intentionally scrolled the opposite direction after settling
+          const isReversal = prevDir !== 0 && currentDir !== prevDir && absDelta > 20;
+
+          // Sharp second flick: new acceleration spike over decaying inertia
+          const isSharpSecondFlick =
+            currentDir === prevDir && absDelta > 60 && absDelta > lastWheelDeltaRef.current * 2.5;
+
+          if (isReversal || isSharpSecondFlick) {
+            isLockedRef.current = false;
+            accumulatedDeltaRef.current = 0;
+          }
+        }
+
+        if (isLockedRef.current) {
+          lastWheelDeltaRef.current = absDelta;
+          return;
+        }
+      }
+
+      accumulatedDeltaRef.current += deltaY;
+      lastWheelDeltaRef.current = absDelta;
+
+      const ACCUMULATION_THRESHOLD = 20;
+
+      if (Math.abs(accumulatedDeltaRef.current) >= ACCUMULATION_THRESHOLD) {
+        const direction = accumulatedDeltaRef.current > 0 ? 1 : -1;
+        lastWheelDirectionRef.current = direction;
+        accumulatedDeltaRef.current = 0;
+
+        const currentIndex = targetChapterIndexRef.current;
+        const nextIndex = Math.min(Math.max(currentIndex + direction, 0), STORY_CHAPTERS.length - 1);
+
+        if (nextIndex !== currentIndex) {
+          goToChapterIndex(nextIndex);
+        } else {
+          // At page boundaries
+          isLockedRef.current = true;
+          setTimeout(() => {
+            if (!isWheelActiveRef.current) {
+              isLockedRef.current = false;
+            }
+          }, 250);
+        }
+      }
+    };
+
+    // Mobile touch gating
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      touchStartYRef.current = e.touches[0].clientY;
+      touchStartXRef.current = e.touches[0].clientX;
+      touchConsumedRef.current = false;
+      touchInScrollableRef.current = isScrollable(e.target as HTMLElement, 0);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      if (touchConsumedRef.current) {
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
+
+      const curY = e.touches[0].clientY;
+      const curX = e.touches[0].clientX;
+      const diffY = curY - touchStartYRef.current;
+      const diffX = curX - touchStartXRef.current;
+
+      if (touchInScrollableRef.current && isScrollable(e.target as HTMLElement, -diffY)) {
+        return;
+      }
+
+      if (Math.abs(diffY) > Math.abs(diffX) * 1.2) {
+        if (e.cancelable) e.preventDefault();
+
+        const SWIPE_THRESHOLD = 45;
+        if (Math.abs(diffY) > SWIPE_THRESHOLD) {
+          touchConsumedRef.current = true;
+          const direction = diffY < 0 ? 1 : -1; // swipe up = next (+1), swipe down = prev (-1)
+
+          if (!isLockedRef.current) {
+            const currentIndex = targetChapterIndexRef.current;
+            const nextIndex = Math.min(Math.max(currentIndex + direction, 0), STORY_CHAPTERS.length - 1);
+            if (nextIndex !== currentIndex) {
+              goToChapterIndex(nextIndex);
+            }
+          }
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchConsumedRef.current = false;
+      touchInScrollableRef.current = false;
+    };
+
+    // Keyboard gating
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.getAttribute('contenteditable') === 'true' ||
+          activeEl.closest?.('[role="dialog"]'))
+      ) {
+        return;
+      }
+
+      if (e.code === 'ArrowDown' || e.code === 'PageDown' || (e.code === 'Space' && !e.shiftKey)) {
+        e.preventDefault();
+        if (!isLockedRef.current) {
+          const nextIndex = Math.min(targetChapterIndexRef.current + 1, STORY_CHAPTERS.length - 1);
+          if (nextIndex !== targetChapterIndexRef.current) {
+            goToChapterIndex(nextIndex);
+          }
+        }
+      } else if (e.code === 'ArrowUp' || e.code === 'PageUp' || (e.code === 'Space' && e.shiftKey)) {
+        e.preventDefault();
+        if (!isLockedRef.current) {
+          const nextIndex = Math.max(targetChapterIndexRef.current - 1, 0);
+          if (nextIndex !== targetChapterIndexRef.current) {
+            goToChapterIndex(nextIndex);
+          }
+        }
+      } else if (e.code === 'Home') {
+        e.preventDefault();
+        if (!isLockedRef.current) {
+          goToChapterIndex(0);
+        }
+      } else if (e.code === 'End') {
+        e.preventDefault();
+        if (!isLockedRef.current) {
+          goToChapterIndex(STORY_CHAPTERS.length - 1);
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Lerp loop for buttery, immediate 120fps motion
     let current = targetProgressRef.current;
     const updateProgress = () => {
-      const target = targetProgressRef.current;
-      current += (target - current) * 0.14; // smooth lerp factor
+      const target = getScrollProgress();
+      targetProgressRef.current = target;
+      current += (target - current) * 0.55;
 
-      // Snap if close
-      if (Math.abs(target - current) < 0.0005) {
+      if (Math.abs(target - current) < 0.0006) {
         current = target;
       }
 
       setSmoothProgress(current);
 
-      // Determine active chapter
-      let chapter = 'HEADING';
-      if (current > 0.22 && current <= 0.45) chapter = 'ARCHITECTURE';
-      else if (current > 0.45 && current <= 0.70) chapter = 'TOOLBOX';
-      else if (current > 0.70 && current <= 0.88) chapter = 'SYSTEMS';
-      else if (current > 0.88) chapter = 'UPLINK';
-
+      const chapter = getNearestStoryChapter(current).label;
       if (prevChapterRef.current !== chapter) {
         prevChapterRef.current = chapter;
         onProgressChange?.(current, chapter);
@@ -127,11 +455,19 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
     rafIdRef.current = requestAnimationFrame(updateProgress);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll, { capture: true } as EventListenerOptions);
+      document.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
+
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       if (autoScrollRafRef.current) cancelAnimationFrame(autoScrollRafRef.current);
+      if (wheelEndTimerRef.current) clearTimeout(wheelEndTimerRef.current);
     };
-  }, [onProgressChange]);
+  }, [goToChapterIndex, onProgressChange]);
 
   const handleCopyCommand = async () => {
     try {
@@ -142,51 +478,6 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     }
-  };
-
-  const scrollToProgress = (ratio: number) => {
-    const scrollEl = document.scrollingElement || document.documentElement || document.body;
-    const maxScroll = Math.max(0, scrollEl.scrollHeight - window.innerHeight);
-    const targetY = Math.max(0, Math.min(ratio * maxScroll, maxScroll));
-    const startY = window.scrollY || window.pageYOffset || 0;
-    const distance = targetY - startY;
-
-    if (Math.abs(distance) < 4) return;
-
-    if (autoScrollRafRef.current) {
-      cancelAnimationFrame(autoScrollRafRef.current);
-      autoScrollRafRef.current = null;
-    }
-
-    try {
-      window.scrollTo({
-        top: targetY,
-        behavior: 'smooth',
-      });
-    } catch {
-      window.scrollTo(0, targetY);
-    }
-
-    // High precision rAF easing fallback for mobile touch momentum
-    const startTime = performance.now();
-    const duration = 650;
-    const easeInOutCubic = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    const animateScroll = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = easeInOutCubic(progress);
-      window.scrollTo(0, startY + distance * eased);
-
-      if (progress < 1) {
-        autoScrollRafRef.current = requestAnimationFrame(animateScroll);
-      } else {
-        autoScrollRafRef.current = null;
-      }
-    };
-
-    autoScrollRafRef.current = requestAnimationFrame(animateScroll);
   };
 
   // --------------------------------------------------------------------------
@@ -203,22 +494,104 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
   const op1 = p < 0.20 || p > 0.42 ? 0 : p < 0.24 ? (p - 0.20) / 0.04 : p > 0.38 ? (0.42 - p) / 0.04 : 1;
   const ty1 = p < 0.24 ? (1 - (p - 0.20) / 0.04) * 35 : p > 0.38 ? -((p - 0.38) / 0.04) * 35 : 0;
 
-  // Chapter 2: [0.42, 0.66]
-  const op2 = p < 0.42 || p > 0.66 ? 0 : p < 0.46 ? (p - 0.42) / 0.04 : p > 0.62 ? (0.66 - p) / 0.04 : 1;
-  const ty2 = p < 0.46 ? (1 - (p - 0.42) / 0.04) * 35 : p > 0.62 ? -((p - 0.62) / 0.04) * 35 : 0;
+  const clampUnit = (value: number) => Math.min(1, Math.max(0, value));
+  const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
+  const easeInOutCubic = (value: number) => (
+    value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2
+  );
 
-  // Chapter 3: [0.66, 0.88]
-  const op3 = p < 0.66 || p > 0.88 ? 0 : p < 0.70 ? (p - 0.66) / 0.04 : p > 0.84 ? (0.88 - p) / 0.04 : 1;
-  const ty3 = p < 0.70 ? (1 - (p - 0.66) / 0.04) * 35 : p > 0.84 ? -((p - 0.84) / 0.04) * 35 : 0;
+  // Chapter 2: [0.42, 0.66] (TOOLBOX)
+  const skillsExit = easeInOutCubic(clampUnit((0.66 - p) / 0.10));
+  const op2 = p < 0.42 || p > 0.66 ? 0 : p < 0.46 ? (p - 0.42) / 0.04 : p > 0.56 ? skillsExit : 1;
+  const ty2 = p < 0.46 ? (1 - (p - 0.42) / 0.04) * 35 : p > 0.56 ? -(1 - skillsExit) * 35 : 0;
 
-  // Chapter 4: [0.88, 1.00]
-  const op4 = p < 0.88 ? 0 : Math.min((p - 0.88) / 0.04, 1);
-  const ty4 = p < 0.92 ? (1 - Math.min((p - 0.88) / 0.04, 1)) * 35 : 0;
+  // Chapter 3: SYSTEMS. Project chrome gives the hand-off globe room to
+  // establish itself before the cards clear, avoiding a blank transition beat.
+  const projectsEntry = easeOutCubic(clampUnit((p - 0.64) / 0.08));
+  const projectsExit = easeInOutCubic(clampUnit((0.78 - p) / 0.04));
+  const op3 = p < 0.64 || p > 0.78 ? 0 : Math.min(projectsEntry, projectsExit);
+  const ty3 = p < 0.72
+    ? (1 - projectsEntry) * 35
+    : p > 0.74 ? -(1 - projectsExit) * 35
+    : 0;
+
+  // Physical genesis & 3D unfurling progression for the Orbital Projects Solar System
+  // Begins at p = 0.58 as cylinder rings start contracting together, fully blooming by 0.72
+  const projectsEntryProgress = clampUnit((p - 0.58) / 0.14);
+
+  // Chapter 4: EXPERIENCE. Cross-fades seamlessly with Projects exit and
+  // Contact entrance. No blank delay zones.
+  const experienceEntry = easeOutCubic(clampUnit((p - 0.76) / 0.05));
+  const experienceExit = easeInOutCubic(clampUnit((0.92 - p) / 0.03));
+  const op4 = p < 0.76 || p > 0.92 ? 0 : Math.min(experienceEntry, experienceExit);
+
+  // Chapter 5: CONTACT. Starts entering at 0.92 as Experience clears.
+  const contactEntry = easeOutCubic(clampUnit((p - 0.92) / 0.04));
+  const op5 = p < 0.92 ? 0 : contactEntry;
+  const ty5 = (1 - op5) * 20;
+
+  // The Experience globe is the transition globe. Reusing that exact canvas
+  // avoids the double-sphere artifact that occurs when two globe renderers
+  // are cross-faded over each other.
+  const projectToExperienceProgress = clampUnit((p - 0.74) / 0.08);
+  const experienceToContactProgress = clampUnit((p - 0.89) / 0.065);
+  const experienceHandoff = p >= 0.74 && p < 0.82
+    ? 'from-project'
+    : p >= 0.89 && p < 0.955
+      ? 'to-contact'
+      : undefined;
+  const experienceHandoffProgress = experienceHandoff === 'from-project'
+    ? projectToExperienceProgress
+    : experienceToContactProgress;
+  const experienceHandoffOpacity = experienceHandoff === 'to-contact'
+    ? 1 - easeInOutCubic(clampUnit((p - 0.945) / 0.015))
+    : 1;
+  const experienceLandmassOpacity = experienceHandoff === 'from-project'
+    ? easeOutCubic(clampUnit((p - 0.75) / 0.06))
+    : experienceHandoff === 'to-contact'
+      ? 1 - easeInOutCubic(clampUnit((p - 0.90) / 0.045))
+      : 1;
+  const experienceIsRevealed = p >= 0.79 && p < 0.90;
+  const experienceHandoffEntry = easeOutCubic(clampUnit((p - 0.74) / 0.016));
+  const experienceLayerOpacity = p >= 0.74 && p < 0.96
+    ? experienceHandoffEntry
+    : op4;
+  const contactIsRevealed = p >= 0.94;
+
+  // The chapter-specific globes yield to Experience's travelling canvas at
+  // either end of its hand-off. Keeping these fades tight makes the source
+  // and destination feel continuous without ever exposing two full spheres.
+  const projectGlobeOpacity = p < 0.74
+    ? 1
+    : 1 - easeOutCubic(clampUnit((p - 0.74) / 0.016));
+  const projectChromeOpacity = p < 0.74 ? 1 : projectsExit;
+  const projectLayerOpacity =
+    p < 0.58
+      ? 0
+      : p < 0.74
+        ? easeOutCubic(clampUnit((p - 0.58) / 0.10))
+        : p < 0.78
+          ? 1
+          : op3;
+  const contactGlobeOpacity = p < 0.945
+    ? 0
+    : easeInOutCubic(clampUnit((p - 0.945) / 0.015));
+  const contactLayerOpacity = p >= 0.945 ? 1 : 0;
+
+  // Visualizer transitions seamlessly into Projects orbital solar system.
+  // Between 0.54 and 0.68, the exploded cylinder layers collapse into a tight glowing core.
+  // The visualizer fades out as the collapsing core hands off to the newborn globe between 0.60 and 0.68.
+  const visualizerOpacity =
+    p <= 0.60
+      ? 1
+      : p < 0.68
+        ? 1 - easeInOutCubic((p - 0.60) / 0.08)
+        : 0;
 
   return (
     <div ref={scrollTrackRef} className={styles.scrollTrack} id="story-track">
       <div className={styles.stickyViewport}>
-        <div className={styles.storyContainer}>
+        <div ref={storyContainerRef} className={styles.storyContainer}>
           {/* Left Column: Cross-Fading Chapter Content */}
           <div className={styles.leftColumn}>
             {/* -----------------------------------------------------------
@@ -226,6 +599,8 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 ----------------------------------------------------------- */}
             <div
               className={styles.chapterPanel}
+              aria-hidden={op0 <= 0.4}
+              inert={op0 <= 0.4 || undefined}
               style={{
                 opacity: op0,
                 pointerEvents: op0 > 0.1 ? 'auto' : 'none',
@@ -273,7 +648,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => scrollToProgress(0.52)}
+                  onClick={() => goToChapterIndex(1)}
                   className={styles.exploreBtn}
                 >
                   <span>EXPLORE ENGINE</span>
@@ -297,6 +672,8 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 ----------------------------------------------------------- */}
             <div
               className={styles.chapterPanel}
+              aria-hidden={op1 <= 0.4}
+              inert={op1 <= 0.4 || undefined}
               style={{
                 opacity: op1,
                 pointerEvents: op1 > 0.1 ? 'auto' : 'none',
@@ -340,7 +717,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               <div className={styles.actionsRow}>
                 <button
                   type="button"
-                  onClick={() => scrollToProgress(0.52)}
+                  onClick={() => goToChapterIndex(2)}
                   className={styles.exploreBtn}
                 >
                   <span>VIEW TOOLBOX</span>
@@ -354,6 +731,8 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 ----------------------------------------------------------- */}
             <div
               className={styles.chapterPanel}
+              aria-hidden={op2 <= 0.4}
+              inert={op2 <= 0.4 || undefined}
               style={{
                 opacity: op2,
                 pointerEvents: op2 > 0.1 ? 'auto' : 'none',
@@ -398,7 +777,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               <div className={styles.actionsRow}>
                 <button
                   type="button"
-                  onClick={() => scrollToProgress(0.76)}
+                  onClick={() => goToChapterIndex(3)}
                   className={styles.exploreBtn}
                 >
                   <span>SEE PRODUCTION SYSTEMS</span>
@@ -412,6 +791,8 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                 ----------------------------------------------------------- */}
             <div
               className={styles.chapterPanel}
+              aria-hidden={op3 <= 0.4}
+              inert={op3 <= 0.4 || undefined}
               style={{
                 opacity: op3,
                 pointerEvents: op3 > 0.1 ? 'auto' : 'none',
@@ -453,10 +834,10 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               <div className={styles.actionsRow}>
                 <button
                   type="button"
-                  onClick={() => scrollToProgress(0.95)}
+                  onClick={() => goToChapterIndex(4)}
                   className={styles.exploreBtn}
                 >
-                  <span>OPEN UPLINK</span>
+                  <span>EXPLORE TIMELINE</span>
                   <ArrowDown size={14} />
                 </button>
                 <button
@@ -471,14 +852,19 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
             </div>
 
             {/* -----------------------------------------------------------
-                CHAPTER 4: UPLINK // Motion Lab & Direct Channel
+                CHAPTER 4: TIMELINE // Professional Experience
+                ----------------------------------------------------------- */}
+            {/* -----------------------------------------------------------
+                CHAPTER 5: UPLINK // Motion Lab & Direct Channel
                 ----------------------------------------------------------- */}
             <div
-              className={`${styles.chapterPanel} ${styles.chapter4Panel}`}
+              className={`${styles.chapterPanel} ${styles.chapter4Panel} ${contactIsRevealed ? styles.contactContentRevealed : ''}`}
+              aria-hidden={op5 <= 0.4}
+              inert={op5 <= 0.4 || undefined}
               style={{
-                opacity: op4,
-                pointerEvents: op4 > 0.1 ? 'auto' : 'none',
-                transform: `translateY(calc(-50% + ${ty4.toFixed(1)}px))`,
+                opacity: op5,
+                pointerEvents: op5 > 0.1 ? 'auto' : 'none',
+                transform: `translateY(calc(-50% + ${ty5.toFixed(1)}px))`,
               }}
             >
               <div className={styles.badgeWrapper}>
@@ -567,12 +953,14 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
           </div>
 
           {/* Right Column: 3D Transforming Visualizer, Chapter 3 Projects Deck & Chapter 4 Social Solar System */}
-          <div className={styles.rightColumn}>
+          <div ref={rightColumnRef} className={styles.rightColumn}>
             <div
               className={styles.visualizerLayer}
+              aria-hidden={visualizerOpacity <= 0.01}
+              inert={visualizerOpacity <= 0.01 || undefined}
               style={{
-                opacity: Math.max(0, 1 - (op3 + op4) * 1.5),
-                pointerEvents: (op3 > 0.4 || op4 > 0.4) ? 'none' : 'auto',
+                opacity: visualizerOpacity,
+                pointerEvents: visualizerOpacity > 0.1 ? 'auto' : 'none',
               }}
             >
               <MorphingVisualizer
@@ -583,32 +971,63 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
 
             <div
               className={styles.horizontalDeckLayer}
+              aria-hidden={op3 <= 0.4}
+              inert={op3 <= 0.4 || undefined}
               style={{
-                opacity: op3,
+                opacity: projectLayerOpacity,
                 pointerEvents: op3 > 0.4 ? 'auto' : 'none',
-                display: op3 > 0.02 ? 'block' : 'none',
+                display: projectLayerOpacity > 0.01 ? 'block' : 'none',
                 zIndex: op3 > 0.4 ? 12 : 5,
-                transform: `translateY(${(1 - op3) * 20}px)`,
+                transform: 'translateY(0)',
               }}
             >
-              <OrbitalProjectsSolarSystem onRotate={handleProjectRotate} />
+              <OrbitalProjectsSolarSystem
+                onRotate={handleProjectRotate}
+                isActive={projectLayerOpacity > 0.02}
+                globeOpacity={projectGlobeOpacity}
+                chromeOpacity={projectChromeOpacity}
+                entryProgress={projectsEntryProgress}
+              />
             </div>
 
             <div
               className={styles.socialDeckLayer}
+              aria-hidden={op5 <= 0.4}
+              inert={op5 <= 0.4 || undefined}
               style={{
-                opacity: op4,
-                pointerEvents: op4 > 0.4 ? 'auto' : 'none',
-                display: op4 > 0.02 ? 'flex' : 'none',
-                zIndex: op4 > 0.4 ? 15 : 4,
-                transform: `translateY(${(1 - op4) * 20}px)`,
+                opacity: contactLayerOpacity,
+                pointerEvents: op5 > 0.4 ? 'auto' : 'none',
+                display: contactLayerOpacity > 0.02 ? 'flex' : 'none',
+                zIndex: op5 > 0.4 ? 15 : 4,
+                transform: 'translateY(0)',
               }}
             >
               <OrbitalSocialSolarSystem
                 onChannelSelect={handleSocialChannelSelect}
-                isActive={op4 > 0.3}
+                isActive={op5 > 0.3}
+                globeOpacity={contactGlobeOpacity}
+                chromeOpacity={op5}
               />
             </div>
+          </div>
+
+          <div
+            className={styles.experienceLayer}
+            style={{
+              opacity: experienceLayerOpacity,
+              pointerEvents: op4 > 0.8 ? 'auto' : 'none',
+              transform: 'translateY(0)',
+            }}
+          >
+            <Experience
+              isActive={op4 > 0.35}
+              isRevealed={experienceIsRevealed}
+              globeHandoff={experienceHandoff}
+              globeHandoffProgress={experienceHandoffProgress}
+              globeHandoffOpacity={experienceHandoffOpacity}
+              landmassOpacity={experienceLandmassOpacity}
+              globeHandoffOffsetPx={globeOffsetPx}
+            />
           </div>
         </div>
       </div>

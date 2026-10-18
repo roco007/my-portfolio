@@ -156,14 +156,14 @@ export function App() {
 
         @media (max-width: 768px) {
           .bottom-scrubber-dock {
-            bottom: 0.75rem;
-            left: 0.75rem;
+            bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+            left: 0.6rem;
           }
 
           .floating-terminal-trigger {
-            bottom: 0.75rem;
-            right: 0.75rem;
-            padding: 0.4rem 0.7rem;
+            bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+            right: 0.6rem;
+            padding: 0.38rem 0.65rem;
             font-size: 0.7rem;
           }
 
@@ -174,14 +174,14 @@ export function App() {
 
         @media (max-width: 480px) {
           .bottom-scrubber-dock {
-            bottom: 0.6rem;
-            left: 0.6rem;
+            bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px));
+            left: 0.45rem;
           }
 
           .floating-terminal-trigger {
-            bottom: 0.6rem;
-            right: 0.6rem;
-            padding: 0.35rem 0.6rem;
+            bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px));
+            right: 0.45rem;
+            padding: 0.32rem 0.55rem;
           }
         }
       `}</style>

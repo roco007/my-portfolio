@@ -10,6 +10,7 @@ interface SectionHeadingProps {
   highlightWord?: string;
   subtitle?: string;
   align?: 'left' | 'center';
+  id?: string;
 }
 
 export const SectionHeading: React.FC<SectionHeadingProps> = ({
@@ -19,6 +20,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
   highlightWord,
   subtitle,
   align = 'left',
+  id,
 }) => {
   const headingWrapperRef = useRef<HTMLDivElement | null>(null);
   const tagTextRef = useRef<HTMLSpanElement | null>(null);
@@ -80,7 +82,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
         <span className={styles.bracket}>]</span>
       </div>
 
-      <h2 className={styles.heading}>{renderTitle()}</h2>
+      <h2 className={styles.heading} id={id}>{renderTitle()}</h2>
 
       {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal, Menu, X, Github, Mail, Play } from 'lucide-react';
+import { Terminal, Menu, X, Github, Mail, Play, Download } from 'lucide-react';
 import { NAV_LINKS, SOCIAL_LINKS } from '../data/portfolio';
+import { getNearestStoryChapter, getStoryChapterById } from '../data/storyChapters';
 import { ThemeToggle } from './ThemeToggle';
 import styles from './Navbar.module.css';
 
@@ -10,15 +11,6 @@ interface NavbarProps {
   onOpenTerminal: () => void;
   onReplayIntro?: () => void;
 }
-
-const CHAPTER_TARGETS: Record<string, number> = {
-  hero: 0,
-  about: 0.25,
-  skills: 0.52,
-  projects: 0.76,
-  experience: 0.82,
-  contact: 0.95,
-};
 
 export const Navbar: React.FC<NavbarProps> = ({
   theme,
@@ -44,11 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         const ratio = window.scrollY / totalHeight;
         setScrollProgress(ratio * 100);
 
-        if (ratio <= 0.22) setActiveSection('hero');
-        else if (ratio <= 0.45) setActiveSection('about');
-        else if (ratio <= 0.70) setActiveSection('skills');
-        else if (ratio <= 0.88) setActiveSection('projects');
-        else setActiveSection('contact');
+        setActiveSection(getNearestStoryChapter(ratio).id);
       }
     };
 
@@ -62,10 +50,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     e.preventDefault();
     setMobileMenuOpen(false);
 
-    if (CHAPTER_TARGETS[id] !== undefined) {
+    const chapter = getStoryChapterById(id);
+    if (chapter) {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       window.scrollTo({
-        top: CHAPTER_TARGETS[id] * maxScroll,
+        top: chapter.target * maxScroll,
         behavior: 'smooth',
       });
       return;
@@ -168,6 +157,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Theme Toggle */}
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
+            <a
+              href="/Raj_Colaco_Resume.pdf"
+              download
+              className={styles.resumeBtn}
+              title="Download Raj Colaco's resume as a PDF"
+              aria-label="Download Raj Colaco's resume as a PDF"
+            >
+              <Download size={14} />
+              <span>RESUME</span>
+            </a>
+
             {/* Signature Red Contact Pill matching Anime.js SPONSOR button */}
             <a
               href="#contact"
@@ -209,6 +209,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </a>
                   </li>
                 ))}
+                <li>
+                  <a
+                    href="/Raj_Colaco_Resume.pdf"
+                    download
+                    className={styles.mobileResumeBtn}
+                  >
+                    <Download size={15} />
+                    <span>DOWNLOAD RESUME</span>
+                  </a>
+                </li>
                 <li>
                   <a
                     href="#contact"

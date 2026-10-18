@@ -77,7 +77,21 @@ export const FuturisticHudRail: React.FC = () => {
     };
   }, []);
 
+  const SECTOR_TARGETS: Record<string, number> = {
+    hero: 0,
+    about: 0.25,
+    skills: 0.52,
+    projects: 0.76,
+    experience: 0.82,
+    contact: 0.95,
+  };
+
   const scrollToSector = (id: string) => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    if (SECTOR_TARGETS[id] !== undefined) {
+      window.scrollTo({ top: SECTOR_TARGETS[id] * maxScroll, behavior: 'smooth' });
+      return;
+    }
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });

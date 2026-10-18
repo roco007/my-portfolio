@@ -3,18 +3,30 @@
    -------------------------------------------------------------------------- */
 
 .socialSolarWrapper {
+  --chapter-chrome-opacity: 1;
   position: relative;
   width: 100%;
   height: 100%;
   min-height: 480px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 1.25rem;
   align-items: center;
   box-sizing: border-box;
   z-index: 10;
   user-select: none;
   overflow: visible;
+}
+
+/* Keep the destination globe independent from the social controls so it can
+   arrive first; the surrounding orbit then materializes after it settles. */
+.headerBar,
+.backTilesStage,
+.frontTilesStage,
+.footerNav {
+  opacity: var(--chapter-chrome-opacity);
+  transition: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -108,8 +120,9 @@
 .solarArena {
   position: relative;
   width: 100%;
-  flex: 1;
-  min-height: 420px;
+  height: 640px;
+  min-height: 620px;
+  margin-top: 1.7rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,11 +184,11 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 66px;
-  height: 66px;
-  margin-top: -33px;
-  margin-left: -33px;
-  border-radius: 16px;
+  width: 82px;
+  height: 82px;
+  margin-top: -41px;
+  margin-left: -41px;
+  border-radius: 19px;
   background: rgba(21, 20, 19, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -198,7 +211,7 @@
 .tileCornerGlow {
   position: absolute;
   inset: 0;
-  border-radius: 15px;
+  border-radius: 18px;
   pointer-events: none;
   opacity: 0.65;
   transition: opacity 0.25s ease;
@@ -343,15 +356,16 @@
   }
 
   .solarArena {
-    min-height: 280px;
+    min-height: 250px;
+    margin-top: 0;
   }
 
   .socialSatelliteTile {
-    width: 48px;
-    height: 48px;
-    margin-top: -24px;
-    margin-left: -24px;
-    border-radius: 12px;
+    width: 58px;
+    height: 58px;
+    margin-top: -29px;
+    margin-left: -29px;
+    border-radius: 14px;
   }
 
   .beaconBadge {
@@ -364,8 +378,9 @@
   }
 
   .footerNav {
-    padding: 0.15rem 0.25rem;
+    padding: 0.1rem 0.25rem;
     gap: 0.35rem;
+    justify-content: center;
   }
 
   .stepBtn {
@@ -374,6 +389,6 @@
   }
 
   .orbitHint {
-    font-size: 0.52rem;
+    display: none;
   }
 }

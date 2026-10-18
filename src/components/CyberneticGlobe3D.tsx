@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import type { GeoPoint } from './worldLandmasses';
 import styles from './CyberneticGlobe3D.module.css';
 
 // 3D Cybernetic nodes distributed across world coordinates (lat, lon in degrees)
@@ -50,6 +51,13 @@ const CYBER_NODES = [
   { lat: 70.0, lon: 40.0, name: '', color: '#33b3f1' },
 ];
 
+export interface GlobeLocation {
+  latitude: number;
+  longitude: number;
+  label: string;
+  isRemote?: boolean;
+}
+
 export interface CyberneticGlobe3DProps {
   id?: string;
   rotationAngle?: number;
@@ -59,6 +67,16 @@ export interface CyberneticGlobe3DProps {
   systemTag?: string;
   unitLabel?: string;
   orbitOrientation?: 'horizontal' | 'vertical';
+  /** Shows Natural Earth landmasses; intended for the location-aware Experience globe. */
+  showLandmass?: boolean;
+  /** Smoothly fades the location-aware map layer without replacing the globe canvas. */
+  landmassOpacity?: number;
+  /** Rotates the globe toward a selected work location and draws a location beacon. */
+  focusLocation?: GlobeLocation;
+  /** Hides the external telemetry card when the globe is used as a transition-only visual. */
+  showTelemetry?: boolean;
+  /** Stops the rendering loop while a chapter is off-screen, retaining its last frame. */
+  isAnimating?: boolean;
 }
 
 export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlobe3DProps>(({
@@ -70,9 +88,45 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
   systemTag = '3D PLANETARY CORE // AXIAL TILT 23.4°',
   unitLabel = 'ACTIVE UNIT',
   orbitOrientation = 'horizontal',
+  showLandmass = false,
+  landmassOpacity = showLandmass ? 1 : 0,
+  focusLocation,
+  showTelemetry = true,
+  isAnimating = true,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spinRef = useRef<number>(0);
+  const landmassesRef = useRef<GeoPoint[][]>([]);
+  const [hasLandmasses, setHasLandmasses] = useState(false);
+  const normalizedLandmassOpacity = Math.min(1, Math.max(0, landmassOpacity));
+  const landmassOpacityRef = useRef(normalizedLandmassOpacity);
+  const shouldLoadLandmasses = showLandmass || normalizedLandmassOpacity > 0.001;
+
+  useEffect(() => {
+    landmassOpacityRef.current = normalizedLandmassOpacity;
+  }, [normalizedLandmassOpacity]);
+
+  useEffect(() => {
+    let disposed = false;
+
+    if (!shouldLoadLandmasses) {
+      landmassesRef.current = [];
+      setHasLandmasses(false);
+      return () => {
+        disposed = true;
+      };
+    }
+
+    void import('./worldLandmasses').then(({ WORLD_LANDMASSES }) => {
+      if (disposed) return;
+      landmassesRef.current = WORLD_LANDMASSES;
+      setHasLandmasses(true);
+    });
+
+    return () => {
+      disposed = true;
+    };
+  }, [shouldLoadLandmasses]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -80,7 +134,7 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId: number;
+    let animId: number | undefined;
     let lastTime = performance.now();
 
     // Size parameters: Increased by 50% from 340 to 510
@@ -129,8 +183,15 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
-      // Spin continuously around its own axis at ~22 deg/second
-      spinRef.current += 0.38 * dt;
+      // A selected location rotates into view; otherwise retain the ambient globe motion.
+      if (focusLocation) {
+        const targetSpin = -(focusLocation.longitude * Math.PI) / 180;
+        const fullTurn = Math.PI * 2;
+        const shortestTurn = ((targetSpin - spinRef.current + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+        spinRef.current += shortestTurn * Math.min(dt * 4, 1);
+      } else {
+        spinRef.current += 0.38 * dt;
+      }
       const currentSpin = spinRef.current + (rotationAngle * Math.PI) / 180;
 
       ctx.save();
@@ -218,7 +279,72 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       ctx.clip();
 
       // -------------------------------------------------------------
-      // 4. Draw Latitude Parallels (Lines of Latitude)
+      // 4. Draw geographic landmasses. Each contour is clipped at the
+      // horizon before it is painted, preventing the far side of the world
+      // from bleeding through the globe.
+      // -------------------------------------------------------------
+      const currentLandmassOpacity = landmassOpacityRef.current;
+      if (currentLandmassOpacity > 0 && hasLandmasses) {
+        type SurfacePoint = { sx: number; sy: number; z: number };
+
+        const projectGeoPoint = ([latitude, longitude]: GeoPoint): SurfacePoint => {
+          const latitudeRadians = (latitude * Math.PI) / 180;
+          const longitudeRadians = (longitude * Math.PI) / 180 + currentSpin;
+          return project3D(
+            R * Math.cos(latitudeRadians) * Math.sin(longitudeRadians),
+            R * Math.sin(latitudeRadians),
+            R * Math.cos(latitudeRadians) * Math.cos(longitudeRadians)
+          );
+        };
+
+        const horizonIntersection = (from: SurfacePoint, to: SurfacePoint): SurfacePoint => {
+          const progress = from.z / (from.z - to.z);
+          return {
+            sx: from.sx + (to.sx - from.sx) * progress,
+            sy: from.sy + (to.sy - from.sy) * progress,
+            z: 0,
+          };
+        };
+
+        landmassesRef.current.forEach((landmass) => {
+          const projectedLand = landmass.map(projectGeoPoint);
+          const visibleLand: SurfacePoint[] = [];
+
+          for (let index = 0; index < projectedLand.length; index += 1) {
+            const current = projectedLand[index];
+            const previous = projectedLand[(index - 1 + projectedLand.length) % projectedLand.length];
+            const currentIsVisible = current.z >= 0;
+            const previousIsVisible = previous.z >= 0;
+
+            if (currentIsVisible && !previousIsVisible) {
+              visibleLand.push(horizonIntersection(previous, current));
+            }
+
+            if (currentIsVisible) {
+              visibleLand.push(current);
+            } else if (previousIsVisible) {
+              visibleLand.push(horizonIntersection(previous, current));
+            }
+          }
+
+          if (visibleLand.length < 3) return;
+
+          ctx.beginPath();
+          visibleLand.forEach((point, index) => {
+            if (index === 0) ctx.moveTo(point.sx, point.sy);
+            else ctx.lineTo(point.sx, point.sy);
+          });
+          ctx.closePath();
+          ctx.fillStyle = `rgba(0, 218, 171, ${(0.21 * currentLandmassOpacity).toFixed(3)})`;
+          ctx.fill();
+          ctx.strokeStyle = `rgba(92, 255, 220, ${(0.32 * currentLandmassOpacity).toFixed(3)})`;
+          ctx.lineWidth = 0.45;
+          ctx.stroke();
+        });
+      }
+
+      // -------------------------------------------------------------
+      // 5. Draw Latitude Parallels (Lines of Latitude)
       // -------------------------------------------------------------
       const lats = [-60, -40, -20, 0, 20, 40, 60];
       lats.forEach((latDeg) => {
@@ -258,7 +384,7 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       });
 
       // -------------------------------------------------------------
-      // 5. Draw Longitude Meridians (Lines of Longitude rotating around axis)
+      // 6. Draw Longitude Meridians (Lines of Longitude rotating around axis)
       // -------------------------------------------------------------
       const meridianCount = 12;
       for (let m = 0; m < meridianCount; m++) {
@@ -292,7 +418,7 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       }
 
       // -------------------------------------------------------------
-      // 6. Draw Cybernetic Network Arcs across globe
+      // 7. Draw Cybernetic Network Arcs across globe
       // -------------------------------------------------------------
       for (let i = 0; i < CYBER_NODES.length - 1; i += 2) {
         const n1 = CYBER_NODES[i];
@@ -369,7 +495,49 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       });
 
       // -------------------------------------------------------------
-      // 8. Tilted Axis Spindle (North & South Poles)
+      // 8. Selected work-location beacon
+      // -------------------------------------------------------------
+      if (focusLocation) {
+        const latRad = (focusLocation.latitude * Math.PI) / 180;
+        const lonRad = (focusLocation.longitude * Math.PI) / 180 + currentSpin;
+        const p = project3D(
+          R * Math.cos(latRad) * Math.sin(lonRad),
+          R * Math.sin(latRad),
+          R * Math.cos(latRad) * Math.cos(lonRad)
+        );
+        const locationColor = focusLocation.isRemote ? '#33b3f1' : '#ff4b4b';
+        const pulse = 8 + Math.sin(time * 0.008) * 2;
+
+        if (p.z > 0) {
+          ctx.beginPath();
+          ctx.arc(p.sx, p.sy, pulse * 1.9, 0, Math.PI * 2);
+          ctx.fillStyle = focusLocation.isRemote
+            ? 'rgba(51, 179, 241, 0.14)'
+            : 'rgba(255, 75, 75, 0.16)';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(p.sx, p.sy, pulse, 0, Math.PI * 2);
+          ctx.strokeStyle = locationColor;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(p.sx, p.sy, 3.6, 0, Math.PI * 2);
+          ctx.fillStyle = locationColor;
+          ctx.shadowColor = locationColor;
+          ctx.shadowBlur = 12;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.font = '700 9px monospace';
+          ctx.fillStyle = '#f6f4f2';
+          ctx.fillText(focusLocation.label, p.sx + 12, p.sy - 10);
+        }
+      }
+
+      // -------------------------------------------------------------
+      // 9. Tilted Axis Spindle (North & South Poles)
       // -------------------------------------------------------------
       const northPole = project3D(0, R * 1.15, 0);
       const southPole = project3D(0, -R * 1.15, 0);
@@ -386,7 +554,7 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       ctx.restore(); // Restore clip inside sphere
 
       // -------------------------------------------------------------
-      // 9. Draw Front Half of Planetary Orbit Rings (Z > 0)
+      // 10. Draw Front Half of Planetary Orbit Rings (Z > 0)
       // -------------------------------------------------------------
       ringRadii.forEach((rRing, rIdx) => {
         ctx.beginPath();
@@ -417,7 +585,7 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       });
 
       // -------------------------------------------------------------
-      // 10. Polar Axis Beacon Caps
+      // 11. Polar Axis Beacon Caps
       // -------------------------------------------------------------
       [northPole, southPole].forEach((pole) => {
         ctx.beginPath();
@@ -430,12 +598,16 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       });
 
       ctx.restore();
-      animId = requestAnimationFrame(render);
+      if (isAnimating) {
+        animId = requestAnimationFrame(render);
+      }
     };
 
-    animId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animId);
-  }, [rotationAngle]);
+    render(performance.now());
+    return () => {
+      if (animId !== undefined) cancelAnimationFrame(animId);
+    };
+  }, [focusLocation, hasLandmasses, isAnimating, rotationAngle]);
 
   return (
     <div ref={ref} id={id} className={styles.globeContainer} aria-label="3D Rotating Cybernetic Globe">
@@ -445,18 +617,19 @@ export const CyberneticGlobe3D = React.forwardRef<HTMLDivElement, CyberneticGlob
       {/* The 3D Canvas rendering the rotating globe */}
       <canvas ref={canvasRef} className={styles.globeCanvas} />
 
-      {/* Futuristic Telemetry Tag */}
-      <div className={styles.telemetryTag}>
-        <span className={styles.encoderLabel}>
-          {systemTag}
-        </span>
-        <span className={styles.projectIndex}>
-          {unitLabel} [{String(activeProjectIndex + 1).padStart(2, '0')} / {String(totalProjects).padStart(2, '0')}]
-        </span>
-        <span className={styles.projectTitleTruncated}>
-          {activeProjectTitle}
-        </span>
-      </div>
+      {showTelemetry && (
+        <div className={styles.telemetryTag}>
+          <span className={styles.encoderLabel}>
+            {systemTag}
+          </span>
+          <span className={styles.projectIndex}>
+            {unitLabel} [{String(activeProjectIndex + 1).padStart(2, '0')} / {String(totalProjects).padStart(2, '0')}]
+          </span>
+          <span className={styles.projectTitleTruncated}>
+            {activeProjectTitle}
+          </span>
+        </div>
+      )}
     </div>
   );
 });

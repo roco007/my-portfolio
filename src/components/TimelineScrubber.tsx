@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getNearestStoryChapter } from '../data/storyChapters';
 import styles from './TimelineScrubber.module.css';
 
 interface TimelineScrubberProps {
@@ -11,6 +12,7 @@ const SECTIONS = [
   { id: 'about', label: 'ARCHITECTURE' },
   { id: 'skills', label: 'TOOLBOX' },
   { id: 'projects', label: 'SYSTEMS' },
+  { id: 'experience', label: 'TIMELINE' },
   { id: 'contact', label: 'UPLINK' },
 ];
 
@@ -38,12 +40,13 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const ratio = Math.min(Math.max(clickX / rect.width, 0), 1);
+    const chapter = getNearestStoryChapter(ratio);
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     window.scrollTo({
-      top: ratio * maxScroll,
+      top: chapter.target * maxScroll,
       behavior: 'smooth',
     });
-    onScrub?.(ratio * 100);
+    onScrub?.(chapter.target * 100);
   };
 
   const activeLabel =
