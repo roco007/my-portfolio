@@ -1,8 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ExternalLink, Github, ChevronDown, ChevronUp, Layers, CheckCircle2 } from 'lucide-react';
 import { Project } from '../data/portfolio';
-import { setupCardTilt } from '../animations/interactions';
-import { useReducedMotion } from '../animations/useReducedMotion';
 import styles from './ProjectCard.module.css';
 
 interface ProjectCardProps {
@@ -11,13 +9,7 @@ interface ProjectCardProps {
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const reducedMotion = useReducedMotion();
   const [expanded, setExpanded] = useState<boolean>(false);
-
-  useEffect(() => {
-    const cleanup = setupCardTilt(cardRef.current, reducedMotion);
-    return () => cleanup();
-  }, [reducedMotion]);
 
   return (
     <article
@@ -29,31 +21,37 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       {/* Specular Glare Overlay */}
       <div className={styles.cardGlare} aria-hidden="true" />
 
-      {/* Media Preview Container */}
-      <div className={styles.imageContainer}>
-        <img
-          src={project.image}
-          alt={`${project.title} Preview Screenshot`}
-          className={styles.image}
-          loading="lazy"
-          decoding="async"
-        />
-
-        <div className={styles.imageOverlay}>
-          {project.liveUrl && (
-            <a
-              href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.overlayLiveBtn}
-              aria-label={`Launch ${project.title} live demo`}
-            >
-              <span>INITIALIZE DEMO</span>
-              <ExternalLink size={14} />
-            </a>
-          )}
+      {/* Media Preview Container - Clickable with Pop-out on Hover */}
+      {project.liveUrl || project.githubUrl ? (
+        <a
+          href={project.liveUrl || project.githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.imageLink}
+          aria-label={`Open ${project.liveUrl ? 'live demo' : 'source code'} for ${project.title}`}
+          title={`Click to open ${project.liveUrl ? 'live demo' : 'source code'}`}
+        >
+          <div className={styles.imageContainer}>
+            <img
+              src={project.image}
+              alt={`${project.title} Preview Screenshot`}
+              className={styles.image}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </a>
+      ) : (
+        <div className={styles.imageContainer}>
+          <img
+            src={project.image}
+            alt={`${project.title} Preview Screenshot`}
+            className={styles.image}
+            loading="lazy"
+            decoding="async"
+          />
         </div>
-      </div>
+      )}
 
       {/* Card Content Header & Meta */}
       <div className={styles.content}>

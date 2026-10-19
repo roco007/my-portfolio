@@ -424,16 +424,17 @@
    DETAILED PROJECT INSPECTOR (Pauses motion for comfortable reading)
    -------------------------------------------------------------------------- */
 .inspectorBackdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 100;
-  background: rgba(12, 11, 10, 0.86);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+  background: rgba(8, 7, 6, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeInModal 0.25s ease;
+  padding: clamp(0.75rem, 2.5vh, 1.75rem);
+  animation: fadeInModal 0.22s ease-out;
 }
 
 @keyframes fadeInModal {
@@ -445,24 +446,36 @@
   }
 }
 
+.inspectorModalWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+}
+
 .inspectorModal {
   position: relative;
-  width: 440px;
-  max-width: 92vw;
-  background: rgba(22, 21, 20, 0.98);
-  border: 1px solid rgba(255, 75, 75, 0.4);
+  width: 530px;
+  max-width: min(94vw, 550px);
+  max-height: min(88vh, 760px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 17, 16, 0.98);
+  border: 1px solid rgba(255, 75, 75, 0.45);
   box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.9),
-    0 0 40px rgba(255, 75, 75, 0.25);
-  border-radius: var(--radius-md, 12px);
+    0 28px 75px rgba(0, 0, 0, 0.96),
+    0 0 50px rgba(255, 75, 75, 0.22);
+  border-radius: var(--radius-md, 14px);
   overflow: hidden;
   animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: auto;
 }
 
 @keyframes slideUpModal {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(12px);
+    transform: scale(0.96) translateY(14px);
   }
   to {
     opacity: 1;
@@ -470,21 +483,119 @@
   }
 }
 
+/* Floating Prev / Next chevrons on sides */
+.modalSideNavBtnPrev,
+.modalSideNavBtnNext {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(24, 22, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f0ece1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+}
+
+.modalSideNavBtnPrev {
+  left: -22px;
+}
+
+.modalSideNavBtnNext {
+  right: -22px;
+}
+
+.modalSideNavBtnPrev:hover,
+.modalSideNavBtnNext:hover {
+  background: rgba(38, 35, 33, 0.98);
+  border-color: #ff4b4b;
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow:
+    0 0 20px rgba(255, 75, 75, 0.45),
+    0 12px 32px rgba(0, 0, 0, 0.85);
+}
+
+.modalSideNavBtnPrev:active,
+.modalSideNavBtnNext:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
 .inspectorTopBar {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.55rem 0.9rem;
-  background: rgba(15, 14, 13, 0.98);
+  padding: 0.6rem 0.95rem;
+  background: rgba(14, 13, 12, 0.98);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-family: var(--font-mono, monospace);
+  z-index: 10;
+  gap: 0.5rem;
 }
 
 .inspectorStationInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 0.72rem;
   font-weight: 700;
   color: #ff4b4b;
   letter-spacing: 0.06em;
+}
+
+.inspectorProjectBadge {
+  background: rgba(255, 75, 75, 0.16);
+  color: #ff4b4b;
+  border: 1px solid rgba(255, 75, 75, 0.35);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.inspectorCenterHint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.64rem;
+  color: var(--text-tertiary, #888580);
+  letter-spacing: 0.04em;
+}
+
+.inspectorNavArrows {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.inspectorNavArrowBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary, #b5b3ad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inspectorNavArrowBtn:hover {
+  background: rgba(255, 75, 75, 0.2);
+  border-color: #ff4b4b;
+  color: #ffffff;
 }
 
 .resumeOrbitBtn {
@@ -501,6 +612,7 @@
   color: #00ffaa;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .resumeOrbitBtn:hover {
@@ -508,8 +620,193 @@
   box-shadow: 0 0 14px rgba(0, 255, 170, 0.45);
 }
 
-.inspectorCardContent {
-  padding: 0.5rem;
+.inspectorCardViewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardSlideSlot {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0.65rem;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 75, 75, 0.45) rgba(255, 255, 255, 0.04);
+}
+
+.cardSlideSlot::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cardSlideSlot::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+}
+
+.cardSlideSlot::-webkit-scrollbar-thumb {
+  background: rgba(255, 75, 75, 0.45);
+  border-radius: 3px;
+}
+
+.cardSlideSlot::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 75, 75, 0.8);
+}
+
+.cardSlideSlotExiting {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Relaxed, continuous horizontal transitions with organic deceleration */
+.slideInFromRight {
+  animation: projectSlideInFromRight 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+  z-index: 2;
+}
+
+.slideInFromLeft {
+  animation: projectSlideInFromLeft 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+  z-index: 2;
+}
+
+.slideOutToLeft {
+  animation: projectSlideOutToLeft 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+.slideOutToRight {
+  animation: projectSlideOutToRight 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes projectSlideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(76px, 0, 0) scale(0.97);
+    filter: blur(5px);
+  }
+  28% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes projectSlideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-76px, 0, 0) scale(0.97);
+    filter: blur(5px);
+  }
+  28% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes projectSlideOutToLeft {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-76px, 0, 0) scale(0.97);
+    filter: blur(5px);
+  }
+}
+
+@keyframes projectSlideOutToRight {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(76px, 0, 0) scale(0.97);
+    filter: blur(5px);
+  }
+}
+
+.inspectorBottomBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.95rem;
+  background: rgba(14, 13, 12, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #888580);
+  gap: 0.5rem;
+}
+
+.inspectorPips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inspectorPip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inspectorPip:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.2);
+}
+
+.inspectorPipActive {
+  width: 12px;
+  border-radius: 3px;
+  background: #ff4b4b;
+  box-shadow: 0 0 6px rgba(255, 75, 75, 0.7);
+}
+
+.inspectorHintText {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.inspectorKeyBadge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  padding: 0.08rem 0.3rem;
+  color: #f0ece1;
+  font-weight: 600;
+  font-size: 0.58rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -657,9 +954,22 @@
   }
 
   .inspectorModal {
-    width: 94vw;
-    max-height: 82vh;
-    overflow-y: auto;
+    width: 96vw;
+    max-height: 88vh;
+  }
+
+  .modalSideNavBtnPrev {
+    left: 4px;
+    width: 36px;
+    height: 36px;
+    background: rgba(18, 17, 16, 0.92);
+  }
+
+  .modalSideNavBtnNext {
+    right: 4px;
+    width: 36px;
+    height: 36px;
+    background: rgba(18, 17, 16, 0.92);
   }
 }
 

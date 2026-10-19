@@ -296,7 +296,7 @@ export const PROJECTS: Project[] = [
     technologies: ['TypeScript', 'Google Gemini 3.5', 'Next.js', 'GitHub REST API', 'Tailwind CSS'],
     githubUrl: 'https://github.com/roco007/ResumeMind.AI',
     liveUrl: 'https://resumemindai-one.vercel.app',
-    image: 'images/Gemini_Generated_Image_tlb71xtlb71xtlb7.png',
+    image: 'images/resumemind_preview.webp',
     sysId: 'SYS.005',
     featured: true
   },
@@ -356,7 +356,7 @@ export const PROJECTS: Project[] = [
     technologies: ['TypeScript', 'React', 'Monaco Parser', 'Client-Side Workers'],
     githubUrl: 'https://github.com/roco007/jsonTools',
     liveUrl: 'https://jsonmaster-gfnesxad.manus.space',
-    image: 'images/Gemini_Generated_Image_tlb71xtlb71xtlb7.png',
+    image: 'images/json_master_preview.webp',
     sysId: 'SYS.008',
     featured: false
   },
@@ -376,7 +376,7 @@ export const PROJECTS: Project[] = [
     technologies: ['React 19', 'TypeScript', 'Tailwind CSS', 'node-qrcode'],
     githubUrl: 'https://github.com/roco007/instantQrGenerator',
     liveUrl: 'https://instantqr-f9mqj6lp.manus.space',
-    image: 'images/project-placeholder.svg',
+    image: 'images/instant_qr_preview.webp',
     sysId: 'SYS.009',
     featured: false
   },

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Compass, Play, Pause, X } from 'lucide-react';
 import { PROJECTS, Project, ProjectCategory } from '../data/portfolio';
 import { CyberneticGlobe3D } from './CyberneticGlobe3D';
@@ -26,6 +26,24 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
   const [selectedCategory, setSelectedCategory] = useState<ProjectCategory>('all');
   const [scrollOffset, setScrollOffset] = useState<number>(0);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [exitingProject, setExitingProject] = useState<Project | null>(null);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+  const currentOffsetRef = useRef<number>(0);
+  const targetOffsetRef = useRef<number>(0);
+  const isSteppingRef = useRef<boolean>(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Inspector modal scroll & navigation refs
+  const cardContentRef = useRef<HTMLDivElement | null>(null);
+  const horizontalWheelAccumulatorRef = useRef<number>(0);
+  const isHorizontalLockedRef = useRef<boolean>(false);
+  const horizontalUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastHorizontalDirRef = useRef<number>(0);
+  const lastHorizDeltaRef = useRef<number>(0);
+  const lastNavTimestampRef = useRef<number>(0);
+  const modalTouchStartXRef = useRef<number>(0);
+  const modalTouchStartYRef = useRef<number>(0);
+  const isModalHorizontalSwipeRef = useRef<boolean>(false);
 
   // Drag interaction state
   const isDraggingRef = useRef<boolean>(false);
@@ -80,8 +98,8 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
     }
   }, [activeIndex, activeProject, sunRotationAngle, onRotate]);
 
-  // Continuous slow-pace auto-motion
-  // Pauses ONLY when a tile is clicked on or during manual dragging
+  // Continuous slow-pace auto-motion & smooth stepping interpolation
+  // Pauses auto-motion when a tile is inspected, during manual dragging, or while smoothly stepping
   useEffect(() => {
     if (!isActive) return;
 
@@ -91,9 +109,27 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
-      if (!selectedProject && !isDraggingRef.current && total > 0) {
+      if (isSteppingRef.current && total > 0) {
+        const diff = targetOffsetRef.current - currentOffsetRef.current;
+        if (Math.abs(diff) < 0.002) {
+          currentOffsetRef.current = targetOffsetRef.current;
+          const normalized = ((targetOffsetRef.current % total) + total) % total;
+          currentOffsetRef.current = normalized;
+          targetOffsetRef.current = normalized;
+          setScrollOffset(normalized);
+          isSteppingRef.current = false;
+        } else {
+          // Relaxed, critically damped exponential easing (~0.5s settle, perfectly smooth)
+          const factor = 1 - Math.exp(-6.5 * dt);
+          currentOffsetRef.current += diff * factor;
+          const normalized = ((currentOffsetRef.current % total) + total) % total;
+          setScrollOffset(normalized);
+        }
+      } else if (!selectedProject && !isDraggingRef.current && total > 0) {
         // Slow, elegant pace: ~0.16 units/s (approx 6.2 seconds per project transition)
-        setScrollOffset((prev) => (prev + 0.16 * dt) % total);
+        currentOffsetRef.current = (currentOffsetRef.current + 0.16 * dt) % total;
+        targetOffsetRef.current = currentOffsetRef.current;
+        setScrollOffset(currentOffsetRef.current);
       }
 
       rafIdRef.current = requestAnimationFrame(loop);
@@ -102,41 +138,95 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
     rafIdRef.current = requestAnimationFrame(loop);
     return () => {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
     };
   }, [isActive, selectedProject, total]);
 
-  // Mouse wheel & trackpad horizontal scroll support
+  // Mouse wheel & trackpad horizontal scroll support for 3D turntable
+  // Ensures each scroll strictly steps either to the next or previous project
   useEffect(() => {
     const el = arenaRef.current;
     if (!el) return;
 
-    const handleWheel = (e: WheelEvent) => {
-      // Prioritize horizontal delta if user is swiping horizontally or holding shift
-      const isHorizontalIntent = Math.abs(e.deltaX) > 1 || e.shiftKey;
-      const isHorizontalDominant = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    let arenaLocked = false;
+    let arenaTimer: ReturnType<typeof setTimeout> | null = null;
+    let arenaAccumulator = 0;
+    let lastArenaDelta = 0;
+    let lastArenaDir = 0;
+    let lastArenaTime = 0;
 
-      if (isHorizontalIntent || isHorizontalDominant) {
-        const delta = Math.abs(e.deltaX) > 0 ? e.deltaX : e.deltaY;
-        if (Math.abs(delta) > 1) {
-          e.preventDefault();
-          setScrollOffset((prev) => {
-            const next = prev + delta * 0.0035;
-            return total > 0 ? ((next % total) + total) % total : 0;
-          });
+    const handleWheel = (e: WheelEvent) => {
+      const isShift = e.shiftKey;
+      const deltaX = isShift && Math.abs(e.deltaY) > 0 ? e.deltaY : e.deltaX;
+      const deltaY = isShift ? 0 : e.deltaY;
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+
+      if (absX < 0.8 && absY < 0.8) return;
+
+      const isHorizontalIntent = isShift || absX > absY || (absX > 3 && absX >= absY * 0.7);
+
+      if (isHorizontalIntent) {
+        e.preventDefault();
+
+        const currentDir = deltaX > 0 ? 1 : -1;
+        const now = performance.now();
+
+        if (arenaTimer) clearTimeout(arenaTimer);
+        arenaTimer = setTimeout(() => {
+          arenaLocked = false;
+          arenaAccumulator = 0;
+          lastArenaDelta = 0;
+          lastArenaDir = 0;
+        }, 140);
+
+        if (arenaLocked) {
+          const isReversal = lastArenaDir !== 0 && currentDir !== lastArenaDir && absX > 6;
+          const isSharpFlick =
+            currentDir === lastArenaDir &&
+            now - lastArenaTime > 280 &&
+            absX > 22 &&
+            absX > lastArenaDelta * 1.8;
+
+          if (isReversal || isSharpFlick) {
+            arenaLocked = false;
+            arenaAccumulator = 0;
+          } else {
+            lastArenaDelta = absX;
+            return;
+          }
+        }
+
+        arenaAccumulator += deltaX;
+        lastArenaDelta = absX;
+
+        const ARENA_THRESHOLD = 14;
+        if (Math.abs(arenaAccumulator) >= ARENA_THRESHOLD) {
+          const stepDir = arenaAccumulator > 0 ? 'next' : 'prev';
+          lastArenaDir = currentDir;
+          lastArenaTime = now;
+          arenaLocked = true;
+          arenaAccumulator = 0;
+
+          stepProject(stepDir);
         }
       }
     };
 
     el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      if (arenaTimer) clearTimeout(arenaTimer);
+    };
   }, [total]);
 
   // Pointer drag handlers
   const handlePointerDown = (e: React.PointerEvent) => {
+    isSteppingRef.current = false;
     isDraggingRef.current = true;
     hasMovedRef.current = false;
     dragStartXRef.current = e.clientX;
-    dragStartOffsetRef.current = scrollOffset;
+    dragStartOffsetRef.current = currentOffsetRef.current;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -147,24 +237,239 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
     }
     const offsetDelta = -dx * 0.006;
     const next = dragStartOffsetRef.current + offsetDelta;
+    currentOffsetRef.current = next;
+    targetOffsetRef.current = next;
     setScrollOffset(total > 0 ? ((next % total) + total) % total : 0);
   };
 
   const handlePointerUp = () => {
     isDraggingRef.current = false;
+    if (total > 0) {
+      // Gently settle to the nearest project on release with relaxed glide
+      targetOffsetRef.current = Math.round(currentOffsetRef.current);
+      isSteppingRef.current = true;
+    }
     setTimeout(() => {
       hasMovedRef.current = false;
     }, 120);
   };
 
-  // Step controls
+  // Step controls with smooth relaxed turntable glide
   const stepProject = (direction: 'prev' | 'next') => {
     if (total === 0) return;
-    setScrollOffset((prev) => {
-      const next = prev + (direction === 'next' ? 1 : -1);
-      return ((next % total) + total) % total;
-    });
+    const delta = direction === 'next' ? 1 : -1;
+    targetOffsetRef.current = Math.round(currentOffsetRef.current) + delta;
+    isSteppingRef.current = true;
   };
+
+  // Helper for closing inspector modal cleanly
+  const closeModal = useCallback(() => {
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+    setExitingProject(null);
+    setSelectedProject(null);
+  }, []);
+
+  // Helper to jump to project in modal (e.g. from bottom pips)
+  const jumpToModalProject = useCallback(
+    (targetProject: Project, targetIdx: number) => {
+      if (!selectedProject || selectedProject.id === targetProject.id || total === 0) return;
+      const currIdx = filteredProjects.findIndex((p) => p.id === selectedProject.id);
+      const dir = targetIdx > currIdx ? 'right' : 'left';
+
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+      }
+
+      setSlideDirection(dir);
+      setExitingProject(selectedProject);
+      setSelectedProject(targetProject);
+
+      let diff = targetIdx - (currentOffsetRef.current % total);
+      while (diff > total / 2) diff -= total;
+      while (diff < -total / 2) diff += total;
+      targetOffsetRef.current = currentOffsetRef.current + diff;
+      isSteppingRef.current = true;
+
+      exitTimerRef.current = setTimeout(() => {
+        setExitingProject(null);
+        exitTimerRef.current = null;
+      }, 540);
+    },
+    [filteredProjects, selectedProject, total]
+  );
+
+  // Sideways navigation for modal project inspector with continuous paired transitions
+  const navigateModalProject = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (total === 0 || !selectedProject) return;
+      const currentIndex = filteredProjects.findIndex((p) => p.id === selectedProject.id);
+      const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex =
+        direction === 'next'
+          ? (safeIndex + 1) % total
+          : (safeIndex - 1 + total) % total;
+
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+      }
+
+      setSlideDirection(direction === 'next' ? 'right' : 'left');
+      setExitingProject(selectedProject);
+      setSelectedProject(filteredProjects[nextIndex]);
+
+      // Smooth background turntable rotation (shortest circular path)
+      let diff = nextIndex - (currentOffsetRef.current % total);
+      while (diff > total / 2) diff -= total;
+      while (diff < -total / 2) diff += total;
+      targetOffsetRef.current = currentOffsetRef.current + diff;
+      isSteppingRef.current = true;
+
+      exitTimerRef.current = setTimeout(() => {
+        setExitingProject(null);
+        exitTimerRef.current = null;
+      }, 540);
+    },
+    [filteredProjects, selectedProject, total]
+  );
+
+  // Wheel handler for inspector modal:
+  // - Pure vertical wheel: allows smooth scrolling down through specs accordion
+  // - Horizontal wheel / Shift+Wheel / Trackpad 2-finger sideways swipe: strictly navigates by 1 project per scroll
+  const handleModalWheel = (e: React.WheelEvent) => {
+    // Stop propagation so story container and chapter locks NEVER receive this event
+    e.stopPropagation();
+
+    const isShift = e.shiftKey;
+    const deltaX = isShift && Math.abs(e.deltaY) > 0 ? e.deltaY : e.deltaX;
+    const deltaY = isShift ? 0 : e.deltaY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (absX < 0.8 && absY < 0.8) return;
+
+    // Detect horizontal scroll intent:
+    // Any gesture where horizontal is dominant or Shift is held
+    const isHorizontalIntent =
+      isShift ||
+      absX > absY ||
+      (absX > 3 && absX >= absY * 0.7);
+
+    if (isHorizontalIntent) {
+      e.preventDefault();
+
+      const currentDir = deltaX > 0 ? 1 : -1;
+      const now = performance.now();
+
+      // Refresh silence timer: 140ms after wheel events stop, unlock for the next gesture
+      if (horizontalUnlockTimerRef.current) {
+        clearTimeout(horizontalUnlockTimerRef.current);
+      }
+      horizontalUnlockTimerRef.current = setTimeout(() => {
+        isHorizontalLockedRef.current = false;
+        horizontalWheelAccumulatorRef.current = 0;
+        lastHorizDeltaRef.current = 0;
+        lastHorizontalDirRef.current = 0;
+        horizontalUnlockTimerRef.current = null;
+      }, 140);
+
+      // If locked from a previous transition during this gesture:
+      if (isHorizontalLockedRef.current) {
+        // Condition 1: Immediate Direction Reversal (e.g. swiped right, now deliberately swiped left)
+        const isReversal =
+          lastHorizontalDirRef.current !== 0 &&
+          currentDir !== lastHorizontalDirRef.current &&
+          absX > 5;
+
+        // Condition 2: Intentional Sharp Second Flick (accelerating spike over decaying inertia)
+        const isSharpSecondFlick =
+          currentDir === lastHorizontalDirRef.current &&
+          now - lastNavTimestampRef.current > 280 &&
+          absX > 22 &&
+          absX > lastHorizDeltaRef.current * 1.8;
+
+        if (isReversal || isSharpSecondFlick) {
+          isHorizontalLockedRef.current = false;
+          horizontalWheelAccumulatorRef.current = 0;
+        } else {
+          // Decaying inertia from current swipe: strictly reject so it NEVER skips tiles!
+          lastHorizDeltaRef.current = absX;
+          return;
+        }
+      }
+
+      horizontalWheelAccumulatorRef.current += deltaX;
+      lastHorizDeltaRef.current = absX;
+
+      const HORIZONTAL_THRESHOLD = 14;
+      if (Math.abs(horizontalWheelAccumulatorRef.current) >= HORIZONTAL_THRESHOLD) {
+        const dir = horizontalWheelAccumulatorRef.current > 0 ? 'next' : 'prev';
+        lastHorizontalDirRef.current = currentDir;
+        lastNavTimestampRef.current = now;
+        navigateModalProject(dir);
+
+        // Lock gesture immediately: strictly 1 project per swipe!
+        isHorizontalLockedRef.current = true;
+        horizontalWheelAccumulatorRef.current = 0;
+      }
+    } else {
+      // Clear or decay accumulator if user is clearly scrolling vertically in specs
+      if (absY > 15) {
+        horizontalWheelAccumulatorRef.current = 0;
+      }
+    }
+  };
+
+  // Touch swipe support for sideways project navigation on mobile / touch
+  const handleModalTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    modalTouchStartXRef.current = e.touches[0].clientX;
+    modalTouchStartYRef.current = e.touches[0].clientY;
+    isModalHorizontalSwipeRef.current = false;
+  };
+
+  const handleModalTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - modalTouchStartXRef.current;
+    const dy = e.touches[0].clientY - modalTouchStartYRef.current;
+
+    if (Math.abs(dx) > Math.abs(dy) * 1.3 && Math.abs(dx) > 12) {
+      isModalHorizontalSwipeRef.current = true;
+    }
+  };
+
+  const handleModalTouchEnd = (e: React.TouchEvent) => {
+    if (isModalHorizontalSwipeRef.current && e.changedTouches.length === 1) {
+      const dx = e.changedTouches[0].clientX - modalTouchStartXRef.current;
+      if (Math.abs(dx) > 40) {
+        navigateModalProject(dx < 0 ? 'next' : 'prev');
+      }
+    }
+    isModalHorizontalSwipeRef.current = false;
+  };
+
+  // Keyboard navigation when inspector modal is open
+  useEffect(() => {
+    if (!selectedProject) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateModalProject('next');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateModalProject('prev');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedProject, navigateModalProject, closeModal]);
 
   // Category counts
   const countAll = PROJECTS.length;
@@ -200,7 +505,10 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
             className={`${styles.filterChip} ${selectedCategory === 'all' ? styles.filterChipActive : ''}`}
             onClick={() => {
               setSelectedCategory('all');
-              setSelectedProject(null);
+              closeModal();
+              currentOffsetRef.current = 0;
+              targetOffsetRef.current = 0;
+              isSteppingRef.current = false;
               setScrollOffset(0);
             }}
           >
@@ -213,7 +521,10 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
             className={`${styles.filterChip} ${selectedCategory === 'ai' ? styles.filterChipActive : ''}`}
             onClick={() => {
               setSelectedCategory('ai');
-              setSelectedProject(null);
+              closeModal();
+              currentOffsetRef.current = 0;
+              targetOffsetRef.current = 0;
+              isSteppingRef.current = false;
               setScrollOffset(0);
             }}
           >
@@ -226,7 +537,10 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
             className={`${styles.filterChip} ${selectedCategory === 'utility' ? styles.filterChipActive : ''}`}
             onClick={() => {
               setSelectedCategory('utility');
-              setSelectedProject(null);
+              closeModal();
+              currentOffsetRef.current = 0;
+              targetOffsetRef.current = 0;
+              isSteppingRef.current = false;
               setScrollOffset(0);
             }}
           >
@@ -239,7 +553,10 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
             className={`${styles.filterChip} ${selectedCategory === 'interactive' ? styles.filterChipActive : ''}`}
             onClick={() => {
               setSelectedCategory('interactive');
-              setSelectedProject(null);
+              closeModal();
+              currentOffsetRef.current = 0;
+              targetOffsetRef.current = 0;
+              isSteppingRef.current = false;
               setScrollOffset(0);
             }}
           >
@@ -387,7 +704,13 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
               }}
               onClick={() => {
                 if (!hasMovedRef.current) {
+                  if (exitTimerRef.current) {
+                    clearTimeout(exitTimerRef.current);
+                    exitTimerRef.current = null;
+                  }
+                  setExitingProject(null);
                   setSelectedProject(tile.project);
+                  setSlideDirection(null);
                 }
               }}
               title={`Click to inspect ${tile.project.title}`}
@@ -489,31 +812,172 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
       {selectedProject && (
         <div
           className={styles.inspectorBackdrop}
-          onClick={() => setSelectedProject(null)}
+          onClick={closeModal}
+          onWheel={(e) => {
+            e.stopPropagation();
+            if (e.target === e.currentTarget) {
+              handleModalWheel(e);
+            }
+          }}
+          data-inspector-modal="true"
         >
           <div
-            className={styles.inspectorModal}
+            className={styles.inspectorModalWrapper}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className={styles.inspectorTopBar}>
-              <span className={styles.inspectorStationInfo}>
-                PLANETARY STATION // {selectedProject.sysId}
-              </span>
+            {/* Floating Left/Right Prev/Next Buttons */}
+            {total > 1 && (
+              <>
+                <button
+                  type="button"
+                  className={styles.modalSideNavBtnPrev}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateModalProject('prev');
+                  }}
+                  aria-label="Previous project"
+                  title="Previous project (← or scroll sideways)"
+                >
+                  <ChevronLeft size={22} />
+                </button>
 
-              <button
-                type="button"
-                className={styles.resumeOrbitBtn}
-                onClick={() => setSelectedProject(null)}
-                title="Close and resume slow pace motion"
-              >
-                <Play size={12} />
-                <span>RESUME MOTION</span>
-                <X size={13} style={{ marginLeft: '4px' }} />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className={styles.modalSideNavBtnNext}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateModalProject('next');
+                  }}
+                  aria-label="Next project"
+                  title="Next project (→ or scroll sideways)"
+                >
+                  <ChevronRight size={22} />
+                </button>
+              </>
+            )}
 
-            <div className={styles.inspectorCardContent}>
-              <ProjectCard project={selectedProject} />
+            <div
+              className={styles.inspectorModal}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Project inspection: ${selectedProject.title}`}
+              data-inspector-modal="true"
+              onWheel={handleModalWheel}
+              onTouchStart={handleModalTouchStart}
+              onTouchMove={handleModalTouchMove}
+              onTouchEnd={handleModalTouchEnd}
+            >
+              {/* Top Header Bar */}
+              <div className={styles.inspectorTopBar}>
+                <div className={styles.inspectorStationInfo}>
+                  <span className={styles.inspectorProjectBadge}>
+                    [{String(
+                      Math.max(
+                        1,
+                        filteredProjects.findIndex((p) => p.id === selectedProject.id) + 1
+                      )
+                    ).padStart(2, '0')}{' '}
+                    / {String(total).padStart(2, '0')}]
+                  </span>
+                  <span>SYS // {selectedProject.sysId}</span>
+                </div>
+
+                <div className={styles.inspectorCenterHint}>
+                  <span>SCROLL SIDEWAYS ⇄</span>
+                  <div className={styles.inspectorNavArrows}>
+                    <button
+                      type="button"
+                      className={styles.inspectorNavArrowBtn}
+                      onClick={() => navigateModalProject('prev')}
+                      title="Previous project (←)"
+                      aria-label="Previous project"
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.inspectorNavArrowBtn}
+                      onClick={() => navigateModalProject('next')}
+                      title="Next project (→)"
+                      aria-label="Next project"
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.resumeOrbitBtn}
+                  onClick={closeModal}
+                  title="Close and resume slow pace motion (Esc)"
+                >
+                  <Play size={12} />
+                  <span>RESUME MOTION</span>
+                  <X size={13} style={{ marginLeft: '4px' }} />
+                </button>
+              </div>
+
+              {/* Scrollable Card Viewport: paired exit/enter relaxed transitions */}
+              <div className={styles.inspectorCardViewport}>
+                {exitingProject && (
+                  <div
+                    key={`exit-${exitingProject.id}`}
+                    className={`${styles.cardSlideSlot} ${styles.cardSlideSlotExiting} ${
+                      slideDirection === 'right'
+                        ? styles.slideOutToLeft
+                        : styles.slideOutToRight
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <ProjectCard project={exitingProject} />
+                  </div>
+                )}
+
+                <div
+                  ref={cardContentRef}
+                  key={`enter-${selectedProject.id}`}
+                  className={`${styles.cardSlideSlot} ${
+                    exitingProject
+                      ? slideDirection === 'right'
+                        ? styles.slideInFromRight
+                        : styles.slideInFromLeft
+                      : ''
+                  }`}
+                >
+                  <ProjectCard project={selectedProject} />
+                </div>
+              </div>
+
+              {/* Bottom Quick-Switch Bar & Pips */}
+              <div className={styles.inspectorBottomBar}>
+                <div className={styles.inspectorPips}>
+                  {filteredProjects.map((p, idx) => {
+                    const isSelected = p.id === selectedProject.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`${styles.inspectorPip} ${
+                          isSelected ? styles.inspectorPipActive : ''
+                        }`}
+                        onClick={() => jumpToModalProject(p, idx)}
+                        aria-label={`Jump to ${p.title}`}
+                        title={p.title}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className={styles.inspectorHintText}>
+                  <span className={styles.inspectorKeyBadge}>← / →</span>
+                  <span>navigate</span>
+                  <span className={styles.inspectorKeyBadge} style={{ marginLeft: '4px' }}>
+                    ESC
+                  </span>
+                  <span>close</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -556,8 +1020,12 @@ export const OrbitalProjectsSolarSystem: React.FC<OrbitalProjectsSolarSystemProp
               type="button"
               className={`${styles.pip} ${idx === activeIndex ? styles.pipActive : ''}`}
               onClick={() => {
-                setScrollOffset(idx);
-                setSelectedProject(null);
+                let diff = idx - (currentOffsetRef.current % total);
+                while (diff > total / 2) diff -= total;
+                while (diff < -total / 2) diff += total;
+                targetOffsetRef.current = currentOffsetRef.current + diff;
+                isSteppingRef.current = true;
+                closeModal();
               }}
               aria-label={`Jump to ${p.title}`}
             />

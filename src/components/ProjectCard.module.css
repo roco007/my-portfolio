@@ -2,92 +2,62 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
-  height: 100%;
-  transform-style: preserve-3d;
-  will-change: transform;
+  overflow: visible;
+  min-height: 100%;
+  height: auto;
+  transform: none !important;
 }
 
 .cardGlare {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(var(--accent-cyan-rgb), 0.15) 0%,
-    transparent 60%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 5;
+  display: none;
 }
 
-.card:hover .cardGlare {
-  opacity: 1;
+/* Image Preview & Pop-Out on Hover */
+.imageLink {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  border-radius: var(--radius-sm, 8px) var(--radius-sm, 8px) 0 0;
 }
 
-/* Image Preview */
 .imageContainer {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--bg-tertiary);
   overflow: hidden;
+  border-radius: var(--radius-sm, 8px) var(--radius-sm, 8px) 0 0;
   border-bottom: 1px solid var(--border-dim);
+  transition:
+    transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease;
+}
+
+/* Pop out a little on hover */
+.imageLink:hover .imageContainer,
+.imageContainer:hover {
+  transform: translateY(-5px) scale(1.025);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.88),
+    0 0 24px rgba(0, 255, 170, 0.25);
+  border-color: rgba(0, 255, 170, 0.5);
+  z-index: 10;
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-smooth);
+  display: block;
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card:hover .image {
-  transform: scale(1.04);
-}
-
-.imageOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(5, 8, 17, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  backdrop-filter: blur(4px);
-  z-index: 4;
-}
-
-.card:hover .imageOverlay {
-  opacity: 1;
-}
-
-.overlayLiveBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--accent-gradient);
-  color: #030712;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 700;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-full);
-  box-shadow: 0 4px 15px rgba(var(--accent-cyan-rgb), 0.4);
-  transform: translateY(10px);
-  transition: transform var(--transition-normal);
-}
-
-.card:hover .overlayLiveBtn {
-  transform: translateY(0);
+.imageLink:hover .image,
+.imageContainer:hover .image {
+  transform: scale(1.015);
 }
 
 /* Card Content */

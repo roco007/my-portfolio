@@ -11,7 +11,12 @@ import styles from './PinnedStoryContainer.module.css';
 const isScrollable = (el: HTMLElement | null, deltaY: number): boolean => {
   let cur: HTMLElement | null = el;
   while (cur && cur !== document.body && cur !== document.documentElement) {
-    if (cur.getAttribute('role') === 'dialog' || cur.classList.contains('terminal')) {
+    if (
+      cur.getAttribute('role') === 'dialog' ||
+      cur.getAttribute('aria-modal') === 'true' ||
+      cur.getAttribute('data-inspector-modal') === 'true' ||
+      cur.classList.contains('terminal')
+    ) {
       return true;
     }
     const style = window.getComputedStyle(cur);
@@ -259,7 +264,12 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
 
     // Wheel event interceptor: strictly moves only to next or previous section
     const handleWheel = (e: WheelEvent) => {
-      if (isScrollable(e.target as HTMLElement, e.deltaY)) {
+      // If any project inspector modal or dialog is open, NEVER navigate story sections!
+      const isInspectorModalOpen =
+        !!document.querySelector('[data-inspector-modal="true"]') ||
+        !!(e.target as HTMLElement)?.closest?.('[data-inspector-modal="true"], [role="dialog"]');
+
+      if (isInspectorModalOpen || isScrollable(e.target as HTMLElement, e.deltaY)) {
         return;
       }
 
@@ -336,6 +346,12 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
     // Mobile touch gating
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
+      if (
+        document.querySelector('[data-inspector-modal="true"]') ||
+        (e.target as HTMLElement)?.closest?.('[data-inspector-modal="true"], [role="dialog"]')
+      ) {
+        return;
+      }
       touchStartYRef.current = e.touches[0].clientY;
       touchStartXRef.current = e.touches[0].clientX;
       touchConsumedRef.current = false;
@@ -344,6 +360,12 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
+      if (
+        document.querySelector('[data-inspector-modal="true"]') ||
+        (e.target as HTMLElement)?.closest?.('[data-inspector-modal="true"], [role="dialog"]')
+      ) {
+        return;
+      }
       if (touchConsumedRef.current) {
         if (e.cancelable) e.preventDefault();
         return;
@@ -386,11 +408,12 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
       if (
-        activeEl &&
-        (activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          activeEl.getAttribute('contenteditable') === 'true' ||
-          activeEl.closest?.('[role="dialog"]'))
+        document.querySelector('[data-inspector-modal="true"]') ||
+        (activeEl &&
+          (activeEl.tagName === 'INPUT' ||
+            activeEl.tagName === 'TEXTAREA' ||
+            activeEl.getAttribute('contenteditable') === 'true' ||
+            activeEl.closest?.('[role="dialog"], [data-inspector-modal="true"]')))
       ) {
         return;
       }
