@@ -4,20 +4,20 @@
    ========================================================================== */
 
 :root {
-  /* Warm Obsidian / Charcoal Palette (Anime.js Primary Dark) */
-  --hex-black-1: #252423;
-  --hex-black-2: #21201f;
-  --hex-black-3: #1a1918;
-  --hex-black-4: #151413;
+  /* Deep Space / Avengers Dark Palette */
+  --hex-black-1: #0e0c1a;
+  --hex-black-2: #0b0917;
+  --hex-black-3: #090714;
+  --hex-black-4: #060511;
 
-  --hex-bg-1: #252423;
-  --hex-bg-2: #2a2928;
-  --hex-bg-3: #302e2d;
-  --hex-bg-4: #353432;
-  --hex-bg-5: #3a3938;
-  --hex-bg-6: #3f3e3d;
-  --hex-bg-7: #454342;
-  --hex-bg-8: #4a4847;
+  --hex-bg-1: #0e0c1a;
+  --hex-bg-2: #13111f;
+  --hex-bg-3: #181523;
+  --hex-bg-4: #1d1a28;
+  --hex-bg-5: #221f2d;
+  --hex-bg-6: #272432;
+  --hex-bg-7: #2c2937;
+  --hex-bg-8: #312e3c;
 
   /* Warm Ivory / Cream Foreground */
   --hex-fg-1: #f6f4f2;

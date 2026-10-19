@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Terminal } from 'lucide-react';
 import { Navbar } from './components/Navbar';
-import { AmbientCanvas } from './components/AmbientCanvas';
+import { SpaceBackground } from './components/SpaceBackground';
 import { DeveloperTerminal } from './components/DeveloperTerminal';
 import { TimelineScrubber } from './components/TimelineScrubber';
 import { IntroAnimation } from './components/IntroAnimation';
@@ -59,8 +59,8 @@ export function App() {
         Skip to main content
       </a>
 
-      {/* Ambient Canvas Background */}
-      <AmbientCanvas theme={theme} />
+      {/* Layered Outer-Space Background Environment */}
+      <SpaceBackground theme={theme} />
 
       {/* Primary Navigation */}
       <Navbar

@@ -48,7 +48,8 @@ my-portfolio/
 │   │   ├── interactions.ts   # 3D card tilt, specular glare & text scramble
 │   │   └── useReducedMotion.ts # React hook for accessibility preferences
 │   ├── components/
-│   │   ├── AmbientCanvas.tsx # Lightweight interactive node/particle mesh
+│   │   ├── SpaceBackground.tsx  # Layered outer-space canvas orchestrator (parallax, quality, reduced-motion)
+│   │   ├── space/              # Modular environment layers (nebula, stars, planets, satellites, stations, spacecraft, asteroids, events)
 │   │   ├── Button.tsx        # Tactile multi-variant button with microinteractions
 │   │   ├── DeveloperTerminal.tsx # Floating interactive CLI command HUD
 │   │   ├── Navbar.tsx        # Scroll-progress, active section tracking & mobile drawer

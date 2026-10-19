@@ -1,25 +1,39 @@
+/* Matches the Navbar action cluster: same 36px height, radius, neumorphic shadows
+   (var fallbacks apply if ever rendered outside the header's --neu-* scope) */
 .toggleBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-dim);
+  gap: 0.45rem;
+  height: 2.25rem;
+  padding: 0 0.8rem;
+  background: var(--neu-surface, rgba(255, 255, 255, 0.035));
+  border: 1px solid var(--neu-border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-md);
   color: var(--text-primary);
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-full);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-shadow: var(--neu-shadow-raise, 4px 4px 9px rgba(0, 0, 0, 0.42), -3px -3px 8px rgba(255, 255, 255, 0.045));
 }
 
 .toggleBtn:hover {
-  border-color: var(--border-subtle);
-  background: var(--bg-card-hover);
+  background: var(--neu-surface-hover, rgba(255, 255, 255, 0.07));
   color: var(--accent-cyan);
-  box-shadow: 0 0 12px -2px rgba(var(--accent-cyan-rgb), 0.25);
+  transform: translateY(-1px);
+  box-shadow: var(--neu-shadow-raise-hover, 5px 5px 12px rgba(0, 0, 0, 0.48), -4px -4px 10px rgba(255, 255, 255, 0.06));
+}
+
+.toggleBtn:active {
+  transform: translateY(0);
+  box-shadow: var(--neu-shadow-press, inset 3px 3px 7px rgba(0, 0, 0, 0.45), inset -2px -2px 6px rgba(255, 255, 255, 0.05));
+}
+
+.toggleBtn:focus-visible {
+  outline: 2px solid var(--hex-red-1);
+  outline-offset: 2px;
 }
 
 .iconWrapper {
@@ -48,4 +62,15 @@
 
 .label {
   display: inline-block;
+}
+
+/* Collapse to icon-only in lockstep with the Navbar's 1180px tier */
+@media (max-width: 1180px) {
+  .toggleBtn {
+    padding: 0 0.6rem;
+  }
+
+  .label {
+    display: none;
+  }
 }
