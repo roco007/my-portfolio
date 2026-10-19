@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alternate AI rendering of the avatar">
+  <defs>
+    <radialGradient id="hv-vig" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#3a1d1d"/>
+      <stop offset="55%" stop-color="#1a0f12"/>
+      <stop offset="100%" stop-color="#080406"/>
+    </radialGradient>
+    <linearGradient id="hv-skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9a7a68"/>
+      <stop offset="100%" stop-color="#64493c"/>
+    </linearGradient>
+    <linearGradient id="hv-beard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#423028"/>
+      <stop offset="100%" stop-color="#261a14"/>
+    </linearGradient>
+    <linearGradient id="hv-paint" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff5a5a"/>
+      <stop offset="100%" stop-color="#b02323"/>
+    </linearGradient>
+    <linearGradient id="hv-rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff4b4b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ff4b4b" stop-opacity="0.15"/>
+    </linearGradient>
+    <clipPath id="hv-circle"><circle cx="256" cy="256" r="256"/></clipPath>
+  </defs>
+  <g clip-path="url(#hv-circle)">
+    <rect width="512" height="512" fill="url(#hv-vig)"/>
+    <!-- shoulders -->
+    <path d="M60 512 C90 400 160 360 256 360 C352 360 422 400 452 512 Z" fill="#241816"/>
+    <path d="M96 512 C120 430 170 398 256 398 C342 398 392 430 416 512 Z" fill="#33211c"/>
+    <!-- red rim light on shoulders -->
+    <path d="M60 512 C90 400 160 360 256 360 L256 372 C170 374 100 412 74 512 Z" fill="url(#hv-rim)" opacity="0.55"/>
+    <!-- neck -->
+    <rect x="216" y="300" width="80" height="90" rx="28" fill="url(#hv-skin)"/>
+    <!-- head -->
+    <ellipse cx="256" cy="212" rx="118" ry="132" fill="url(#hv-skin)"/>
+    <!-- red rim light along the skull -->
+    <path d="M140 180 C138 100 190 58 256 54 C322 58 374 100 372 180 L360 176 C360 106 316 70 256 68 C196 70 152 106 152 176 Z" fill="url(#hv-rim)" opacity="0.8"/>
+    <!-- war paint: full diagonal slash across scalp and both brows -->
+    <path d="M316 64 C296 104 286 140 292 172 C298 204 322 228 356 252 L382 220 C354 198 334 176 330 148 C326 118 338 88 354 62 Z" fill="url(#hv-paint)"/>
+    <path d="M150 132 C176 150 202 160 230 164 L226 186 C192 180 162 168 138 150 Z" fill="url(#hv-paint)" opacity="0.9"/>
+    <!-- brow ridge -->
+    <path d="M158 186 C190 168 226 164 256 170 C286 164 322 168 354 186 L348 200 C318 184 286 180 256 186 C226 180 194 184 164 200 Z" fill="#433029"/>
+    <!-- both eyes open, amber with red ring glow -->
+    <ellipse cx="206" cy="222" rx="22" ry="14" fill="#f6efe6"/>
+    <circle cx="208" cy="222" r="9" fill="#e8a53f"/>
+    <circle cx="208" cy="222" r="4.5" fill="#20130a"/>
+    <circle cx="208" cy="222" r="12" fill="none" stroke="#ff4b4b" stroke-width="1.6" opacity="0.75"/>
+    <ellipse cx="306" cy="222" rx="22" ry="14" fill="#f6efe6"/>
+    <circle cx="304" cy="222" r="9" fill="#e8a53f"/>
+    <circle cx="304" cy="222" r="4.5" fill="#20130a"/>
+    <circle cx="304" cy="222" r="12" fill="none" stroke="#ff4b4b" stroke-width="1.6" opacity="0.75"/>
+    <!-- nose -->
+    <path d="M252 226 C246 252 240 268 232 280 C244 290 268 290 280 280 C272 268 266 252 260 226 Z" fill="#715444" opacity="0.85"/>
+    <!-- beard -->
+    <path d="M150 250 C158 330 196 384 256 392 C316 384 354 330 362 250 C356 306 322 330 256 336 C190 330 156 306 150 250 Z" fill="url(#hv-beard)"/>
+    <path d="M186 300 C196 356 222 384 256 388 C290 384 316 356 326 300 C312 330 288 346 256 350 C224 346 200 330 186 300 Z" fill="#1c120f" opacity="0.6"/>
+    <!-- grin -->
+    <path d="M222 314 C244 332 278 332 300 312" stroke="#e4d2c2" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <!-- cheek scar -->
+    <path d="M198 246 L192 268" stroke="#b06a5e" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+    <!-- vignette edge -->
+    <circle cx="256" cy="256" r="252" fill="none" stroke="#000" stroke-width="10" opacity="0.6"/>
+  </g>
+</svg>
