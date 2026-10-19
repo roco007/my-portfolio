@@ -5,6 +5,7 @@ import {
   SKILL_CATEGORIES,
   SOCIAL_LINKS,
 } from './portfolio';
+import type { StoryChapter } from './storyChapters';
 
 /**
  * Portfolio chatbot brain — a small rule-based intent matcher that answers
@@ -16,9 +17,14 @@ import {
  * didn't understand — no pretending.
  */
 
+/** Story chapters the page can scroll to (see data/storyChapters.ts). */
+export type SiteSection = StoryChapter['id'];
+
 export interface KnowledgeEntry {
   id: string;
-  /** Lowercase phrases. Matched word-by-word when ≤3 chars, substring otherwise. */
+  /** Story chapter to bring into view alongside this answer ("hero" = top). */
+  section?: SiteSection;
+  /** Lowercase phrases. Matched word-by-word when ≤4 chars, substring otherwise. */
   keywords: string[];
   reply: string | ((normalizedQuery: string) => string);
 }
@@ -27,6 +33,8 @@ export interface ChatAnswer {
   reply: string;
   /** false → the bot did not understand the question. */
   matched: boolean;
+  /** Story chapter to scroll to alongside the answer. */
+  section: SiteSection;
 }
 
 /** Any entry scoring below this is treated as "not understood". */
@@ -85,12 +93,14 @@ const scoreEntry = (norm: string, entry: KnowledgeEntry): number =>
 
 const GREETING: KnowledgeEntry = {
   id: 'greeting',
+  section: 'hero',
   keywords: ['hi', 'hello', 'hey', 'good morning', 'good evening', 'yo', 'namaste'],
   reply: GREETING_REPLY,
 };
 
 const HELP: KnowledgeEntry = {
   id: 'help',
+  section: 'hero',
   keywords: ['help', 'what can you', 'what can i ask', 'options', 'menu', 'commands', 'topics', 'questions', 'ask you'],
   reply:
     "I'm wired for portfolio queries:\n" +
@@ -105,18 +115,21 @@ const HELP: KnowledgeEntry = {
 
 const THANKS: KnowledgeEntry = {
   id: 'thanks',
+  section: 'hero',
   keywords: ['thanks', 'thank you', 'thx', 'appreciate', 'nice one', 'cool'],
   reply: 'Anytime. Curious about anything else on this portfolio?',
 };
 
 const BYE: KnowledgeEntry = {
   id: 'bye',
+  section: 'hero',
   keywords: ['bye', 'goodbye', 'see you', 'see ya', 'later'],
   reply: 'Signing off. I live bottom-right — reopen me anytime.',
 };
 
 const RIDDLE: KnowledgeEntry = {
   id: 'riddle',
+  section: 'contact', // the reply points guesses at the Contact section
   keywords: [
     'created you', 'made you', 'built you', 'build you', 'created me', 'made me',
     'who made', 'which ai', 'ai created', 'your creator', 'draw you', 'artistic intelligence',
@@ -129,6 +142,7 @@ const RIDDLE: KnowledgeEntry = {
 
 const AI_EXPERTISE: KnowledgeEntry = {
   id: 'ai',
+  section: 'skills',
   keywords: ['ai', 'artificial intelligence', 'llm', 'llms', 'agents', 'agent', 'gemini', 'machine learning', 'rag', 'prompt', 'models'],
   reply: () => {
     const aiCat = SKILL_CATEGORIES.find((c) => c.id === 'ai-agents');
@@ -145,6 +159,7 @@ const AI_EXPERTISE: KnowledgeEntry = {
 
 const EXPERIENCE_ENTRY: KnowledgeEntry = {
   id: 'experience',
+  section: 'experience',
   keywords: [
     'experience', 'career', 'companies', 'company', 'worked', 'worked at',
     'employment', 'deloitte', 'flexiloans', 'jobs', 'work history', 'previous roles',
@@ -159,6 +174,7 @@ const EXPERIENCE_ENTRY: KnowledgeEntry = {
 
 const ABOUT: KnowledgeEntry = {
   id: 'about',
+  section: 'about',
   keywords: [
     'who is raj', 'who are you', 'about raj', 'about you', 'yourself', 'bio',
     'your name', 'introduce', 'raj colaco', 'whos raj', 'about', 'job', 'role',
@@ -174,6 +190,7 @@ const ABOUT: KnowledgeEntry = {
 
 const SKILLS_ENTRY: KnowledgeEntry = {
   id: 'skills',
+  section: 'skills',
   keywords: ['skills', 'skill', 'stack', 'tech stack', 'technologies', 'technology', 'tools', 'languages', 'know', 'proficient', 'expertise', 'what can he use'],
   reply: () => {
     const lines = SKILL_CATEGORIES.map((c) => {
@@ -187,6 +204,7 @@ const SKILLS_ENTRY: KnowledgeEntry = {
 
 const PROJECTS_ENTRY: KnowledgeEntry = {
   id: 'projects',
+  section: 'projects',
   keywords: ['projects', 'project', 'built', 'building', 'apps', 'applications', 'portfolio', 'show me', 'side projects', 'things he made'],
   reply: () => {
     const featured = PROJECTS.filter((p) => p.featured).slice(0, 5);
@@ -203,6 +221,7 @@ const PROJECTS_ENTRY: KnowledgeEntry = {
 
 const CONTACT_ENTRY: KnowledgeEntry = {
   id: 'contact',
+  section: 'contact',
   keywords: ['contact', 'email', 'hire', 'hiring', 'reach', 'get in touch', 'available', 'freelance', 'talk to', 'social', 'whatsapp', 'telegram', 'phone'],
   reply: () => {
     const lines = SOCIAL_LINKS.filter((l) => ['github', 'linkedin', 'x', 'email'].includes(l.platform))
@@ -218,6 +237,7 @@ const CONTACT_ENTRY: KnowledgeEntry = {
 
 const RESUME_ENTRY: KnowledgeEntry = {
   id: 'resume',
+  section: 'contact',
   keywords: ['resume', 'cv', 'download', 'pdf'],
   reply:
     'Grab the PDF: /Raj_Colaco_Resume.pdf (opens in a new tab)\n' +
@@ -226,12 +246,14 @@ const RESUME_ENTRY: KnowledgeEntry = {
 
 const LOCATION_ENTRY: KnowledgeEntry = {
   id: 'location',
+  section: 'about',
   keywords: ['where is', 'where does', 'location', 'based', 'live in', 'lives', 'india', 'mumbai', 'vasai', 'city', 'country', 'timezone'],
   reply: `${PERSONAL_INFO.location} (IST, UTC+5:30) — currently working remote.`,
 };
 
 const GITHUB_ENTRY: KnowledgeEntry = {
   id: 'github',
+  section: 'contact',
   keywords: ['github', 'repos', 'repositories', 'open source', 'source code', 'roco007'],
   reply:
     'github.com/roco007 — 34 public repositories.\n' +
@@ -240,6 +262,7 @@ const GITHUB_ENTRY: KnowledgeEntry = {
 
 const SITE_ENTRY: KnowledgeEntry = {
   id: 'site',
+  section: 'hero',
   keywords: ['this site', 'this website', 'made this', 'built this', 'portfolio site', 'who made this', 'source of this site', 'this page', 'animations'],
   reply:
     'Hand-built by Raj — no site builders, no templates.\n' +
@@ -251,6 +274,7 @@ const AI_GUESS_MODELS = ['gemini', 'chatgpt', 'claude', 'midjourney', 'grok', 'c
 
 const GUESS_ENTRY: KnowledgeEntry = {
   id: 'guess',
+  section: 'contact', // guesses are "filed" in the Contact section
   keywords: ['is it', 'is that', 'you might be', 'you are a', 'guess', ...AI_GUESS_MODELS],
   reply: (norm) => {
     const hit = AI_GUESS_MODELS.find((m) => norm.includes(m)) ?? '???';
@@ -267,6 +291,7 @@ const GUESS_ENTRY: KnowledgeEntry = {
 
 const PROJECT_ENTRIES: KnowledgeEntry[] = PROJECTS.map((p) => ({
   id: p.id,
+  section: 'projects' as SiteSection,
   keywords: [
     p.title.toLowerCase(),
     ...p.title
@@ -300,7 +325,7 @@ const ENTRIES: KnowledgeEntry[] = [
  */
 export const matchAnswer = (query: string): ChatAnswer => {
   const norm = normalize(query);
-  if (!norm) return { reply: FALLBACK_REPLY, matched: false };
+  if (!norm) return { reply: FALLBACK_REPLY, matched: false, section: 'hero' };
 
   let best: KnowledgeEntry | null = null;
   let bestScore = 0;
@@ -313,11 +338,12 @@ export const matchAnswer = (query: string): ChatAnswer => {
   }
 
   if (!best || bestScore < MIN_SCORE) {
-    return { reply: FALLBACK_REPLY, matched: false };
+    return { reply: FALLBACK_REPLY, matched: false, section: 'hero' };
   }
   return {
     reply: typeof best.reply === 'function' ? best.reply(norm) : best.reply,
     matched: true,
+    section: best.section ?? 'hero',
   };
 };
 
