@@ -3,6 +3,7 @@ import { Terminal } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { SpaceBackground } from './components/SpaceBackground';
 import { DeveloperTerminal } from './components/DeveloperTerminal';
+import { AiAvatar } from './components/AiAvatar';
 import { TimelineScrubber } from './components/TimelineScrubber';
 import { IntroAnimation } from './components/IntroAnimation';
 import { PinnedStoryContainer } from './components/PinnedStoryContainer';
@@ -69,6 +70,9 @@ export function App() {
         onOpenTerminal={() => setTerminalOpen(true)}
         onReplayIntro={() => setShowIntro(true)}
       />
+
+      {/* Floating "AI version of me" easter-egg companion */}
+      <AiAvatar visible={!showIntro} />
 
       {/* Master Pinned Scrollytelling Storyboard */}
       <main id="main-content" tabIndex={-1}>
