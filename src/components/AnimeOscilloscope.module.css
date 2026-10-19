@@ -60,3 +60,226 @@
     margin: 2rem auto 0;
   }
 }
+
+/* Continuous Cybernetic Glitch Effect for RC Monogram */
+.glitchWrapper {
+  transform-origin: 160px 160px;
+  position: relative;
+}
+
+.glitchBase {
+  transform-origin: 160px 160px;
+  animation: glitchTwitch 2.4s infinite;
+}
+
+@keyframes glitchTwitch {
+  0%, 82%, 100% {
+    transform: translate(0, 0) skew(0deg);
+  }
+  83% {
+    transform: translate(-1.5px, 0.5px) skew(-0.8deg);
+  }
+  85% {
+    transform: translate(1px, -0.5px) skew(0.6deg);
+  }
+  87% {
+    transform: translate(-2px, 0.2px) skew(-1.2deg);
+  }
+  89% {
+    transform: translate(1.5px, -0.5px) skew(0.8deg);
+  }
+  91% {
+    transform: translate(-0.5px, 0.5px) skew(0deg);
+  }
+  93% {
+    transform: translate(0.5px, -0.5px) skew(0deg);
+  }
+  96% {
+    transform: translate(-1px, 0px) skew(-0.5deg);
+  }
+  98% {
+    transform: translate(0.5px, 0px) skew(0deg);
+  }
+}
+
+.glitchCyan {
+  opacity: 0.85;
+  animation: glitchSliceCyan 1.8s infinite steps(2, start);
+  mix-blend-mode: screen;
+}
+
+@keyframes glitchSliceCyan {
+  0% {
+    clip-path: inset(18% 0 62% 0);
+    transform: translate(-2.5px, 1px);
+    opacity: 0.85;
+  }
+  8% {
+    clip-path: inset(58% 0 18% 0);
+    transform: translate(2px, -1px);
+    opacity: 0.6;
+  }
+  16% {
+    clip-path: inset(82% 0 4% 0);
+    transform: translate(-3px, 0.5px);
+    opacity: 0.9;
+  }
+  24% {
+    clip-path: inset(2% 0 88% 0);
+    transform: translate(1.5px, -0.5px);
+    opacity: 0.3;
+  }
+  32% {
+    clip-path: inset(42% 0 42% 0);
+    transform: translate(-2px, 1.5px);
+    opacity: 0.8;
+  }
+  40% {
+    clip-path: inset(72% 0 8% 0);
+    transform: translate(3px, -1px);
+    opacity: 0.95;
+  }
+  48% {
+    clip-path: inset(22% 0 62% 0);
+    transform: translate(-1.5px, -0.5px);
+    opacity: 0.4;
+  }
+  56% {
+    clip-path: inset(6% 0 84% 0);
+    transform: translate(2.5px, 1px);
+    opacity: 0.85;
+  }
+  64% {
+    clip-path: inset(62% 0 22% 0);
+    transform: translate(-3px, -1px);
+    opacity: 0.7;
+  }
+  72% {
+    clip-path: inset(32% 0 48% 0);
+    transform: translate(2px, 0.5px);
+    opacity: 0.9;
+  }
+  80% {
+    clip-path: inset(86% 0 2% 0);
+    transform: translate(-1.5px, 1px);
+    opacity: 0.3;
+  }
+  88% {
+    clip-path: inset(12% 0 68% 0);
+    transform: translate(3px, -1.5px);
+    opacity: 0.95;
+  }
+  94% {
+    clip-path: inset(48% 0 38% 0);
+    transform: translate(-2px, 0.5px);
+    opacity: 0.75;
+  }
+  100% {
+    clip-path: inset(18% 0 62% 0);
+    transform: translate(-2.5px, 1px);
+    opacity: 0.85;
+  }
+}
+
+.glitchRed {
+  opacity: 0.85;
+  animation: glitchSliceRed 2.1s infinite steps(2, start);
+  mix-blend-mode: screen;
+}
+
+@keyframes glitchSliceRed {
+  0% {
+    clip-path: inset(42% 0 38% 0);
+    transform: translate(2.5px, -1px);
+    opacity: 0.75;
+  }
+  10% {
+    clip-path: inset(6% 0 82% 0);
+    transform: translate(-2px, 1px);
+    opacity: 0.9;
+  }
+  20% {
+    clip-path: inset(68% 0 12% 0);
+    transform: translate(3px, -0.5px);
+    opacity: 0.4;
+  }
+  30% {
+    clip-path: inset(22% 0 58% 0);
+    transform: translate(-2.5px, 1.5px);
+    opacity: 0.85;
+  }
+  40% {
+    clip-path: inset(82% 0 4% 0);
+    transform: translate(1.5px, -1px);
+    opacity: 0.95;
+  }
+  50% {
+    clip-path: inset(32% 0 48% 0);
+    transform: translate(-3px, 0.5px);
+    opacity: 0.5;
+  }
+  60% {
+    clip-path: inset(8% 0 78% 0);
+    transform: translate(2.5px, -1.5px);
+    opacity: 0.9;
+  }
+  70% {
+    clip-path: inset(78% 0 8% 0);
+    transform: translate(-1.5px, 1px);
+    opacity: 0.7;
+  }
+  80% {
+    clip-path: inset(52% 0 28% 0);
+    transform: translate(3px, -0.5px);
+    opacity: 0.95;
+  }
+  90% {
+    clip-path: inset(22% 0 58% 0);
+    transform: translate(-2px, -1px);
+    opacity: 0.6;
+  }
+  100% {
+    clip-path: inset(42% 0 38% 0);
+    transform: translate(2.5px, -1px);
+    opacity: 0.75;
+  }
+}
+
+.glitchScanBar {
+  animation: glitchScanAnim 1.6s infinite linear;
+}
+
+@keyframes glitchScanAnim {
+  0% {
+    transform: translateY(110px);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(135px);
+    opacity: 0.85;
+  }
+  25% {
+    transform: translateY(145px);
+    opacity: 0;
+  }
+  65% {
+    transform: translateY(170px);
+    opacity: 0.9;
+  }
+  70% {
+    transform: translateY(185px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(210px);
+    opacity: 0;
+  }
+}
+
+/* RC Scramble Text Overlay */
+.rcScrambleText {
+  pointer-events: none;
+  user-select: none;
+  animation: glitchTwitch 2.4s infinite;
+  transform-origin: 160px 160px;
+}

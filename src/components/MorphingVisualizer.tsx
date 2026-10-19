@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { useLoopingScramble } from '../animations/useLoopingScramble';
 import styles from './MorphingVisualizer.module.css';
 
 interface MorphingVisualizerProps {
@@ -9,63 +10,7 @@ interface MorphingVisualizerProps {
 export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
   progress,
 }) => {
-  // Oscilloscope Wave Live Animation Refs
-  const wavePathRef = useRef<SVGPathElement | null>(null);
-  const wavePathGlowRef = useRef<SVGPathElement | null>(null);
-  const dotsRef = useRef<(SVGCircleElement | null)[]>([]);
-
-  const NUM_DOTS = 22;
-  const START_X = 64;
-  const END_X = 256;
-  const STEP_X = (END_X - START_X) / (NUM_DOTS - 1);
-
-  // Continuous live oscilloscope wave animation at all times when on display
-  useEffect(() => {
-    let animId: number;
-    const startTime = performance.now();
-
-    const renderWave = (now: number) => {
-      const elapsed = (now - startTime) / 1000;
-
-      let pathD = '';
-
-      for (let i = 0; i < NUM_DOTS; i++) {
-        const x = START_X + i * STEP_X;
-        // Natural multi-frequency harmonic traveling wave
-        const primary = Math.sin(i * 0.42 - elapsed * 3.4) * 12.5;
-        const secondary = Math.cos(i * 0.21 + elapsed * 2.1) * 4.5;
-        const tertiary = Math.sin(elapsed * 1.2) * 2;
-        const y = 160 + primary + secondary + tertiary;
-
-        const circleEl = dotsRef.current[i];
-        if (circleEl) {
-          circleEl.setAttribute('cy', y.toFixed(2));
-          const r = 2.4 + Math.abs(primary) * 0.08;
-          circleEl.setAttribute('r', r.toFixed(2));
-          const op = 0.55 + Math.sin(i * 0.42 - elapsed * 3.4) * 0.4;
-          circleEl.setAttribute('fill-opacity', Math.max(0.35, Math.min(1, op)).toFixed(2));
-        }
-
-        if (i === 0) {
-          pathD = `M ${x.toFixed(1)} ${y.toFixed(1)}`;
-        } else {
-          pathD += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
-        }
-      }
-
-      if (wavePathRef.current) {
-        wavePathRef.current.setAttribute('d', pathD);
-      }
-      if (wavePathGlowRef.current) {
-        wavePathGlowRef.current.setAttribute('d', pathD);
-      }
-
-      animId = requestAnimationFrame(renderWave);
-    };
-
-    animId = requestAnimationFrame(renderWave);
-    return () => cancelAnimationFrame(animId);
-  }, []);
+  const scrambledRC = useLoopingScramble('RC', { totalFrames: 18, intervalMs: 35, pauseMs: 900 });
 
   // Rotation and Z-extrusions based on progress
   let rotX = 0;
@@ -243,17 +188,29 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              <pattern id="frontRaster" width="8" height="6" patternUnits="userSpaceOnUse">
-                <line x1="0" y1="3" x2="8" y2="3" stroke="#ff4b4b" strokeWidth="1.5" opacity="0.65" />
-                <animateTransform
-                  attributeName="patternTransform"
-                  type="translate"
-                  from="0,0"
-                  to="0,6"
-                  dur="0.85s"
-                  repeatCount="indefinite"
-                />
+              <radialGradient id="centerPlateBg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#2c1a1e" />
+                <stop offset="65%" stopColor="#181114" />
+                <stop offset="100%" stopColor="#0c090a" />
+              </radialGradient>
+              <linearGradient id="rcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="22%" stopColor="#ffa2b4" />
+                <stop offset="60%" stopColor="#ff4b4b" />
+                <stop offset="100%" stopColor="#db1f26" />
+              </linearGradient>
+              <pattern id="frontRaster" width="6" height="4" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="2" x2="6" y2="2" stroke="#ff4b4b" strokeWidth="1.2" opacity="0.32" />
               </pattern>
+              <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="6" result="blur1" />
+                <feGaussianBlur stdDeviation="2.5" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
             {/* Segmented Ring Arcs matching animejs */}
@@ -291,7 +248,7 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
                 cy="160"
                 r="72"
                 fill="none"
-                stroke="rgba(0, 255, 170, 0.2)"
+                stroke="rgba(0, 255, 170, 0.35)"
                 strokeWidth="1.2"
                 strokeDasharray="8 12"
               />
@@ -302,50 +259,76 @@ export const MorphingVisualizer: React.FC<MorphingVisualizerProps> = ({
                 cy="160"
                 r="64"
                 fill="none"
-                stroke="rgba(255, 75, 75, 0.22)"
+                stroke="rgba(255, 75, 75, 0.38)"
                 strokeWidth="1"
                 strokeDasharray="4 16"
               />
             </g>
 
-            {/* Center diamond raster with breathing neon animation */}
-            <g className={styles.diamondWrapper}>
-              <rect
-                x="115"
-                y="115"
-                width="90"
-                height="90"
-                rx="16"
-                fill="url(#frontRaster)"
-                stroke="#ff4b4b"
-                strokeWidth="1.8"
-              />
-            </g>
+            {/* Central Octagonal Core Plate */}
+            <polygon
+              points="112,86 208,86 234,112 234,208 208,234 112,234 86,208 86,112"
+              fill="url(#centerPlateBg)"
+              stroke="rgba(255, 75, 75, 0.55)"
+              strokeWidth="2"
+            />
+            <polygon
+              points="112,86 208,86 234,112 234,208 208,234 112,234 86,208 86,112"
+              fill="url(#frontRaster)"
+              opacity="0.65"
+            />
 
-            {/* Pulsing Core Heartbeat Elements */}
-            <circle cx="160" cy="160" r="3.2" fill="#ff4b4b" className={styles.innerCorePulse} />
-            <circle cx="160" cy="160" r="8" fill="none" stroke="#ff4b4b" className={styles.innerCoreRingPulse} />
+            {/* Cybernetic Corner Target Brackets */}
+            <path d="M 94,112 L 94,94 L 112,94" fill="none" stroke="#00ffaa" strokeWidth="2.2" strokeLinecap="square" />
+            <path d="M 226,112 L 226,94 L 208,94" fill="none" stroke="#00ffaa" strokeWidth="2.2" strokeLinecap="square" />
+            <path d="M 94,208 L 94,226 L 112,226" fill="none" stroke="#00ffaa" strokeWidth="2.2" strokeLinecap="square" />
+            <path d="M 226,208 L 226,226 L 208,226" fill="none" stroke="#00ffaa" strokeWidth="2.2" strokeLinecap="square" />
 
-            {/* Live Undulating Oscilloscope Sine Wave Lines */}
-            <path ref={wavePathGlowRef} className={styles.oscilloscopeLineGlow} />
-            <path ref={wavePathRef} className={styles.oscilloscopeLine} />
+            {/* Crosshair Guides */}
+            <line x1="78" y1="160" x2="86" y2="160" stroke="#ff4b4b" strokeWidth="1.6" />
+            <line x1="234" y1="160" x2="242" y2="160" stroke="#ff4b4b" strokeWidth="1.6" />
+            <line x1="160" y1="78" x2="160" y2="86" stroke="#ff4b4b" strokeWidth="1.6" />
+            <line x1="160" y1="234" x2="160" y2="242" stroke="#ff4b4b" strokeWidth="1.6" />
 
-            {/* Live Undulating Oscilloscope Dots */}
-            {Array.from({ length: NUM_DOTS }).map((_, i) => {
-              const x = START_X + i * STEP_X;
-              return (
-                <circle
-                  key={i}
-                  ref={(el) => {
-                    dotsRef.current[i] = el;
-                  }}
-                  cx={x.toFixed(1)}
-                  cy="160"
-                  r="2.8"
-                  className={styles.oscilloscopeDot}
-                />
-              );
-            })}
+            {/* RC Monogram — text-based so scramble effect can run on the characters */}
+            {/* Cyan RGB-split glitch slice */}
+            <text
+              x="160" y="172"
+              textAnchor="middle" dominantBaseline="middle"
+              fill="#00ffea"
+              fontSize="96" fontFamily="'Courier New', 'Roboto Mono', monospace"
+              fontWeight="900" letterSpacing="4"
+              className={styles.glitchCyan}
+            >{scrambledRC}</text>
+
+            {/* Red/Magenta RGB-split glitch slice */}
+            <text
+              x="160" y="172"
+              textAnchor="middle" dominantBaseline="middle"
+              fill="#ff0055"
+              fontSize="96" fontFamily="'Courier New', 'Roboto Mono', monospace"
+              fontWeight="900" letterSpacing="4"
+              className={styles.glitchRed}
+            >{scrambledRC}</text>
+
+            {/* Primary base — gradient fill, twitching */}
+            <text
+              x="160" y="172"
+              textAnchor="middle" dominantBaseline="middle"
+              fill="url(#rcGrad)"
+              fontSize="96" fontFamily="'Courier New', 'Roboto Mono', monospace"
+              fontWeight="900" letterSpacing="4"
+              className={styles.glitchBase}
+              style={{ filter: 'drop-shadow(0 0 8px rgba(255, 75, 75, 0.7))' }}
+            >{scrambledRC}</text>
+
+            {/* Horizontal Glitch Tear Slice Bar */}
+            <rect x="88" y="0" width="144" height="3" fill="#00ffea" opacity="0.8" className={styles.glitchScanBar} />
+
+            {/* High-Tech Micro Accents */}
+            <circle cx="160" cy="116" r="2.2" fill="#00ffaa" />
+            <circle cx="160" cy="204" r="2.2" fill="#00ffaa" />
+            <rect x="157" y="157" width="6" height="6" fill="#ff4b4b" transform="rotate(45 160 160)" />
           </svg>
         </div>
       </div>

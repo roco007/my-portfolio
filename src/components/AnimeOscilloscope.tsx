@@ -1,82 +1,112 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { animate } from 'animejs';
 import { useReducedMotion } from '../animations/useReducedMotion';
+import { useLoopingScramble } from '../animations/useLoopingScramble';
 import styles from './AnimeOscilloscope.module.css';
 
 export const AnimeOscilloscope: React.FC = () => {
   const reducedMotion = useReducedMotion();
-  const centerDiamondRef = useRef<SVGGElement | null>(null);
+  const scrambledRC = useLoopingScramble('RC', { totalFrames: 18, intervalMs: 35, pauseMs: 900 });
+  const centerMonogramRef = useRef<SVGGElement | null>(null);
   const outerRingRef = useRef<SVGGElement | null>(null);
-  const wavePointsRef = useRef<SVGGElement | null>(null);
-  const [activeShape, setActiveShape] = useState<'diamond' | 'circle' | 'square'>('diamond');
+  const reticleFwdRef = useRef<SVGGElement | null>(null);
+  const reticleRevRef = useRef<SVGGElement | null>(null);
 
   useEffect(() => {
-    if (reducedMotion || !outerRingRef.current || !centerDiamondRef.current) return;
+    if (reducedMotion) return;
 
     // 1. Slow ambient rotation of outer rings & ticks
-    const ringAnim = animate(outerRingRef.current, {
-      rotate: 360,
-      duration: 35000,
-      loop: true,
-      ease: 'linear',
-    });
+    let ringAnim: ReturnType<typeof animate> | null = null;
+    if (outerRingRef.current) {
+      ringAnim = animate(outerRingRef.current, {
+        rotate: 360,
+        duration: 35000,
+        loop: true,
+        ease: 'linear',
+      });
+    }
 
-    // 2. Smooth floating oscillation of center diamond
-    const diamondAnim = animate(centerDiamondRef.current, {
-      rotate: [45, 135],
-      scale: [1, 1.05, 1],
-      duration: 6000,
-      loop: true,
-      alternate: true,
-      ease: 'inOutQuad',
-    });
+    // 2. Dual counter-rotating cybernetic reticles
+    let reticleFwdAnim: ReturnType<typeof animate> | null = null;
+    if (reticleFwdRef.current) {
+      reticleFwdAnim = animate(reticleFwdRef.current, {
+        rotate: 360,
+        duration: 26000,
+        loop: true,
+        ease: 'linear',
+      });
+    }
 
-    // 3. Staggered sine wave pulsation for the dots
-    let dotsAnim: ReturnType<typeof animate> | null = null;
-    if (wavePointsRef.current) {
-      const dots = wavePointsRef.current.querySelectorAll('circle');
-      dotsAnim = animate(dots, {
-        translateY: [
-          (_: unknown, i: number = 0) => Math.sin(i * 0.35) * 12,
-          (_: unknown, i: number = 0) => Math.sin(i * 0.35 + Math.PI) * 12,
-        ],
-        duration: 2200,
+    let reticleRevAnim: ReturnType<typeof animate> | null = null;
+    if (reticleRevRef.current) {
+      reticleRevAnim = animate(reticleRevRef.current, {
+        rotate: -360,
+        duration: 20000,
+        loop: true,
+        ease: 'linear',
+      });
+    }
+
+    // 3. Ambient breathing scale on the center RC monogram core
+    let pulseAnim: ReturnType<typeof animate> | null = null;
+    if (centerMonogramRef.current) {
+      pulseAnim = animate(centerMonogramRef.current, {
+        scale: [1, 1.03, 1],
+        duration: 3800,
         loop: true,
         alternate: true,
-        delay: (_: unknown, i: number = 0) => i * 45,
         ease: 'inOutSine',
       });
     }
 
     return () => {
-      ringAnim.cancel();
-      diamondAnim.cancel();
-      dotsAnim?.cancel();
+      ringAnim?.cancel();
+      reticleFwdAnim?.cancel();
+      reticleRevAnim?.cancel();
+      pulseAnim?.cancel();
     };
   }, [reducedMotion]);
 
-  // Click to trigger a burst rotation on the center shape
+  // Click to trigger interactive pulse burst
   const handleInteract = () => {
-    if (reducedMotion || !centerDiamondRef.current) return;
-    animate(centerDiamondRef.current, {
-      rotate: '+=90',
-      duration: 900,
-      ease: 'outElastic(1, 0.5)',
-    });
-    setActiveShape((prev) => (prev === 'diamond' ? 'circle' : prev === 'circle' ? 'square' : 'diamond'));
+    if (reducedMotion) return;
+
+    if (centerMonogramRef.current) {
+      animate(centerMonogramRef.current, {
+        scale: [1, 1.15, 1],
+        duration: 850,
+        ease: 'outElastic(1, 0.45)',
+      });
+    }
+
+    if (reticleFwdRef.current) {
+      animate(reticleFwdRef.current, {
+        rotate: '+=90',
+        duration: 650,
+        ease: 'outCubic',
+      });
+    }
+
+    if (reticleRevRef.current) {
+      animate(reticleRevRef.current, {
+        rotate: '-=90',
+        duration: 650,
+        ease: 'outCubic',
+      });
+    }
   };
 
   return (
     <div
       className={styles.oscilloscopeWrapper}
       onClick={handleInteract}
-      title="Click to interact with the animation engine"
+      title="Click to interact with the engine core"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') handleInteract();
       }}
-      aria-label="Interactive Anime.js oscilloscope demonstration"
+      aria-label="Interactive cybernetic RC engine oscilloscope demonstration"
     >
       <svg
         viewBox="0 0 500 500"
@@ -91,17 +121,43 @@ export const AnimeOscilloscope: React.FC = () => {
             <stop offset="60%" stopColor="transparent" stopOpacity="0" />
           </linearGradient>
 
-          {/* Center Glow */}
+          {/* Center Radial Glow */}
           <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(255, 75, 75, 0.25)" />
-            <stop offset="70%" stopColor="rgba(255, 75, 75, 0.04)" />
+            <stop offset="0%" stopColor="rgba(255, 75, 75, 0.28)" />
+            <stop offset="70%" stopColor="rgba(255, 75, 75, 0.05)" />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
 
-          {/* Raster Line Pattern for Center Diamond */}
+          {/* Raster Line Pattern for Center Plate */}
           <pattern id="rasterLines" width="10" height="4" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="2" x2="10" y2="2" stroke="#ff4b4b" strokeWidth="1.5" opacity="0.65" />
+            <line x1="0" y1="2" x2="10" y2="2" stroke="#ff4b4b" strokeWidth="1.2" opacity="0.35" />
           </pattern>
+
+          {/* Octagonal Plate Background */}
+          <radialGradient id="plateBg" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#2c1a1e" />
+            <stop offset="65%" stopColor="#181114" />
+            <stop offset="100%" stopColor="#0c090a" />
+          </radialGradient>
+
+          {/* Neon Coral Gradient for RC Letters */}
+          <linearGradient id="heroRcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="25%" stopColor="#ffa0b2" />
+            <stop offset="65%" stopColor="#ff4b4b" />
+            <stop offset="100%" stopColor="#db1f26" />
+          </linearGradient>
+
+          {/* Multi-tier Neon Glow Filter */}
+          <filter id="heroIntenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="7" result="blur1" />
+            <feGaussianBlur stdDeviation="3" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur1" />
+              <feMergeNode in="blur2" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Ambient Radial Background Glow */}
@@ -184,7 +240,11 @@ export const AnimeOscilloscope: React.FC = () => {
         </g>
 
         {/* Outer Rotating Concentric Ticks Ring */}
-        <g ref={outerRingRef} className={styles.ticksRing} transform-origin="250 250">
+        <g
+          ref={outerRingRef}
+          className={styles.ticksRing}
+          style={{ transformOrigin: '250px 250px' }}
+        >
           {Array.from({ length: 60 }).map((_, i) => {
             const angle = (i * 360) / 60;
             const isMajor = i % 5 === 0;
@@ -208,73 +268,153 @@ export const AnimeOscilloscope: React.FC = () => {
           cx="250"
           cy="250"
           r="175"
-          fill="#1c1b1a"
-          stroke="rgba(255, 255, 255, 0.08)"
+          fill="#181716"
+          stroke="rgba(255, 255, 255, 0.12)"
           strokeWidth="1.5"
         />
 
         {/* Inner Radial Dot Grid */}
-        <circle cx="250" cy="250" r="170" fill="none" stroke="rgba(255, 255, 255, 0.04)" strokeDasharray="3, 8" />
-        <circle cx="250" cy="250" r="120" fill="none" stroke="rgba(255, 255, 255, 0.06)" strokeDasharray="2, 6" />
-        <circle cx="250" cy="250" r="70" fill="none" stroke="rgba(255, 255, 255, 0.05)" />
+        <circle
+          cx="250"
+          cy="250"
+          r="170"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.04)"
+          strokeDasharray="3, 8"
+        />
 
-        {/* Center Animated Diamond Shape with Raster Lines */}
-        <g ref={centerDiamondRef} transform-origin="250 250">
-          {activeShape === 'diamond' && (
-            <rect
-              x="175"
-              y="175"
-              width="150"
-              height="150"
-              rx="24"
-              fill="url(#rasterLines)"
-              stroke="#ff4b4b"
-              strokeWidth="2"
-              opacity="0.9"
-            />
-          )}
-          {activeShape === 'circle' && (
-            <circle
-              cx="250"
-              cy="250"
-              r="75"
-              fill="url(#rasterLines)"
-              stroke="#ff4b4b"
-              strokeWidth="2"
-              opacity="0.9"
-            />
-          )}
-          {activeShape === 'square' && (
-            <rect
-              x="180"
-              y="180"
-              width="140"
-              height="140"
-              rx="8"
-              fill="url(#rasterLines)"
-              stroke="#ff4b4b"
-              strokeWidth="2"
-              opacity="0.9"
-            />
-          )}
+        {/* Dual Counter-Rotating Cybernetic Reticles */}
+        <g
+          ref={reticleFwdRef}
+          style={{ transformOrigin: '250px 250px' }}
+        >
+          <circle
+            cx="250"
+            cy="250"
+            r="138"
+            fill="none"
+            stroke="rgba(0, 255, 170, 0.32)"
+            strokeWidth="1.2"
+            strokeDasharray="8 12"
+          />
+        </g>
+        <g
+          ref={reticleRevRef}
+          style={{ transformOrigin: '250px 250px' }}
+        >
+          <circle
+            cx="250"
+            cy="250"
+            r="124"
+            fill="none"
+            stroke="rgba(255, 75, 75, 0.36)"
+            strokeWidth="1.2"
+            strokeDasharray="5 15"
+          />
         </g>
 
-        {/* Animated Sine-Wave Dots Crossing the Center */}
-        <g ref={wavePointsRef}>
-          {Array.from({ length: 24 }).map((_, i) => {
-            const x = 110 + i * 12;
-            const baseY = 210 + i * 2.5;
-            return (
-              <circle
-                key={i}
-                cx={x}
-                cy={baseY}
-                r="3.5"
-                fill="#ff4b4b"
-                className={styles.waveDot}
-              />
-            );
-          })}
+        {/* Center RC Monogram Core (Scaled cleanly from center) */}
+        <g
+          ref={centerMonogramRef}
+          style={{ transformOrigin: '250px 250px' }}
+        >
+          <g transform="translate(250, 250) scale(1.35) translate(-160, -160)">
+            {/* Central Octagonal Core Plate */}
+            <polygon
+              points="112,86 208,86 234,112 234,208 208,234 112,234 86,208 86,112"
+              fill="url(#plateBg)"
+              stroke="rgba(255, 75, 75, 0.55)"
+              strokeWidth="2"
+            />
+            <polygon
+              points="112,86 208,86 234,112 234,208 208,234 112,234 86,208 86,112"
+              fill="url(#rasterLines)"
+              opacity="0.65"
+            />
+
+            {/* Cybernetic Corner Target Brackets */}
+            <path
+              d="M 94,112 L 94,94 L 112,94"
+              fill="none"
+              stroke="#00ffaa"
+              strokeWidth="2.2"
+              strokeLinecap="square"
+            />
+            <path
+              d="M 226,112 L 226,94 L 208,94"
+              fill="none"
+              stroke="#00ffaa"
+              strokeWidth="2.2"
+              strokeLinecap="square"
+            />
+            <path
+              d="M 94,208 L 94,226 L 112,226"
+              fill="none"
+              stroke="#00ffaa"
+              strokeWidth="2.2"
+              strokeLinecap="square"
+            />
+            <path
+              d="M 226,208 L 226,226 L 208,226"
+              fill="none"
+              stroke="#00ffaa"
+              strokeWidth="2.2"
+              strokeLinecap="square"
+            />
+
+            {/* Crosshair Guides */}
+            <line x1="76" y1="160" x2="86" y2="160" stroke="#ff4b4b" strokeWidth="1.6" />
+            <line x1="234" y1="160" x2="244" y2="160" stroke="#ff4b4b" strokeWidth="1.6" />
+            <line x1="160" y1="76" x2="160" y2="86" stroke="#ff4b4b" strokeWidth="1.6" />
+            <line x1="160" y1="234" x2="160" y2="244" stroke="#ff4b4b" strokeWidth="1.6" />
+
+            {/* RC Monogram — text-based so scramble effect can run on the characters */}
+            {/* Cyan RGB-split glitch slice */}
+            <text
+              x="160" y="172"
+              textAnchor="middle" dominantBaseline="middle"
+              fill="#00ffea"
+              fontSize="96" fontFamily="'Courier New', 'Roboto Mono', monospace"
+              fontWeight="900" letterSpacing="4"
+              className={styles.glitchCyan}
+            >{scrambledRC}</text>
+
+            {/* Red/Magenta RGB-split glitch slice */}
+            <text
+              x="160" y="172"
+              textAnchor="middle" dominantBaseline="middle"
+              fill="#ff0055"
+              fontSize="96" fontFamily="'Courier New', 'Roboto Mono', monospace"
+              fontWeight="900" letterSpacing="4"
+              className={styles.glitchRed}
+            >{scrambledRC}</text>
+
+            {/* Primary base — gradient fill, twitching */}
+            <text
+              x="160" y="172"
+              textAnchor="middle" dominantBaseline="middle"
+              fill="url(#heroRcGrad)"
+              fontSize="96" fontFamily="'Courier New', 'Roboto Mono', monospace"
+              fontWeight="900" letterSpacing="4"
+              className={styles.glitchBase}
+              style={{ filter: 'drop-shadow(0 0 8px rgba(255, 75, 75, 0.7))' }}
+            >{scrambledRC}</text>
+
+            {/* Horizontal Glitch Tear Slice Bar */}
+            <rect x="88" y="0" width="144" height="3" fill="#00ffea" opacity="0.8" className={styles.glitchScanBar} />
+
+            {/* High-Tech Micro Accents */}
+            <circle cx="160" cy="116" r="2.2" fill="#00ffaa" />
+            <circle cx="160" cy="204" r="2.2" fill="#00ffaa" />
+            <rect
+              x="157"
+              y="157"
+              width="6"
+              height="6"
+              fill="#ff4b4b"
+              transform="rotate(45 160 160)"
+            />
+          </g>
         </g>
 
         {/* Concentric Trailing Orbit Arcs on Bottom Right */}
@@ -313,3 +453,4 @@ export const AnimeOscilloscope: React.FC = () => {
     </div>
   );
 };
+

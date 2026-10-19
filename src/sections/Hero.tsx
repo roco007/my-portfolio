@@ -64,7 +64,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTerminal }) => {
             <div ref={badgeRef} className={styles.badgeWrapper}>
               <span className={styles.statusPill}>
                 <span className={styles.statusDot} />
-                <span>v2.0 // FULL-STACK ENGINEER &amp; AI ARCHITECT</span>
+                v2.0 // FULL-STACK ENGINEER &amp; AI ARCHITECT
               </span>
             </div>
 

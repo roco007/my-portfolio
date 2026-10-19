@@ -633,14 +633,14 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               <div className={styles.badgeWrapper}>
                 <span className={styles.statusPill}>
                   <span className={styles.statusDot} />
-                  <span>v2.0 // FULL-STACK ENGINEER &amp; AI ARCHITECT</span>
+                  v2.0 // FULL-STACK ENGINEER &amp; AI ARCHITECT
                 </span>
               </div>
 
               <h1 className={styles.headline}>
-                <span>Architecting</span>
+                Architecting
                 <br />
-                <span>intelligent</span>
+                intelligent{' '}
                 <span className={styles.headlineLineHighlight}>systems.</span>
               </h1>
 
