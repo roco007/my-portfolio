@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useReducedMotion } from '../animations/useReducedMotion';
-import { GREETING_REPLY, matchAnswer, PREDEFINED_QUESTIONS } from '../data/chatbotKnowledge';
+import { GREETING_REPLY, matchAnswer, PREDEFINED_QUESTIONS, type SiteSection } from '../data/chatbotKnowledge';
+import { getStoryChapterById } from '../data/storyChapters';
 import styles from './AiAvatarChat.module.css';
 
 /**
  * Chat window for the floating AI avatar. A small offline rule-based bot:
  * predefined question chips + free text, matched against the portfolio
  * knowledge base (src/data/chatbotKnowledge.ts). Unrecognized questions get
- * an explicit ERR::404 "didn't understand" reply — no bluffing.
+ * an explicit ERR::404 "didn't understand" reply — no bluffing. Each answer
+ * also scrolls the story to the chapter it talks about ("hero" = back home).
  */
 
 interface ChatMessage {
@@ -80,17 +82,31 @@ export const AiAvatarChat: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, typing]);
 
+  /** Jump the story to the chapter tied to an answer ("hero" = back home). */
+  const scrollToChapter = (section: SiteSection): void => {
+    const behavior: ScrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
+    const chapter = getStoryChapterById(section);
+    if (chapter) {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({ top: chapter.target * maxScroll, behavior });
+      return;
+    }
+    document.getElementById(section)?.scrollIntoView({ behavior });
+  };
+
   const send = (raw: string) => {
     const text = raw.trim();
     if (!text || typing) return;
     setMessages((m) => [...m, { id: nextIdRef.current++, role: 'user', text }]);
     setDraft('');
     setTyping(true);
-    const { reply } = matchAnswer(text);
+    const { reply, section } = matchAnswer(text);
     timerRef.current = window.setTimeout(
       () => {
         setMessages((m) => [...m, { id: nextIdRef.current++, role: 'bot', text: reply }]);
         setTyping(false);
+        // Bring the matching story chapter into view alongside the answer.
+        scrollToChapter(section);
       },
       prefersReducedMotion ? 300 : REPLY_DELAY_MS,
     );
