@@ -1,34 +1,47 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '../animations/useReducedMotion';
 import { createRng } from './space/rng';
 import { cappedDpr, detectQuality } from './space/quality';
 import type { QualityTier, SceneState, SpaceLayer, SpaceTheme } from './space/types';
+import { JourneyTimeline, type JourneyState } from './space/JourneyTimeline';
 import { NebulaLayer } from './space/NebulaLayer';
+import { GalaxyLayer } from './space/GalaxyLayer';
 import { StarFieldLayer } from './space/StarFieldLayer';
-import { PlanetLayer } from './space/PlanetLayer';
+import { KnownStarsLayer } from './space/KnownStarsLayer';
+import { SolarSystemLayer } from './space/SolarSystemLayer';
+import { SunLayer } from './space/SunLayer';
 import { SatelliteLayer } from './space/SatelliteLayer';
 import { SpaceStationLayer } from './space/SpaceStationLayer';
 import { SpacecraftLayer } from './space/SpacecraftLayer';
 import { AsteroidLayer } from './space/AsteroidLayer';
+import { CometLayer } from './space/CometLayer';
 import { ForegroundParticleLayer } from './space/ForegroundParticleLayer';
+import { HyperspaceLayer } from './space/HyperspaceLayer';
 import { EnvironmentalEvents } from './space/EnvironmentalEvents';
+import { SpaceWindowLayer } from './space/SpaceWindowLayer';
+import { JourneyDevScrubber } from './space/JourneyDevScrubber';
 
 interface SpaceBackgroundProps {
   theme: SpaceTheme;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SpaceBackground — orchestrates the layered outer-space environment.
+declare global {
+  interface Window {
+    __SET_JOURNEY_PROGRESS__?: (progress: number | null) => void;
+  }
+}
 
-   Rendered as a single fixed, full-viewport, pointer-transparent canvas that
-   sits behind all website content. One requestAnimationFrame loop drives every
-   layer back-to-front; a shared SceneState carries timing, depth-scaled mouse
-   parallax, scroll coupling and adaptive quality. Respects prefers-reduced-
-   motion by rendering a single static frame, and pauses when the tab is hidden
-   to avoid burning CPU/GPU in the background.
+/* ═══════════════════════════════════════════════════════════════════════════
+   SpaceBackground — Spaceship Observation Deck & 2-Minute Cosmic Voyage.
+   Orchestrates the layered outer-space canvas:
+   Nebula → Spiral Galaxy → 3D StarField → Known Stars → Solar System →
+   Sun Perihelion → Satellites → Space Station → Spacecraft → Asteroid Belt →
+   Particles → Hyperspace Jump → Environmental Events → Spaceship Window & HUD.
    ═══════════════════════════════════════════════════════════════════════════ */
 export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const timelineRef = useRef<JourneyTimeline>(new JourneyTimeline());
+  const [currentJourneyState, setCurrentJourneyState] = useState<JourneyState | null>(null);
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
@@ -36,6 +49,13 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
+
+    const timeline = timelineRef.current;
+
+    // Expose global control hook for testing
+    window.__SET_JOURNEY_PROGRESS__ = (p: number | null) => {
+      timeline.setManualProgress(p);
+    };
 
     // ── Quality tier (device capability) ─────────────────────────────────
     const quality: QualityTier = detectQuality().tier;
@@ -57,7 +77,6 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
 
     // ── Interaction state ────────────────────────────────────────────────
     let scrollY = window.scrollY;
-    // Target/current mouse offset normalized to [-1, 1]; smoothed each frame.
     let mouseTargetX = 0, mouseTargetY = 0;
     let mouseX = 0, mouseY = 0;
 
@@ -72,33 +91,48 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
     window.addEventListener('mouseleave', onLeave);
 
     // ── Scene state factory ──────────────────────────────────────────────
-    // Deterministic seed so a given mount produces a stable, natural layout.
     const seed = (Math.random() * 0xffffffff) >>> 0;
     const rand = createRng(seed);
-    // Light theme dims the whole environment so text stays readable.
     const intensity = theme === 'light' ? 0.35 : 1.0;
 
     const buildState = (time: number, dt: number): SceneState => ({
-      ctx, width, height, time, dt,
-      scrollY, mouse: { x: mouseX, y: mouseY },
-      theme, quality, rand, intensity,
+      ctx,
+      width,
+      height,
+      time,
+      dt,
+      scrollY,
+      mouse: { x: mouseX, y: mouseY },
+      theme,
+      quality,
+      rand,
+      intensity,
+      journey: timeline.getState(time),
     });
 
     // ── Layer stack (back → front) ───────────────────────────────────────
     const layers: SpaceLayer[] = [
       new NebulaLayer(),
+      new GalaxyLayer(),
       new StarFieldLayer(),
-      new PlanetLayer(),
+      new KnownStarsLayer(),
+      new SolarSystemLayer(),
+      new SunLayer(),
       new SatelliteLayer(),
       new SpaceStationLayer(),
       new SpacecraftLayer(),
       new AsteroidLayer(),
+      new CometLayer(),
       new ForegroundParticleLayer(),
+      new HyperspaceLayer(),
       new EnvironmentalEvents(),
+      new SpaceWindowLayer(),
     ];
 
     const initLayers = () => {
-      for (const l of layers) l.init(buildState(0, 0));
+      const s = buildState(0, 0);
+      for (const l of layers) l.init(s);
+      setCurrentJourneyState(s.journey);
     };
     initLayers();
 
@@ -110,7 +144,6 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
         resize();
         initLayers();
         if (reducedMotion) {
-          // Re-render the single static frame at the new size.
           ctx.clearRect(0, 0, width, height);
           const s = buildState(0, 0);
           for (const l of layers) l.draw(s);
@@ -131,6 +164,7 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
         window.removeEventListener('resize', onResize);
         window.clearTimeout(resizeTimer);
         for (const l of layers) l.dispose?.();
+        delete window.__SET_JOURNEY_PROGRESS__;
       };
     }
 
@@ -139,15 +173,15 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
     let last = performance.now();
     let timeSec = 0;
     let running = true;
+    let uiSyncTimer = 0;
 
     const render = (now: number) => {
       if (!running) return;
-      // Clamp dt to avoid huge jumps after tab switches.
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
       timeSec += dt;
 
-      // Smooth mouse (depth parallax is applied per-layer from this base).
+      // Depth mouse smoothing
       mouseX += (mouseTargetX - mouseX) * Math.min(1, dt * 3);
       mouseY += (mouseTargetY - mouseY) * Math.min(1, dt * 3);
 
@@ -157,6 +191,13 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
       for (const l of layers) {
         l.update?.(state);
         l.draw(state);
+      }
+
+      // Sync scrubber state periodically (~4 times/sec) to avoid React re-render overhead
+      uiSyncTimer += dt;
+      if (uiSyncTimer > 0.25) {
+        uiSyncTimer = 0;
+        setCurrentJourneyState(state.journey);
       }
 
       animFrameId = requestAnimationFrame(render);
@@ -186,26 +227,38 @@ export const SpaceBackground: React.FC<SpaceBackgroundProps> = ({ theme }) => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.clearTimeout(resizeTimer);
       for (const l of layers) l.dispose?.();
+      delete window.__SET_JOURNEY_PROGRESS__;
     };
   }, [theme, reducedMotion]);
 
+  const handleDevScrub = (p: number | null) => {
+    timelineRef.current.setManualProgress(p);
+  };
+
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: 0,
-        overflow: 'hidden',
-      }}
-    >
-      <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
-    </div>
+    <>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
+      </div>
+
+      {/* Dev Scrubber for Jump Testing (0%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 99%) */}
+      <JourneyDevScrubber
+        journeyState={currentJourneyState}
+        onScrub={handleDevScrub}
+      />
+    </>
   );
 };
 
 export default SpaceBackground;
-

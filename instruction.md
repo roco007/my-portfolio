@@ -1,795 +1,942 @@
-# Project: Build a Premium, Interactive Developer Portfolio Using Anime.js
+# Upgrade Portfolio Background: Spaceship Window Through Deep Space
 
-## 1. Your Role
+You are modifying my existing portfolio website.
 
-Act as a senior frontend engineer, creative developer, UI/UX designer, motion designer, and technical SEO specialist.
+First, **inspect the entire existing codebase and understand the current visual design, layout, animations, component structure, and performance characteristics before making any changes.**
 
-Your task is to **research my existing portfolio, extract my professional information and projects, and build an entirely new portfolio website from scratch**.
+The website already has a futuristic, dark, AI/technology-oriented aesthetic.
 
-The final result should feel like a premium, interactive digital experience rather than a generic developer portfolio template.
+Your task is to transform the current background into a **cinematic deep-space environment that makes the user feel as if the portfolio itself is a window/view screen inside a moving spaceship.**
 
-Prioritize:
-- Exceptional visual design.
-- Advanced, purposeful animations using Anime.js.
-- Smooth interactions and transitions.
-- Professional presentation of my technical experience.
-- High performance and accessibility.
-- Responsive design across desktop, tablet, and mobile.
-- Easy maintenance and future expansion.
+Do NOT redesign the website itself.
 
-Do not merely redesign the existing website's CSS. Build a new experience with its own visual identity, layout, components, animation system, and implementation.
+Do NOT replace the existing UI.
+
+Do NOT make the background overpower the portfolio content.
+
+The existing portfolio UI must remain clearly readable and visually dominant.
 
 ---
 
-## 2. Source of Truth: My Existing Portfolio
+# 1. CORE CONCEPT
 
-Start by visiting and thoroughly analyzing my existing portfolio:
+The user should feel like:
 
-**Portfolio URL:** https://roco007.github.io/my-portfolio/
+> **They are sitting inside a futuristic spaceship, looking through a large observation window into space while the ship continuously travels through the universe.**
 
-Use this website as the primary source of truth for my personal information, professional background, projects, skills, and existing links.
+The portfolio UI is effectively the **interior interface of the spaceship**.
 
-### Research requirements
+Behind/around the interface is a constantly moving cosmic environment.
 
-Before writing code:
+The spaceship itself does not necessarily need to be explicitly visible.
 
-1. Inspect every accessible page and section of my existing portfolio.
-2. Extract my name, professional headline, biography, technical skills, work experience, projects, achievements, and contact information.
-3. Record all project names, descriptions, technologies, GitHub repositories, and live demonstrations.
-4. Identify all social profiles and professional links.
-5. Inspect any available images, logos, illustrations, and other assets.
-6. Identify existing content that should be retained, improved, reorganized, or removed.
-7. Verify links where possible.
-8. Identify missing information rather than inventing it.
+Instead, create the illusion through:
 
-Use my GitHub profile as a supplementary source:
+- A large space-view background
+- Subtle window/frame effects
+- Parallax
+- Moving stars
+- Passing planets
+- Nebulae
+- Solar systems
+- Asteroids/debris
+- Distant galaxies
+- Lighting changes
+- Occasional large celestial objects passing the window
 
-https://github.com/roco007
+The result should feel like a **cinematic spaceship navigation window**, not a normal website background.
 
-Explore my public repositories to discover projects that may not be represented adequately on the existing portfolio.
+---
 
-Repositories worth checking include:
+# 2. 1-HOUR JOURNEY
 
-- css-to-tailwind
-- instantQrGenerator
-- jsonTools
-- regexCompare
-- sqlOptimizer
-- yamlTools
+Create a **continuous 60-minute virtual journey through space**.
 
-These are starting points, not an exhaustive list. Discover other relevant repositories and determine which projects deserve prominent placement.
+The journey should follow a predefined route.
 
-### Data integrity rules
+Conceptually:
 
-- Preserve factual information about my professional experience.
-- Do not invent employers, clients, job titles, qualifications, metrics, achievements, or project capabilities.
-- Do not assume that a repository has a production-ready implementation without inspecting it.
-- Clearly distinguish verified information from information that needs confirmation.
-- Preserve valid existing links.
-- Do not publish private information or secrets.
-- If a detail cannot be verified, omit it or use an obvious placeholder.
+SPACE STATION
+↓
+DEEP SPACE
+↓
+MERCURY
+↓
+VENUS
+↓
+EARTH
+↓
+MARS
+↓
+JUPITER
+↓
+SATURN
+↓
+URANUS
+↓
+NEPTUNE
+↓
+SUN
+↓
+STAR FIELD
+↓
+KNOWN STARS
+↓
+NEBULA
+↓
+GALAXY / DEEP SPACE
+↓
+ASTEROID FIELD
+↓
+DEEP SPACE
+↓
+LOOP BACK TO START
 
-Create a centralized content configuration so that I can update my portfolio without rewriting its components.
+This is not intended to represent a scientifically accurate spacecraft trajectory.
+
+It is an **artistic cinematic route inspired by the Solar System and recognizable astronomical objects.**
+
+The route must continuously progress for approximately:
+
+**60 minutes**
+
+At exactly/approximately the 60-minute boundary, the journey should smoothly return to the beginning.
+
+Avoid an obvious hard cut.
+
+The transition from the end of the journey back to the beginning should be designed to feel like the ship has entered a wormhole / hyperspace transition / deep-space jump.
+
+---
+
+# 3. PLANET SEQUENCE
+
+Include recognizable representations of the major Solar System planets.
+
+At appropriate points in the journey, the spaceship should pass by:
+
+### Mercury
+Small rocky planet.
+
+### Venus
+Dense yellow/orange atmosphere.
+
+### Earth
+Blue oceans, visible continents/cloud systems.
+
+### Mars
+Red/orange surface.
+
+### Jupiter
+Extremely large gas giant with:
+
+- Cloud bands
+- Great Red Spot
+- Several visible moons if performance permits
+
+### Saturn
+Extremely important visual landmark.
+
+Include:
+
+- Prominent rings
+- Atmospheric bands
+- Moons if feasible
+
+### Uranus
+Blue/green ice giant.
+
+### Neptune
+Deep blue ice giant.
+
+### Sun
+The Sun should appear later in the journey as an enormous luminous celestial object.
+
+Do NOT simply use flat 2D images of planets.
+
+Prefer:
+
+- WebGL
+- Three.js
+- CSS 3D where appropriate
+- Canvas
+- procedural shaders
+- optimized textures
+
+Use whatever technology best fits the existing project.
+
+---
+
+# 4. PLANETS MUST ROTATE
+
+This is critical.
+
+Every planet must have continuous rotation.
+
+The user should never see a static planet.
 
 For example:
 
-`src/data/portfolio.ts`
+Earth:
 
-The configuration should contain personal information, social links, skills, experience, and project data.
+- Clouds rotate with the planet
+- Continents slowly move across the visible surface
+- Day/night terminator changes naturally
 
----
+Jupiter:
 
-## 3. Define the Visual Direction
+- Cloud bands rotate at different speeds if technically feasible
+- Great Red Spot moves naturally
 
-Design an original, visually distinctive portfolio.
+Saturn:
 
-Avoid generic layouts that look like a standard AI-generated website, including repetitive rounded cards, excessive gradients, oversized decorative blobs, and animations that serve no purpose.
+- Planet rotates
+- Rings rotate/orbit appropriately
 
-### Creative direction
+The motion should be slow enough to feel realistic.
 
-Aim for a combination of:
-
-- Premium digital product design.
-- Editorial typography.
-- Contemporary developer aesthetics.
-- Minimalist layouts with strong visual hierarchy.
-- Cinematic transitions.
-- Interactive typography.
-- Carefully controlled motion.
-- Subtle technical details inspired by code, interfaces, and digital systems.
-
-Use the existing portfolio's actual content to inform the design, but do not feel constrained by its original layout.
-
-### Visual system
-
-Develop a coherent design system containing:
-
-- A defined color palette.
-- A consistent typographic scale.
-- Reusable spacing tokens.
-- Responsive layout rules.
-- A consistent icon system.
-- Hover, focus, active, and disabled states.
-- A consistent animation language.
-- Light and dark theme support if it enhances the experience.
-
-Use strong contrast and readable typography.
-
-Avoid using visual effects simply because they are trendy. Every element should support the content or the overall experience.
-
-### Initial design exploration
-
-Before implementation, establish:
-
-1. The overall visual concept.
-2. The page structure.
-3. The typography and color palette.
-4. The animation direction.
-5. The project-card design.
-6. The mobile experience.
-
-Then proceed with the strongest cohesive direction instead of creating disconnected visual styles for different sections.
+Avoid arcade-game-style rotation.
 
 ---
 
-## 4. Technology Stack
+# 5. CAMERA / SPACESHIP MOVEMENT
 
-Use a modern, maintainable frontend stack.
+The camera represents the viewpoint of the spaceship.
 
-Preferred technologies:
+The spaceship is continuously moving forward through space.
 
-- React
-- TypeScript
-- Vite
-- Anime.js
-- CSS Modules or a well-organized global CSS architecture
-- Lucide icons or another consistent icon library
+Do NOT simply move planets toward the camera on a straight line.
 
-Use the current stable Anime.js release and consult its official documentation before implementation.
+The camera path should have subtle cinematic movement:
 
-Official Anime.js website:
+- Forward motion
+- Gentle banking
+- Small horizontal movements
+- Slight vertical movement
+- Occasional turns
+- Gradual changes in direction
 
-https://animejs.com/
+The movement should feel like a massive spacecraft cruising through space.
 
-Official documentation:
+Avoid:
 
-https://animejs.com/documentation/
+- Excessive camera shake
+- Roller-coaster movement
+- Fast spinning
+- Motion sickness
+- Sudden camera jumps
 
-Check the installed version and use the API appropriate to that version. Do not mix APIs from different major versions.
-
-Use semantic HTML, reusable React components, and TypeScript types.
-
-Avoid unnecessary dependencies. Every additional library should have a clear purpose.
-
-If the existing repository has an established stack, inspect it first and make an informed decision about whether to preserve or replace it.
+The user should be able to comfortably read the portfolio while the background moves.
 
 ---
 
-## 5. Website Architecture
+# 6. DEEP SPACE ENVIRONMENT
 
-Build a polished, single-page portfolio with clear navigation and well-structured sections.
+Create a rich layered space environment.
 
-You may adapt the order based on the design, but the following content must be considered.
+The background should contain several depth layers.
 
-### A. Navigation
+### Layer 1 — Distant universe
 
-Create a clean, responsive navigation system.
+Very distant:
 
-Requirements:
+- stars
+- galaxies
+- faint nebulae
+- cosmic dust
 
-- Minimal desktop navigation.
-- Compact mobile navigation.
-- Smooth section navigation.
-- Active-section indication.
-- A distinctive visual treatment for the primary contact action.
-- Optional theme switcher.
-- Optional scroll-progress indicator if it complements the design.
+These should move extremely slowly.
 
-The navigation should remain usable while animations are running.
-
-Use appropriate keyboard interactions and accessible labels.
-
-### B. Hero Section
-
-The hero should immediately communicate who I am, what I build, and why someone should explore my work.
-
-Include verified information from my existing portfolio.
-
-Potential elements:
-
-- My name.
-- My professional title.
-- A concise introduction.
-- A primary CTA leading to projects.
-- A secondary CTA for contacting me or viewing my resume, if available.
-- Links to verified professional profiles.
-- A distinctive visual element that creates a memorable first impression.
-
-Use Anime.js to choreograph the initial presentation.
-
-Possible animation sequence:
-
-1. A refined loading or introduction transition, if justified.
-2. Subtle background or interface movement.
-3. Staggered headline reveals.
-4. Supporting text entering with carefully timed motion.
-5. CTA buttons appearing in sequence.
-6. A restrained ambient animation that continues after the introduction.
-
-Do not make visitors wait through a long splash screen.
-
-The primary content should become available quickly, and users who prefer reduced motion should receive a suitable alternative.
-
-### C. About Section
-
-Present my professional background in a concise, engaging format.
-
-Use the verified source content to explain:
-
-- My professional experience.
-- The technologies I work with.
-- The types of problems I solve.
-- My development interests.
-- My approach to building software.
-
-Do not fabricate a personal story or exaggerate my experience.
-
-Consider a visually interesting editorial layout instead of a conventional biography card.
-
-### D. Technical Skills
-
-Organize verified technologies into sensible categories.
-
-Possible categories include:
-
-- Frontend development.
-- Backend development.
-- Programming languages.
-- Databases.
-- Developer tools.
-- AI-assisted development.
-- Other verified areas of expertise.
-
-Use only technologies supported by the available information.
-
-Possible interactions:
-
-- Subtle staggered entrance animations.
-- Animated category transitions.
-- Interactive technology labels.
-- Contextual hover details.
-
-Do not invent skill percentages, proficiency scores, or years of experience for individual technologies.
-
-Keep the presentation informative rather than turning it into an unnecessary animation showcase.
-
-### E. Featured Projects
-
-This should be one of the strongest sections of the website.
-
-Inspect the available repositories and select the most compelling projects based on their actual implementation, usefulness, completeness, and relevance.
-
-Each project should support the information available from its source.
-
-Potential fields:
-
-- Project name.
-- Concise description.
-- Problem addressed.
-- Key features.
-- Technologies used.
-- GitHub repository.
-- Live demonstration.
-- Preview image or screenshot, when available.
-
-Do not invent missing links, capabilities, or results.
-
-#### Project presentation
-
-Create a visually engaging project gallery with varied layouts where appropriate.
-
-Use Anime.js for interactions such as:
-
-- Staggered project reveals.
-- Image or preview transitions.
-- Subtle hover movement.
-- Animated metadata.
-- Section-level transitions.
-- Interactive filtering, if there are enough projects to justify it.
-
-Keep hover animations restrained and ensure touch devices have equivalent ways to access important information.
-
-Use real project screenshots when available. Do not substitute unrelated stock imagery for actual project previews.
-
-If a screenshot is unavailable, create a deliberate typographic or interface-based project preview instead.
-
-Every project card should make its available source-code and live-demo links easy to find.
-
-Do not display a live-demo button when no valid demonstration exists.
-
-### F. Professional Experience
-
-Use verified work-history information from my existing portfolio.
-
-Present relevant roles, employers, dates, and responsibilities in a clear visual hierarchy.
-
-A timeline, editorial list, or structured experience layout is acceptable.
-
-Use restrained Anime.js transitions to reveal experience entries as visitors scroll.
-
-Never invent dates, promotions, responsibilities, client relationships, or quantified business outcomes.
-
-### G. Contact Section
-
-Create a clear, professional way for visitors to contact me.
-
-Include verified contact methods and social links from the source material.
-
-Potential features:
-
-- Email CTA.
-- Professional profile links.
-- GitHub link.
-- Copy-email interaction.
-- A contact form only if a real submission mechanism can be implemented.
-
-If implementing a form, provide validation, accessible feedback, loading states, and success or error messages.
-
-Do not create a fake contact form that appears to submit messages but does nothing.
-
-Never expose API keys, email-service credentials, or other secrets in client-side code.
-
-### H. Footer
+### Layer 2 — Mid-distance
 
 Include:
 
-- My verified identity or brand.
-- Relevant navigation.
-- Verified social links.
-- A dynamically generated copyright year.
-- A subtle closing interaction if it complements the design.
+- star clusters
+- small planets
+- moons
+- distant solar systems
+- nebula clouds
 
-Keep the footer simple and consistent with the rest of the website.
+### Layer 3 — Nearby objects
+
+Occasionally include:
+
+- asteroids
+- debris
+- spacecraft silhouettes
+- satellites
+- planetary objects
+
+These should move noticeably faster due to parallax.
 
 ---
 
-## 6. Anime.js: Core Animation Requirements
+# 7. STARS
 
-Anime.js is a central requirement, not an optional enhancement.
+The star field should NOT look like:
 
-Use it to create a coherent motion system across the website.
+> `background-image: radial-gradient(...)`
 
-Consult the official documentation and implement animations using the supported APIs of the installed version.
+or a basic random CSS star generator.
 
-Do not simply add a few fade-in effects and claim the website has advanced animation.
+Create a genuinely layered 3D star field.
 
-### Animation 1: Initial Page Entrance
+Stars should have:
 
-Create a carefully choreographed hero entrance.
+- Different sizes
+- Different brightness levels
+- Different distances
+- Slight color variations
+- Depth
+- Parallax
 
-Use staggered timing for suitable text and interface elements.
+Some stars should be extremely distant and almost stationary.
 
-The result should feel smooth, intentional, and professional.
+Others should move noticeably as the spaceship travels.
 
-Avoid excessive bounce, elastic movement, and unnecessary delays.
+Occasionally allow a bright star to pass through the viewing area.
 
-### Animation 2: Text Reveals
+Avoid excessive shooting stars.
 
-Implement high-quality headline reveals.
+---
 
-Possible approaches include:
+# 8. KNOWN STARS
 
-- Line-based reveals.
-- Word-by-word staggered motion.
-- Clipped text transitions.
-- Subtle character animation for short text.
+Include recognizable real stars throughout the journey.
 
-Use semantic markup and preserve readable text for assistive technologies.
+Use well-known stars such as:
 
-Do not animate every paragraph character by character.
+- Sirius
+- Canopus
+- Alpha Centauri
+- Vega
+- Betelgeuse
+- Rigel
+- Polaris
+- Arcturus
+- Procyon
+- Aldebaran
 
-### Animation 3: Scroll-Triggered Sections
+Do not make every star a labeled object.
 
-Reveal important sections as they enter the viewport.
+Most should simply appear naturally within the environment.
 
-Requirements:
+Occasionally, when the spaceship passes relatively close to a notable star, a very subtle identification effect can appear.
 
-- Avoid repeatedly replaying every animation during small scroll movements.
-- Avoid hiding content indefinitely if an animation fails.
-- Ensure content remains accessible.
-- Clean up observers and animation instances appropriately.
-- Prevent layout shifts caused by animation initialization.
+Example:
 
-### Animation 4: Project Interactions
+`SIRIUS`
+`−1.46 apparent magnitude`
 
-Create polished project-card interactions.
+This should be extremely subtle and should not interfere with the portfolio.
+
+---
+
+# 9. THE SUN
+
+The Sun should be one of the major cinematic moments.
+
+As the spaceship approaches it:
+
+- Ambient space lighting gradually changes
+- The Sun grows larger
+- The surrounding environment becomes brighter
+- Subtle lens flare appears
+- Solar glow increases
+- The Sun's surface should visibly move
+- Solar prominences/flaring should be animated if feasible
+
+Do NOT make the Sun look like a simple orange circle.
+
+It should feel enormous and extremely bright.
+
+The ship should NOT literally fly into the Sun.
+
+Instead, have the route curve around it.
+
+---
+
+# 10. NEBULAE
+
+Introduce large-scale nebula environments.
+
+Examples of visual inspiration:
+
+- Orion Nebula
+- Eagle Nebula
+- Carina Nebula
+- colorful emission nebulae
+- dark nebulae
+
+Use procedural effects, textures, shaders, or optimized 3D techniques.
+
+Nebulae should be slow-moving.
+
+They should create cinematic transitions between planetary regions.
+
+---
+
+# 11. ASTEROID FIELD
+
+Include at least one section where the spaceship passes through an asteroid field.
+
+Asteroids should have:
+
+- Different sizes
+- Irregular shapes
+- Different rotations
+- Different distances
+- Realistic parallax
+
+The ship should pass through the field rather than collide with anything.
+
+Keep the density controlled so it doesn't become visually distracting.
+
+---
+
+# 12. SPACE WINDOW EFFECT
+
+The most important conceptual detail:
+
+**Make it feel like the user is looking through a spaceship window.**
+
+Do not simply put a black space background behind the website.
+
+Create a subtle visual boundary around the viewport.
+
+Possible effects:
+
+- Dark metallic edges
+- Subtle HUD framing
+- Slight glass reflection
+- Very subtle glass distortion
+- Soft vignette
+- Interior lighting
+- Small reflections
+
+The website content should feel like it exists **inside the spaceship**.
+
+Do NOT add a huge literal spaceship cockpit around the entire website.
+
+Keep it elegant and minimal.
+
+---
+
+# 13. GLASS / WINDOW REFLECTION
+
+Add extremely subtle glass characteristics.
+
+For example:
+
+- faint reflection streaks
+- subtle transparency
+- occasional light reflection
+- very slight bloom
+
+These effects should only become noticeable when a bright object such as the Sun or a planet passes nearby.
+
+---
+
+# 14. CINEMATIC EVENTS
+
+Create occasional events throughout the one-hour route.
 
 Examples:
 
-- A subtle image scale.
-- A restrained elevation or translation effect.
-- Animated metadata.
-- A visual indication that a project is interactive.
-- A transition into project details if that experience is implemented.
+### Event A
+A large planet slowly enters the viewport.
 
-The interaction must not make important links difficult to click or read.
+### Event B
+A moon passes between the camera and a planet.
 
-### Animation 5: Navigation and Section Transitions
+### Event C
+The spaceship enters a nebula.
 
-Use smooth navigation and suitable transitions between interface states.
+### Event D
+An asteroid field appears.
 
-Respect browser history and URL behavior.
+### Event E
+The Sun becomes visible.
 
-Do not prevent normal scrolling or keyboard navigation.
+### Event F
+A bright star passes nearby.
 
-### Animation 6: Ambient Motion
+### Event G
+A distant galaxy becomes visible.
 
-Introduce optional, subtle ambient motion where it adds visual depth.
+### Event H
+Hyperspace transition begins near the end.
 
-Potential examples:
+These events should happen organically.
 
-- Moving grid lines.
-- Slowly shifting interface elements.
-- A restrained cursor-following accent.
-- A decorative technical visualization.
-
-Avoid resource-intensive effects that harm scrolling, battery life, or mobile performance.
-
-### Animation 7: Microinteractions
-
-Use subtle motion for:
-
-- Buttons.
-- Navigation links.
-- Theme changes.
-- Copy-email feedback.
-- Project filters.
-- Menu open and close states.
-
-Microinteractions should communicate feedback rather than merely decorate the interface.
-
-### Animation 8: Loading and Completion States
-
-Where useful, animate asynchronous interface states, such as loading GitHub project metadata or submitting a contact form.
-
-Do not introduce artificial loading delays.
-
-Do not make essential portfolio content dependent on third-party API availability.
+Do not create a predictable repeating animation every 10 seconds.
 
 ---
 
-## 7. Animation Engineering Rules
+# 15. ONE-HOUR TIMELINE
 
-Follow these rules throughout implementation.
+Create a deterministic timeline.
 
-### Performance
-
-- Prefer transform and opacity animations when appropriate.
-- Avoid unnecessary layout recalculations.
-- Avoid animating large numbers of DOM elements simultaneously.
-- Avoid expensive blur and filter animations on mobile.
-- Keep the page responsive while animations execute.
-- Clean up event listeners, observers, and animation instances.
-- Avoid duplicate animations caused by repeated React effects.
-- Test React component mounting and unmounting.
-- Use lazy loading for appropriate images and below-the-fold media.
-
-### Accessibility
-
-Support `prefers-reduced-motion`.
-
-When reduced motion is enabled:
-
-- Disable nonessential ambient movement.
-- Reduce or remove large translations and elaborate transitions.
-- Keep content visible and usable.
-- Preserve functionality and navigation.
-
-Ensure focus indicators remain visible and interactive elements are keyboard accessible.
-
-### Robustness
-
-- No animation should permanently hide content.
-- Do not depend on animations to reveal essential information.
-- Handle missing images and unavailable external data gracefully.
-- Ensure the website still works when JavaScript animation initialization fails wherever reasonably possible.
-
-### Animation architecture
-
-Create reusable animation utilities or hooks rather than implementing every animation independently.
-
-Keep animation logic separate from content data and presentation styles.
-
-Use clear names and comments to explain non-obvious animation behavior.
-
----
-
-## 8. Responsive Design
-
-The website must work well across:
-
-- Large desktop screens.
-- Standard laptop screens.
-- Tablets.
-- Mobile phones.
-
-Do not treat responsiveness as a final CSS patch.
-
-Design the mobile experience intentionally.
-
-Requirements:
-
-- No horizontal overflow.
-- No clipped text.
-- No overlapping animated elements.
-- Appropriate font sizes and spacing.
-- Usable project cards.
-- Touch-friendly controls.
-- Accessible navigation.
-- Good performance on mid-range mobile devices.
-
-Adapt or disable decorative animations on smaller screens when appropriate.
-
-Test portrait and landscape layouts where relevant.
-
----
-
-## 9. SEO and Social Sharing
-
-Implement the technical SEO fundamentals.
-
-Include:
-
-- A meaningful page title.
-- A unique meta description.
-- A canonical URL where appropriate.
-- Open Graph metadata.
-- Social sharing metadata.
-- Semantic heading structure.
-- Descriptive image alt text.
-- A favicon.
-- A valid sitemap and robots configuration when appropriate for the deployment.
-- Structured data only when the information is accurate and applicable.
-
-Use verified information when generating metadata.
-
-Ensure the page remains understandable to search engines even if animation libraries fail to initialize.
-
-Avoid keyword stuffing.
-
----
-
-## 10. Performance and Code Quality
-
-Treat the website as a production project.
-
-Requirements:
-
-- Clean component architecture.
-- Strong TypeScript typing.
-- Consistent formatting.
-- Reusable components.
-- Centralized content configuration.
-- No unnecessary dependencies.
-- No console errors.
-- No broken internal links.
-- No dead buttons.
-- No placeholder interactions presented as completed features.
-- No exposed secrets.
-- No unnecessary API calls.
-
-Optimize images and fonts.
-
-Avoid loading large libraries or assets when they are not needed.
-
-Use sensible code splitting or lazy loading when appropriate.
-
-The application should be easy to understand and modify.
-
----
-
-## 11. Suggested Project Structure
-
-Use a structure similar to the following, adapting it to the selected architecture:
+Example structure:
 
 ```text
-portfolio/
-├── public/
-│   ├── favicon.svg
-│   ├── images/
-│   └── resume/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   │   ├── Navbar.tsx
-│   │   ├── Button.tsx
-│   │   ├── ProjectCard.tsx
-│   │   ├── SectionHeading.tsx
-│   │   └── ThemeToggle.tsx
-│   ├── sections/
-│   │   ├── Hero.tsx
-│   │   ├── About.tsx
-│   │   ├── Skills.tsx
-│   │   ├── Projects.tsx
-│   │   ├── Experience.tsx
-│   │   ├── Contact.tsx
-│   │   └── Footer.tsx
-│   ├── animations/
-│   │   ├── entrance.ts
-│   │   ├── scroll.ts
-│   │   ├── interactions.ts
-│   │   └── useReducedMotion.ts
-│   ├── data/
-│   │   └── portfolio.ts
-│   ├── styles/
-│   │   ├── globals.css
-│   │   ├── tokens.css
-│   │   └── animations.css
-│   ├── App.tsx
-│   └── main.tsx
-├── index.html
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── README.md
+00:00 – 05:00
+Departure / star field
+
+05:00 – 10:00
+Mercury / Venus
+
+10:00 – 15:00
+Earth
+
+15:00 – 20:00
+Mars
+
+20:00 – 27:00
+Jupiter
+
+27:00 – 34:00
+Saturn
+
+34:00 – 38:00
+Uranus
+
+38:00 – 42:00
+Neptune
+
+42:00 – 47:00
+Deep space / notable stars
+
+47:00 – 52:00
+Sun encounter
+
+52:00 – 56:00
+Nebula / asteroid field
+
+56:00 – 59:00
+Deep space / galaxy
+
+59:00 – 60:00
+Hyperspace transition
+
+60:00
+Smoothly return to 00:00
 ```
 
-This is a suggested organization, not a rigid requirement.
+You may adjust these timings if necessary to make the experience visually better.
 
-Avoid creating unnecessary files or components that add complexity without improving maintainability.
-
----
-
-## 12. Implementation Workflow
-
-Work through the project in the following order.
-
-### Phase 1: Research
-
-- Inspect the existing portfolio.
-- Inspect my GitHub profile and relevant repositories.
-- Extract verified content.
-- Inventory available assets.
-- Record the links and facts that will appear on the new website.
-
-Deliverable: A concise content inventory and implementation plan.
-
-### Phase 2: Design
-
-- Define the creative direction.
-- Establish the design tokens.
-- Plan the page layout.
-- Define the animation language.
-- Consider desktop and mobile layouts.
-
-Deliverable: A coherent design plan that guides the implementation.
-
-### Phase 3: Project Setup
-
-- Initialize the application if necessary.
-- Install the required dependencies.
-- Configure TypeScript and the build system.
-- Establish the project structure.
-- Configure Anime.js using the installed version's documented APIs.
-
-Do not overwrite unrelated files or existing work without inspecting the project first.
-
-### Phase 4: Core Implementation
-
-Build the complete page structure and implement the actual portfolio content.
-
-Ensure every section works before adding complex animation sequences.
-
-### Phase 5: Animation Implementation
-
-Add the Anime.js motion system.
-
-Implement entrance animations, scroll reveals, project interactions, navigation transitions, and appropriate microinteractions.
-
-Test animation cleanup and reduced-motion behavior.
-
-### Phase 6: Responsive Refinement
-
-Test different viewport sizes.
-
-Fix layout issues, text overflow, touch interactions, and mobile animation performance.
-
-### Phase 7: Quality Assurance
-
-Run the available checks, including:
-
-- Production build.
-- TypeScript checks.
-- Linting, if configured.
-- Browser console inspection.
-- Link verification.
-- Responsive layout checks.
-- Keyboard navigation checks.
-- Reduced-motion checks.
-- Basic accessibility review.
-- Performance inspection.
-
-Fix discovered issues instead of merely documenting them.
-
-### Phase 8: Documentation and Delivery
-
-Create a README that explains:
-
-- Project overview.
-- Technology stack.
-- Installation.
-- Local development.
-- Production build.
-- Project structure.
-- How to update portfolio content.
-- How to add a project.
-- How to change the theme.
-- How to customize animations.
-- Deployment instructions.
-
-Provide the exact commands needed to run and build the project.
+The important requirement is that the complete journey takes **one hour**.
 
 ---
 
-## 13. Deployment
+# 16. LOOPING
 
-Prepare the website for deployment.
+The animation must loop indefinitely.
 
-My existing portfolio is hosted on GitHub Pages, so consider GitHub Pages compatibility as the default deployment target.
+Conceptually:
 
-If using Vite:
+```text
+Journey 1
+0 → 60 minutes
 
-- Configure the correct base path for the intended deployment URL.
-- Ensure assets resolve correctly after deployment.
-- Verify client-side routing behavior if routing is introduced.
-- Configure a GitHub Actions workflow if needed.
-- Document the deployment process.
+Journey 2
+0 → 60 minutes
 
-Do not assume the new website will automatically deploy to the existing URL without the required repository and hosting configuration.
+Journey 3
+0 → 60 minutes
+```
 
-If deploying to another hosting platform would materially improve the result, explain the trade-offs, but keep the project deployable to GitHub Pages where practical.
+Do not reload the page.
 
-Never publish deployment credentials or secrets in the repository.
+Do not restart the WebGL scene.
 
----
+Do not cause a visible flash.
 
-## 14. Definition of Done
+Do not reset the DOM.
 
-The project is complete only when the following conditions are met:
+The transition should be seamless.
 
-1. The existing portfolio has been inspected and its verified information extracted.
-2. Relevant GitHub projects have been researched.
-3. The new website has a distinct visual identity.
-4. All major portfolio sections are implemented.
-5. Anime.js is genuinely integrated and used for meaningful interactions.
-6. The animations are smooth and do not obstruct content.
-7. Reduced-motion preferences are supported.
-8. The website is responsive.
-9. All displayed links have been verified where possible.
-10. There are no knowingly broken buttons or fake interactions.
-11. The production build succeeds.
-12. The website has appropriate SEO and accessibility fundamentals.
-13. The README explains how to run, maintain, and deploy the project.
-14. The result is ready for local testing and deployment.
+Use a deterministic normalized timeline:
 
-Do not stop after producing a design concept, wireframe, screenshot, or code outline.
+```javascript
+progress = (elapsedTime % ONE_HOUR) / ONE_HOUR;
+```
 
-**Implement the complete working website.**
+The entire environment should derive its state from this timeline wherever practical.
 
-If the current environment supports browser automation, use it to inspect the reference website and test the new implementation.
-
-If something cannot be verified or tested in the available environment, state that limitation honestly.
+This allows the animation to remain deterministic and synchronized.
 
 ---
 
-## 15. Final Instruction
+# 17. PERFORMANCE IS CRITICAL
 
-Build this portfolio as if it will be evaluated by experienced engineering managers, technical recruiters, frontend engineers, and design-conscious developers.
+This is still a portfolio website.
 
-The website should communicate technical credibility through both its content and its implementation.
+The animation must NOT destroy performance.
 
-Use animation to make the experience memorable, not distracting.
+Target:
 
-Prioritize craftsmanship, clarity, authenticity, accessibility, and performance.
+**60 FPS on a modern desktop**
 
-**Begin by researching the existing portfolio and relevant GitHub repositories. Then implement the new website from scratch, validate it, and deliver the complete project.**
+Gracefully degrade on weaker devices.
+
+Implement:
+
+- GPU acceleration
+- instancing
+- object pooling
+- LOD
+- frustum culling
+- texture compression where appropriate
+- lazy loading
+- efficient shaders
+- reduced particle counts on mobile
+- reduced resolution on mobile
+- pause/slow animation when the tab is hidden
+
+Do NOT load massive uncompressed textures.
+
+Do NOT introduce hundreds of megabytes of assets.
+
+---
+
+# 18. MOBILE
+
+On mobile devices:
+
+Do NOT attempt to render the exact desktop scene.
+
+Instead create a simplified version.
+
+For example:
+
+Desktop:
+- Full 3D environment
+- Many stars
+- planets
+- asteroids
+- nebulae
+- detailed parallax
+
+Mobile:
+- reduced star count
+- fewer objects
+- simplified shaders
+- fewer particles
+- lower texture resolution
+
+The portfolio UI must remain responsive and readable.
+
+---
+
+# 19. REDUCED MOTION
+
+Respect:
+
+```text
+prefers-reduced-motion
+```
+
+If the user has reduced motion enabled:
+
+- Disable major camera movement
+- Disable fast-moving objects
+- Keep planets rotating extremely slowly or freeze them
+- Keep a subtle static cosmic background
+
+Accessibility takes priority over cinematic effects.
+
+---
+
+# 20. AUDIO
+
+Do NOT automatically add audio.
+
+Do not autoplay music.
+
+If the existing website already has an audio system, integrate only if appropriate.
+
+The visual experience should work perfectly without sound.
+
+---
+
+# 21. DO NOT BREAK THE EXISTING WEBSITE
+
+Before implementation:
+
+1. Inspect the current application architecture.
+2. Identify the existing background implementation.
+3. Identify the main UI containers.
+4. Identify existing animation libraries.
+5. Identify whether Three.js/WebGL is already used.
+6. Reuse existing dependencies wherever practical.
+7. Avoid unnecessary dependencies.
+
+Do NOT rewrite unrelated components.
+
+Do NOT change:
+
+- Portfolio content
+- Project information
+- Navigation
+- Typography
+- Existing interactive components
+- Resume/contact functionality
+
+unless absolutely necessary for integration.
+
+---
+
+# 22. IMPLEMENTATION ARCHITECTURE
+
+Prefer a clean separation such as:
+
+```text
+SpaceScene
+ ├── Camera
+ ├── StarField
+ ├── PlanetSystem
+ ├── CelestialObjects
+ ├── NebulaSystem
+ ├── AsteroidField
+ ├── SpaceLighting
+ ├── SpaceWindow
+ ├── JourneyTimeline
+ └── CinematicEvents
+```
+
+The exact architecture should follow the existing project.
+
+Create a centralized journey controller:
+
+```text
+JourneyTimeline
+```
+
+which exposes something conceptually similar to:
+
+```javascript
+journey.progress
+journey.elapsed
+journey.currentSection
+journey.loopCount
+```
+
+Every visual system should use the same timeline.
+
+---
+
+# 23. IMPORTANT: MAKE IT LOOK PREMIUM
+
+Do NOT make this look like a demo of Three.js.
+
+Avoid:
+
+- cartoon planets
+- low-resolution textures
+- obvious procedural spheres
+- excessive bloom
+- excessive lens flare
+- neon sci-fi clichés
+- cheap particle effects
+- overly bright stars
+- random objects everywhere
+
+The visual target should be:
+
+**cinematic + sophisticated + realistic + futuristic + restrained**
+
+Think:
+
+> AAA sci-fi film  
+> NASA visualization  
+> futuristic spacecraft observation window  
+> premium AI product interface
+
+rather than:
+
+> browser game
+
+---
+
+# 24. VISUAL HIERARCHY
+
+The hierarchy must always be:
+
+1. Portfolio content
+2. Portfolio navigation/interactions
+3. Space environment
+4. Cinematic details
+
+The background must support the website rather than compete with it.
+
+When text is over a bright planet or star field, automatically ensure sufficient contrast.
+
+If necessary, use:
+
+- subtle dark overlays
+- dynamic vignette
+- local background dimming
+- blur
+- gradient overlays
+
+---
+
+# 25. OPTIONAL HUD DETAILS
+
+If they fit the existing design, add extremely subtle spaceship instrumentation.
+
+For example:
+
+```text
+SECTOR 07
+DEEP SPACE
+VELOCITY 0.42C
+MISSION TIME 27:43
+```
+
+But these must be subtle.
+
+Do NOT turn the website into a game HUD.
+
+The existing portfolio UI remains the primary interface.
+
+---
+
+# 26. FINAL USER EXPERIENCE
+
+When someone opens the website, they should immediately feel:
+
+> "I'm inside a futuristic spacecraft."
+
+After staying on the website for several minutes:
+
+> "This environment is actually moving through space."
+
+After 10–20 minutes:
+
+> "The scenery is changing."
+
+After 30–60 minutes:
+
+> "This is a continuous journey through an entire cosmic route."
+
+And after one hour:
+
+> "The journey seamlessly started again."
+
+The effect should make the portfolio memorable without making it difficult to use.
+
+---
+
+# 27. IMPLEMENTATION PROCESS
+
+Follow this workflow:
+
+### Step 1
+Inspect the entire existing codebase.
+
+### Step 2
+Understand the existing design system.
+
+### Step 3
+Identify the current background implementation.
+
+### Step 4
+Design the space rendering architecture.
+
+### Step 5
+Implement the core 3D space environment.
+
+### Step 6
+Implement the deterministic 60-minute journey timeline.
+
+### Step 7
+Add planets and continuous planetary rotation.
+
+### Step 8
+Add stars, known stars, nebulae and deep-space objects.
+
+### Step 9
+Add Sun encounter.
+
+### Step 10
+Add asteroid field.
+
+### Step 11
+Add cinematic camera movement.
+
+### Step 12
+Add spaceship-window visual treatment.
+
+### Step 13
+Implement seamless 60-minute looping.
+
+### Step 14
+Optimize desktop performance.
+
+### Step 15
+Implement mobile degradation.
+
+### Step 16
+Implement reduced-motion accessibility.
+
+### Step 17
+Test the website at different timeline positions.
+
+### Step 18
+Verify that the existing portfolio functionality remains intact.
+
+---
+
+# 28. TESTING REQUIREMENTS
+
+Do not only test the beginning.
+
+Create a temporary development/debug mechanism allowing the journey to be jumped to:
+
+```text
+0%
+10%
+20%
+30%
+40%
+50%
+60%
+70%
+80%
+90%
+99%
+```
+
+Use this to verify every section.
+
+Remove or disable the debug controls from production.
+
+Verify:
+
+- No visual glitches
+- No memory leaks
+- No major FPS drops
+- No texture pop-in where avoidable
+- No sudden camera jumps
+- No visible loop seam
+- No broken UI
+- No text readability issues
+
+---
+
+# 29. MOST IMPORTANT DESIGN PRINCIPLE
+
+The final result should NOT look like:
+
+> "A portfolio website with a space animation."
+
+It should look like:
+
+> **"A futuristic spacecraft interface that happens to contain Raj's portfolio."**
+
+That distinction is extremely important.
+
+The space environment should feel like the **world surrounding the website**, not a decorative background added afterward.
+
+Implement this directly into the existing project while preserving its current identity and functionality.

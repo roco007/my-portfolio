@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   Shared types for the layered outer-space background environment.
-   ═══════════════════════════════════════════════════════════════════════════ */
+import type { JourneyState } from './JourneyTimeline';
 
 /** Adaptive quality tier — drives particle/object counts & pixel-ratio caps. */
 export type QualityTier = 'high' | 'medium' | 'low';
@@ -36,6 +34,8 @@ export interface SceneState {
   rand: () => number;
   /** Reduce visual intensity (used for light theme readability). */
   intensity: number;
+  /** 60-minute deterministic space journey timeline state. */
+  journey: JourneyState;
 }
 
 /**

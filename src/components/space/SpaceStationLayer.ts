@@ -9,6 +9,7 @@
 
 import type { SceneState, SpaceLayer } from './types';
 import { randRange } from './rng';
+import { scaleSec } from './JourneyTimeline';
 
 interface Station {
   cx: number; cy: number;   // current center
@@ -206,15 +207,33 @@ export class SpaceStationLayer implements SpaceLayer {
   }
 
   draw(state: SceneState): void {
-    const { ctx, mouse, scrollY, time, intensity, quality } = state;
+    const { ctx, mouse, scrollY, time, intensity, quality, journey } = state;
     const fancy = quality !== 'low';
+
+    // The orbital station is prominently visible during departure (00:00 – 05:00)
+    // and gradually recedes as the spaceship leaves orbit.
+    // Windows are canonical mission-clock seconds mapped onto the live loop.
+    const departEnd = scaleSec(300); // 05:00 → 00:10
+    const fadeEnd = scaleSec(420);   // 07:00 → 00:14
+    let stationAlpha = 1.0;
+    if (journey.elapsed < departEnd) {
+      // 00:00 – 05:00
+      stationAlpha = 1.0 - (journey.elapsed / departEnd) * 0.4;
+    } else if (journey.elapsed < fadeEnd) {
+      // 05:00 – 07:00 fading into deep distance
+      stationAlpha = (1 - (journey.elapsed - departEnd) / (fadeEnd - departEnd)) * 0.6;
+    } else {
+      // Not in departure orbital window
+      return;
+    }
+
     ctx.save();
     for (const s of this.stations) {
-      const ox = mouse.x * (6 + s.depth * 18);
-      const oy = mouse.y * (4 + s.depth * 12) - scrollY * (0.015 + s.depth * 0.05);
+      const ox = mouse.x * (6 + s.depth * 18) + journey.camera.swayX * s.depth * 0.4;
+      const oy = mouse.y * (4 + s.depth * 12) - scrollY * (0.015 + s.depth * 0.05) + journey.camera.swayY * s.depth * 0.4;
       ctx.save();
       ctx.translate(ox, oy);
-      drawStation(ctx, s, time, intensity, fancy);
+      drawStation(ctx, s, time, intensity * stationAlpha, fancy);
       ctx.restore();
     }
     ctx.restore();
