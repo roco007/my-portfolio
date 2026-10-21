@@ -5,7 +5,7 @@ import { MorphingVisualizer } from './MorphingVisualizer';
 import { OrbitalProjectsSolarSystem } from './OrbitalProjectsSolarSystem';
 import { OrbitalSocialSolarSystem } from './OrbitalSocialSolarSystem';
 import { Experience } from '../sections/Experience';
-import { STORY_CHAPTERS, getNearestStoryChapter } from '../data/storyChapters';
+import { STORY_CHAPTERS, getNearestStoryChapter, getStoryChapterById } from '../data/storyChapters';
 import styles from './PinnedStoryContainer.module.css';
 
 const isScrollable = (el: HTMLElement | null, deltaY: number): boolean => {
@@ -217,6 +217,33 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
 
     autoScrollRafRef.current = requestAnimationFrame(animate);
   }, []);
+
+  // The story is driven by a virtual scroll track, so native hash scrolling
+  // cannot find the visually rendered chapter. Resolve an initial hash through
+  // the same chapter targets used by navbar and keyboard navigation.
+  useEffect(() => {
+    const requestedId = window.location.hash.slice(1).trim();
+    const requestedChapter = getStoryChapterById(requestedId);
+    if (!requestedChapter) return;
+
+    const chapterIndex = STORY_CHAPTERS.findIndex(
+      (chapter) => chapter.id === requestedChapter.id,
+    );
+    if (chapterIndex < 0) return;
+
+    let firstFrame = 0;
+    let secondFrame = 0;
+    firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        goToChapterIndex(chapterIndex);
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+    };
+  }, [goToChapterIndex]);
 
   // Unified Section-by-Section Scroll Gating & Lerp Engine
   useEffect(() => {
