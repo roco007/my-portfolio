@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
 Automated Project Ingestion Script for Raj Colaco's Portfolio.
-Takes 1 input: GitHub Repository URL.
-- Automatically derives Project Name from repo name by splitting camelCase / PascalCase.
-- Fetches Description from GitHub repository 'About' section.
-- Fetches Project Link (Live Demo URL) from GitHub repository 'About' website section.
-- Auto-infers Category and Tags from topics and description.
-- Automatically inserts the new card at the TOP of the projects grid (before existing cards).
-- Renumbers SYS.001, SYS.002... and updates the DEPLOYED UNITS HUD counter.
+
+Fetches GitHub metadata, collects the portfolio-specific fields, and appends a
+schema-complete Project object to src/data/portfolio.ts on the current branch.
 """
 
 import sys
 import os
 import re
 import json
-import shutil
 import argparse
+import tempfile
 import urllib.request
-import urllib.error
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional, Sequence
+from urllib.parse import urlparse
 
-INDEX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
-IMAGES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "images")
+PROJECT_ROOT = Path(__file__).resolve().parent
+PORTFOLIO_PATH = PROJECT_ROOT / "src" / "data" / "portfolio.ts"
+IMAGES_DIR = PROJECT_ROOT / "public" / "images"
 
 # Terminal colors for interactive UX
 CYAN = "\033[96m"
@@ -33,8 +33,194 @@ RESET = "\033[0m"
 CATEGORY_MAP = {
     "ai": ("ai", "AI & Multi-Agent", "tag-ai"),
     "utility": ("utility", "Dev Utilities", "tag-utility"),
-    "interactive": ("interactive", "3D & Apps", "tag-interactive"),
+    "interactive": ("interactive", "3D & Interactive Apps", "tag-interactive"),
 }
+
+
+class PortfolioUpdateError(RuntimeError):
+    """Raised when a project cannot be safely added to portfolio.ts."""
+
+
+@dataclass(frozen=True)
+class ProjectEntry:
+    """A schema-complete project record for src/data/portfolio.ts."""
+
+    id: str
+    title: str
+    category: str
+    category_label: str
+    description: str
+    problem_solved: str
+    key_features: Sequence[str]
+    technologies: Sequence[str]
+    github_url: str
+    live_url: Optional[str]
+    image: str
+    featured: bool = True
+
+
+def _typescript_string(value):
+    """Serialize a Python string as a safe TypeScript string literal."""
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _render_string_array(field_name, values):
+    lines = [f"    {field_name}: ["]
+    for value in values:
+        lines.append(f"      {_typescript_string(value)},")
+    lines.append("    ],")
+    return lines
+
+
+def _render_project_entry(project, sys_id):
+    lines = [
+        "  {",
+        f"    id: {_typescript_string(project.id)},",
+        f"    title: {_typescript_string(project.title)},",
+        f"    category: {_typescript_string(project.category)},",
+        f"    categoryLabel: {_typescript_string(project.category_label)},",
+        f"    description: {_typescript_string(project.description)},",
+        f"    problemSolved: {_typescript_string(project.problem_solved)},",
+    ]
+    lines.extend(_render_string_array("keyFeatures", project.key_features))
+    lines.extend(_render_string_array("technologies", project.technologies))
+    lines.append(f"    githubUrl: {_typescript_string(project.github_url)},")
+    if project.live_url:
+        lines.append(f"    liveUrl: {_typescript_string(project.live_url)},")
+    lines.extend(
+        [
+            f"    image: {_typescript_string(project.image)},",
+            f"    sysId: {_typescript_string(sys_id)},",
+            f"    featured: {'true' if project.featured else 'false'}",
+            "  }",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _project_array_bounds(source):
+    declaration = "export const PROJECTS: Project[] = ["
+    start = source.find(declaration)
+    if start < 0:
+        raise PortfolioUpdateError(
+            "Could not find the PROJECTS array in src/data/portfolio.ts."
+        )
+
+    array_start = start + len(declaration)
+    array_end = source.find("\n];", array_start)
+    if array_end < 0:
+        raise PortfolioUpdateError(
+            "Could not find the end of the PROJECTS array in src/data/portfolio.ts."
+        )
+    return array_start, array_end
+
+
+def _require_portfolio_file(portfolio_path):
+    path = Path(portfolio_path)
+    if not path.is_file():
+        raise PortfolioUpdateError(
+            f"This branch does not contain src/data/portfolio.ts at '{path}'."
+        )
+    return path
+
+
+def _atomic_write_text(path, content):
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary_file:
+            temporary_path = Path(temporary_file.name)
+            temporary_file.write(content)
+            temporary_file.flush()
+            os.fsync(temporary_file.fileno())
+
+        os.chmod(temporary_path, path.stat().st_mode)
+        os.replace(temporary_path, path)
+    except OSError as error:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+        raise PortfolioUpdateError(
+            f"Could not safely update '{path}': {error}"
+        ) from error
+
+
+def append_project_to_portfolio(portfolio_path, project):
+    """Append a project to PROJECTS and return the new project count."""
+    path = _require_portfolio_file(portfolio_path)
+
+    source = path.read_text(encoding="utf-8")
+    array_start, array_end = _project_array_bounds(source)
+    array_body = source[array_start:array_end]
+    canonical_repo = re.sub(
+        r"\.git$",
+        "",
+        project.github_url.rstrip("/"),
+        flags=re.IGNORECASE,
+    ).lower()
+    existing_repositories = {
+        re.sub(r"\.git$", "", value.rstrip("/"), flags=re.IGNORECASE).lower()
+        for value in re.findall(r"githubUrl:\s*['\"]([^'\"]+)['\"]", array_body)
+    }
+    if canonical_repo in existing_repositories:
+        raise PortfolioUpdateError(
+            f"A project for '{project.github_url}' already exists in portfolio.ts."
+        )
+
+    existing_project_ids = set(
+        re.findall(r"\bid:\s*['\"]([^'\"]+)['\"]", array_body)
+    )
+    if project.id in existing_project_ids:
+        raise PortfolioUpdateError(
+            f"The project id '{project.id}' already exists in portfolio.ts."
+        )
+
+    existing_ids = [
+        int(value)
+        for value in re.findall(r"sysId:\s*['\"]SYS\.(\d+)['\"]", array_body)
+    ]
+    next_number = max(existing_ids, default=0) + 1
+    sys_id = f"SYS.{next_number:03d}"
+    rendered = _render_project_entry(project, sys_id)
+
+    updated_body = array_body.rstrip()
+    if updated_body:
+        updated_body += "\n" if updated_body.endswith(",") else ",\n"
+    else:
+        updated_body = "\n"
+    updated_body += rendered
+    updated = source[:array_start] + updated_body + source[array_end:]
+
+    total = len(existing_ids) + 1
+    updated, stats_replacements = re.subn(
+        r"(deployedProjects:\s*)\d+",
+        rf"\g<1>{total}",
+        updated,
+        count=1,
+    )
+    if stats_replacements != 1:
+        raise PortfolioUpdateError(
+            "Could not update PERSONAL_INFO.stats.deployedProjects in portfolio.ts."
+        )
+
+    updated, bio_replacements = re.subn(
+        r"With \d+\+ deployed production units",
+        f"With {total}+ deployed production units",
+        updated,
+        count=1,
+    )
+    if bio_replacements != 1:
+        raise PortfolioUpdateError(
+            "Could not update the deployed-project count in the portfolio bio."
+        )
+
+    _atomic_write_text(path, updated)
+    return total
 
 KNOWN_ACRONYMS = {
     "ai": "AI", "llm": "LLM", "api": "API", "ui": "UI", "qr": "QR",
@@ -51,15 +237,39 @@ def parse_repo_identifier(repo_input):
     - github.com/roco007/OpporunityAi
     - roco007/OpporunityAi
     """
-    clean = repo_input.strip().strip("'\"")
-    # Remove trailing .git or slashes
-    clean = re.sub(r'\.git/?$', '', clean)
-    clean = clean.rstrip('/')
+    clean = repo_input.strip().strip("'\"").rstrip("/")
+    if not clean or re.search(r"\s|[\x00-\x1f\x7f]", clean):
+        return None, None
 
-    match = re.search(r'(?:github\.com/)?([^/\s]+)/([^/\s]+)$', clean)
-    if match:
-        return match.group(1), match.group(2)
-    return None, None
+    if re.match(r"https?://", clean, flags=re.IGNORECASE):
+        parsed = urlparse(clean)
+        if parsed.scheme.lower() not in {"http", "https"}:
+            return None, None
+        if (parsed.hostname or "").lower() not in {"github.com", "www.github.com"}:
+            return None, None
+        if parsed.query or parsed.fragment:
+            return None, None
+        parts = [part for part in parsed.path.split("/") if part]
+    else:
+        without_host = re.sub(
+            r"^(?:www\.)?github\.com/",
+            "",
+            clean,
+            flags=re.IGNORECASE,
+        )
+        if "://" in without_host:
+            return None, None
+        parts = without_host.split("/")
+
+    if len(parts) != 2:
+        return None, None
+    owner, repo = parts
+    repo = re.sub(r"\.git$", "", repo, flags=re.IGNORECASE)
+    if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})", owner):
+        return None, None
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", repo) or repo in {".", ".."}:
+        return None, None
+    return owner, repo
 
 
 def split_camel_case_name(raw_name):
@@ -172,266 +382,316 @@ def infer_category(name, description, topics, language):
     return "ai"
 
 
-def infer_tags(category, topics, language):
-    """Generate 2 clean tags for the card header."""
-    tags = []
-
-    # Priority 1: GitHub topics
-    for t in topics:
-        clean_t = t.replace('-', ' ').title()
-        if clean_t.lower() in KNOWN_ACRONYMS:
-            clean_t = KNOWN_ACRONYMS[clean_t.lower()]
-        if clean_t not in tags and len(clean_t) < 16:
-            tags.append(clean_t)
-        if len(tags) >= 2:
-            break
-
-    # Priority 2: Primary language
-    if len(tags) < 2 and language and language not in tags:
-        tags.append(language)
-
-    # Defaults by category if needed
-    if len(tags) < 2:
-        defaults = {
-            "ai": ["AI Tool", "Full Stack"],
-            "utility": ["Utility", "Web App"],
-            "interactive": ["Interactive", "Web App"]
-        }
-        for d in defaults.get(category, ["Project", "Web App"]):
-            if d not in tags:
-                tags.append(d)
-            if len(tags) >= 2:
-                break
-
-    return tags[:2]
+def _clean_image_stem(filename):
+    stem = Path(filename).stem.lower().replace("_preview", "").replace("-preview", "")
+    return re.sub(r"[^a-z0-9]", "", stem)
 
 
-def find_matching_image(repo_name):
-    """Check if an image corresponding to the repository name exists in assets/images, using exact & fuzzy matching."""
-    if not os.path.exists(IMAGES_DIR):
-        return "assets/images/project-placeholder.svg"
+def find_matching_image(repo_name, images_dir=IMAGES_DIR):
+    """Return an exact public image match, or the branch placeholder."""
+    directory = Path(images_dir)
+    if not directory.is_dir():
+        raise PortfolioUpdateError(f"Could not find the image directory at '{directory}'.")
 
-    clean_target = re.sub(r'[^a-zA-Z0-9]', '', repo_name).lower()
-    available_files = [f for f in os.listdir(IMAGES_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.svg'))]
+    clean_target = re.sub(r"[^a-z0-9]", "", repo_name.lower())
+    supported = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
+    for candidate in sorted(directory.iterdir()):
+        if candidate.is_file() and candidate.suffix.lower() in supported:
+            if _clean_image_stem(candidate.name) == clean_target:
+                return f"images/{candidate.name}"
 
-    # 1. Exact substring check
-    for filename in available_files:
-        clean_file = re.sub(r'[^a-zA-Z0-9]', '', filename).lower()
-        if clean_target in clean_file or clean_file in clean_target:
-            return f"assets/images/{filename}"
-
-    # 2. Fuzzy similarity check (e.g. OpporunityAi -> OpportunityAI_preview.png)
-    import difflib
-    cleaned_map = {}
-    for filename in available_files:
-        simplified = re.sub(r'(_preview|\.png|\.jpg|\.jpeg|\.webp|\.svg|[-_])', '', filename.lower())
-        cleaned_map[simplified] = filename
-
-    matches = difflib.get_close_matches(clean_target, list(cleaned_map.keys()), n=1, cutoff=0.65)
-    if matches:
-        return f"assets/images/{cleaned_map[matches[0]]}"
-
-    # Default fallback
-    return "assets/images/project-placeholder.svg"
-
-
-def build_card_html(name, live_url, repo_url, description, category_key, category_class, tags_list, image_src):
-    """Generate HTML string for the new project card."""
-    tags_html = []
-    for i, tag in enumerate(tags_list):
-        tag_str = tag.strip()
-        if not tag_str:
-            continue
-        if i == 0 and category_class:
-            tags_html.append(f'                                <span class="tag {category_class}">{tag_str}</span>')
-        else:
-            tags_html.append(f'                                <span class="tag">{tag_str}</span>')
-
-    rendered_tags = "\n".join(tags_html) if tags_html else f'                                <span class="tag {category_class}">Project</span>'
-
-    card_template = f"""                <!-- Project: {name} -->
-                <article class="project-card glass-cyber fade-in" data-category="{category_key}">
-                    <span class="card-corner tl"></span>
-                    <span class="card-corner tr"></span>
-                    <span class="card-corner bl"></span>
-                    <span class="card-corner br"></span>
-                    <div class="card-laser-glow"></div>
-
-                    <!-- Live Site Overlay Link -->
-                    <a href="{live_url}" target="_blank" rel="noopener noreferrer"
-                        class="card-live-overlay" aria-label="Launch {name} live demo"></a>
-
-                    <div class="card-image-wrapper">
-                        <img src="{image_src}" alt="{name} Preview" class="card-image" loading="lazy" decoding="async" width="768" height="432">
-                        <div class="cyber-laser-scan"></div>
-                        <a href="{live_url}" target="_blank" rel="noopener noreferrer" class="card-overlay" aria-label="Initialize {name} Demo">
-                            <span class="live-btn">
-                                <span class="btn-text">INITIALIZE DEMO</span>
-                                <span class="arrow">↗</span>
-                            </span>
-                        </a>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-header-meta">
-                            <div class="tags">
-{rendered_tags}
-                            </div>
-                            <span class="cyber-chip-id">SYS.001</span>
-                        </div>
-                        <h3>
-                            <a href="{repo_url}" target="_blank" rel="noopener noreferrer"
-                                class="project-title-link">{name}</a>
-                        </h3>
-                        <p>{description}</p>
-                    </div>
-                </article>"""
-    return card_template
-
-
-def insert_card_into_html(card_html):
-    """Insert the new project card at the TOP of the projects grid and renumber systems."""
-    if not os.path.exists(INDEX_PATH):
-        print(f"{PINK}Error: Could not find index.html at '{INDEX_PATH}'{RESET}")
-        sys.exit(1)
-
-    with open(INDEX_PATH, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # Locate <div class="projects-grid" id="projects-grid">
-    grid_pattern = re.compile(r'(<div\s+class="projects-grid"[^>]*id="projects-grid"[^>]*>)', re.IGNORECASE)
-    match = grid_pattern.search(content)
-
-    if not match:
-        print(f"{PINK}Error: Could not find <div class=\"projects-grid\" id=\"projects-grid\"> in index.html.{RESET}")
-        sys.exit(1)
-
-    insert_pos = match.end()
-
-    # Insert card at the very top of the grid (before existing cards)
-    updated_content = content[:insert_pos] + "\n" + card_html + "\n" + content[insert_pos:]
-
-    # Renumber SYS.001, SYS.002, SYS.003... across all cards
-    chip_counter = 1
-    def replace_chip(m):
-        nonlocal chip_counter
-        num_str = f"SYS.{chip_counter:03d}"
-        chip_counter += 1
-        return f'<span class="cyber-chip-id">{num_str}</span>'
-
-    updated_content = re.sub(r'<span class="cyber-chip-id">SYS\.\d+</span>', replace_chip, updated_content)
-    total_projects = chip_counter - 1
-
-    # Update DEPLOYED UNITS counter in the telemetry HUD (e.g. "11 AI APPS")
-    hud_pattern = re.compile(r'(<span class="telemetry-label">DEPLOYED UNITS</span>\s*<span class="telemetry-value">)\d+\s+AI\s+APPS(</span>)', re.IGNORECASE)
-    if hud_pattern.search(updated_content):
-        updated_content = hud_pattern.sub(rf'\g<1>{total_projects} AI APPS\g<2>', updated_content)
-
-    with open(INDEX_PATH, "w", encoding="utf-8") as f:
-        f.write(updated_content)
-
-    return total_projects
-
-
-def process_repo(repo_input, override_name=None, override_live=None, override_desc=None, override_category=None, override_image=None, override_tags=None):
-    """Main workflow: fetch data from GitHub repo, derive fields, and add to index.html."""
-    owner, repo_name = parse_repo_identifier(repo_input)
-
-    if not owner or not repo_name:
-        print(f"{PINK}Error: Invalid repository format '{repo_input}'.{RESET}")
-        print(f"Please provide: {YELLOW}https://github.com/owner/repo{RESET} or {YELLOW}owner/repo{RESET}")
-        sys.exit(1)
-
-    print(f"\n{CYAN}⚡ Fetching metadata from GitHub repository:{RESET} {BOLD}{owner}/{repo_name}{RESET}...")
-    repo_data = fetch_github_repo_data(owner, repo_name)
-
-    # 1. Derive Project Name (split camelCase / PascalCase)
-    derived_name = split_camel_case_name(repo_data["name"])
-    final_name = override_name or derived_name
-
-    # 2. Derive Description (from GitHub repo About section)
-    about_description = repo_data["description"]
-    if not about_description:
-        about_description = f"Production-grade {final_name} application."
-    final_desc = override_desc or about_description
-
-    # 3. Derive Project Live Demo Link (from GitHub repo About section)
-    about_homepage = repo_data["homepage"]
-    if about_homepage and not about_homepage.startswith("http://") and not about_homepage.startswith("https://"):
-        about_homepage = f"https://{about_homepage}"
-    if not about_homepage:
-        about_homepage = repo_data["html_url"]
-    final_live = override_live or about_homepage
-
-    # 4. Repo URL
-    final_repo = repo_data["html_url"]
-
-    # 5. Infer Category & Tags
-    inferred_cat = infer_category(repo_data["name"], repo_data["description"], repo_data["topics"], repo_data["language"])
-    cat_key = override_category or inferred_cat
-    _, cat_name, cat_class = CATEGORY_MAP.get(cat_key, ("ai", "AI & Multi-Agent", "tag-ai"))
-
-    if override_tags:
-        tags_list = [t.strip() for t in override_tags.split(",") if t.strip()]
-    else:
-        tags_list = infer_tags(cat_key, repo_data["topics"], repo_data["language"])
-
-    # 6. Preview Image
-    if override_image:
-        final_image = override_image
-    else:
-        final_image = find_matching_image(repo_name)
-
-    # 7. Generate card HTML and insert into index.html
-    card_html = build_card_html(
-        name=final_name,
-        live_url=final_live,
-        repo_url=final_repo,
-        description=final_desc,
-        category_key=cat_key,
-        category_class=cat_class,
-        tags_list=tags_list,
-        image_src=final_image
+    placeholder = directory / "project-placeholder.svg"
+    if placeholder.is_file():
+        return "images/project-placeholder.svg"
+    raise PortfolioUpdateError(
+        "No matching preview image or public/images/project-placeholder.svg was found."
     )
 
-    total_projects = insert_card_into_html(card_html)
 
-    # Print summary
-    print(f"\n{GREEN}{BOLD}══════════════════════════════════════════════════════════════{RESET}")
-    print(f"{GREEN}{BOLD}✓ SUCCESS: Added '{final_name}' before existing cards!{RESET}")
-    print(f"{GREEN}{BOLD}══════════════════════════════════════════════════════════════{RESET}")
-    print(f"  {CYAN}Position:{RESET}       1st Card in Projects Grid (SYS.001)")
-    print(f"  {CYAN}Project Name:{RESET}   {final_name}  {YELLOW}(derived from '{repo_name}'){RESET}")
-    print(f"  {CYAN}Live Demo URL:{RESET}  {final_live}  {YELLOW}(from GitHub About link){RESET}")
+def resolve_image_reference(repo_name, override_image=None, images_dir=IMAGES_DIR):
+    """Validate an image reference served by Vite's public/images directory."""
+    if not override_image:
+        return find_matching_image(repo_name, images_dir)
+
+    normalized = override_image.strip().replace("\\", "/")
+    if normalized.startswith("public/images/"):
+        normalized = normalized[len("public/"):]
+    elif "/" not in normalized:
+        normalized = f"images/{normalized}"
+
+    if not normalized.startswith("images/") or ".." in Path(normalized).parts:
+        raise PortfolioUpdateError(
+            "Preview images must be files inside public/images."
+        )
+
+    filename = normalized[len("images/"):]
+    relative_path = Path(filename)
+    supported = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
+    if (
+        not filename
+        or relative_path.is_absolute()
+        or relative_path.suffix.lower() not in supported
+    ):
+        raise PortfolioUpdateError(
+            "Preview images must be supported files inside public/images."
+        )
+
+    image_root = Path(images_dir).resolve()
+    candidate = (image_root / relative_path).resolve()
+    try:
+        candidate.relative_to(image_root)
+    except ValueError as error:
+        raise PortfolioUpdateError(
+            "Preview images must stay inside public/images."
+        ) from error
+
+    if not candidate.is_file():
+        raise PortfolioUpdateError(
+            f"Preview image '{normalized}' does not exist in public/images."
+        )
+    return f"images/{relative_path.as_posix()}"
+
+
+def _comma_separated(value):
+    if not value:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _project_slug(value):
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    if not slug:
+        raise PortfolioUpdateError("Could not derive a project id from the project name.")
+    return slug
+
+
+def _validated_web_url(value, field_name, required=False):
+    clean = (value or "").strip()
+    if not clean:
+        if required:
+            raise PortfolioUpdateError(f"{field_name} is required.")
+        return None
+    parsed = urlparse(clean)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+        raise PortfolioUpdateError(
+            f"{field_name} must be an http:// or https:// URL."
+        )
+    return clean
+
+
+def _required_detail(value, label, flag, interactive):
+    clean = (value or "").strip()
+    if clean:
+        return clean
+    if interactive:
+        clean = input(f"{CYAN}? {label}{RESET}: ").strip()
+    if not clean:
+        raise PortfolioUpdateError(
+            f"{label} is required. Pass {flag} when running non-interactively."
+        )
+    return clean
+
+
+def _inferred_technologies(repo_data):
+    values = []
+    language = (repo_data.get("language") or "").strip()
+    if language:
+        values.append(language)
+    for topic in repo_data.get("topics") or []:
+        formatted = split_camel_case_name(topic)
+        if formatted and formatted.lower() not in {value.lower() for value in values}:
+            values.append(formatted)
+    return values[:5]
+
+
+def process_repo(
+    repo_input,
+    override_name=None,
+    override_live=None,
+    override_desc=None,
+    override_category=None,
+    override_image=None,
+    override_problem=None,
+    override_features=None,
+    override_technologies=None,
+    featured=True,
+    portfolio_path=PORTFOLIO_PATH,
+    images_dir=IMAGES_DIR,
+    repo_data=None,
+    interactive=None,
+):
+    """Fetch repository metadata and append a Project to portfolio.ts."""
+    owner, repo_name = parse_repo_identifier(repo_input)
+    if not owner or not repo_name:
+        raise PortfolioUpdateError(
+            f"Invalid repository format '{repo_input}'. Use "
+            "https://github.com/owner/repo or owner/repo."
+        )
+
+    portfolio_path = _require_portfolio_file(portfolio_path)
+    is_interactive = sys.stdin.isatty() if interactive is None else interactive
+    if repo_data is None:
+        print(
+            f"\n{CYAN}⚡ Fetching metadata from GitHub repository:{RESET} "
+            f"{BOLD}{owner}/{repo_name}{RESET}..."
+        )
+        repo_data = fetch_github_repo_data(owner, repo_name)
+
+    final_name = (override_name or split_camel_case_name(repo_data["name"])).strip()
+    final_description = (
+        override_desc
+        or (repo_data.get("description") or "").strip()
+        or f"Production-grade {final_name} application."
+    )
+    final_problem = _required_detail(
+        override_problem,
+        "Problem solved",
+        "--problem",
+        is_interactive,
+    )
+    features_text = _required_detail(
+        override_features,
+        "Key features (comma-separated)",
+        "--features",
+        is_interactive,
+    )
+    final_features = _comma_separated(features_text)
+    if not final_features:
+        raise PortfolioUpdateError("At least one key feature is required.")
+
+    inferred_category = infer_category(
+        repo_data["name"],
+        repo_data.get("description") or "",
+        repo_data.get("topics") or [],
+        repo_data.get("language") or "",
+    )
+    category_key = override_category or inferred_category
+    _, category_label, _ = CATEGORY_MAP[category_key]
+
+    final_technologies = _comma_separated(override_technologies)
+    if not final_technologies:
+        final_technologies = _inferred_technologies(repo_data)
+    if not final_technologies and is_interactive:
+        final_technologies = _comma_separated(
+            input(f"{CYAN}? Technologies (comma-separated){RESET}: ").strip()
+        )
+    if not final_technologies:
+        raise PortfolioUpdateError(
+            "At least one technology is required. Pass --technologies."
+        )
+
+    homepage = override_live
+    if homepage is None:
+        homepage = (repo_data.get("homepage") or "").strip()
+        if homepage and not re.match(r"https?://", homepage, flags=re.IGNORECASE):
+            homepage = f"https://{homepage}"
+    final_live = _validated_web_url(homepage, "Live demo URL")
+    final_repo = _validated_web_url(
+        repo_data.get("html_url") or f"https://github.com/{owner}/{repo_name}",
+        "Repository URL",
+        required=True,
+    )
+    final_image = resolve_image_reference(repo_name, override_image, images_dir)
+
+    project = ProjectEntry(
+        id=_project_slug(final_name),
+        title=final_name,
+        category=category_key,
+        category_label=category_label,
+        description=final_description,
+        problem_solved=final_problem,
+        key_features=tuple(final_features),
+        technologies=tuple(final_technologies),
+        github_url=final_repo,
+        live_url=final_live,
+        image=final_image,
+        featured=featured,
+    )
+    total_projects = append_project_to_portfolio(portfolio_path, project)
+
+    print(f"\n{GREEN}{BOLD}✓ Added '{final_name}' to src/data/portfolio.ts.{RESET}")
     print(f"  {CYAN}Repository:{RESET}     {final_repo}")
-    print(f"  {CYAN}Description:{RESET}    {final_desc}  {YELLOW}(from GitHub About desc){RESET}")
-    print(f"  {CYAN}Category:{RESET}       {cat_name} (`{cat_key}`)")
-    print(f"  {CYAN}Tags:{RESET}           {', '.join(tags_list)}")
+    if final_live:
+        print(f"  {CYAN}Live Demo URL:{RESET}  {final_live}")
+    print(f"  {CYAN}Category:{RESET}       {category_label} (`{category_key}`)")
+    print(f"  {CYAN}Technologies:{RESET}   {', '.join(final_technologies)}")
     print(f"  {CYAN}Image:{RESET}          {final_image}")
-    print(f"  {CYAN}Total Units:{RESET}    {total_projects} AI APPS (HUD updated)")
-    print(f"{GREEN}{BOLD}══════════════════════════════════════════════════════════════{RESET}\n")
+    print(f"  {CYAN}Total Projects:{RESET} {total_projects}\n")
+    return total_projects
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Add a project to Raj Colaco's portfolio using just the GitHub repo URL."
+        description=(
+            "Append a GitHub project to the PROJECTS array in "
+            "src/data/portfolio.ts."
+        )
     )
-    # Single required/optional positional argument for repo link
-    parser.add_argument("repo_url", nargs="?", help="GitHub repository URL or owner/repo (e.g. https://github.com/roco007/OpporunityAi)")
-    
-    # Optional manual overrides
+    parser.add_argument(
+        "repo_url",
+        nargs="?",
+        help=(
+            "GitHub repository URL or owner/repo "
+            "(e.g. https://github.com/roco007/OpporunityAi)"
+        ),
+    )
+
     parser.add_argument("-n", "--name", help="Override project name")
     parser.add_argument("-l", "--live", help="Override live demo URL")
     parser.add_argument("-d", "--desc", help="Override description")
-    parser.add_argument("-c", "--category", choices=["ai", "utility", "interactive"], help="Override category")
-    parser.add_argument("-i", "--image", help="Override preview image path")
-    parser.add_argument("-t", "--tags", help="Override tags (comma-separated)")
+    parser.add_argument(
+        "-c",
+        "--category",
+        choices=["ai", "utility", "interactive"],
+        help="Override category",
+    )
+    parser.add_argument(
+        "-i",
+        "--image",
+        help="Preview filename or images/... path inside public/images",
+    )
+    parser.add_argument(
+        "-p",
+        "--problem",
+        help="Problem solved by the project (prompted when omitted interactively)",
+    )
+    parser.add_argument(
+        "-f",
+        "--features",
+        help="Comma-separated key features (prompted when omitted interactively)",
+    )
+    parser.add_argument(
+        "-t",
+        "--technologies",
+        "--tags",
+        dest="technologies",
+        help="Comma-separated technologies; --tags is retained as an alias",
+    )
+    parser.add_argument(
+        "--featured",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Mark the project as featured (default: true)",
+    )
+    parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="Fail instead of prompting when required project details are missing",
+    )
 
     args = parser.parse_args()
 
     repo_input = args.repo_url
+    if not repo_input and args.non_interactive:
+        print(
+            f"{PINK}Error: A GitHub repository argument is required "
+            f"with --non-interactive.{RESET}",
+            file=sys.stderr,
+        )
+        return 2
     if not repo_input:
         print(f"\n{CYAN}{BOLD}╔═══════════════════════════════════════════════════════════╗{RESET}")
-        print(f"{CYAN}{BOLD}║         CYBER PORTFOLIO // 1-INPUT PROJECT INGESTOR       ║{RESET}")
+        print(f"{CYAN}{BOLD}║          PORTFOLIO.TS // PROJECT INGESTOR                 ║{RESET}")
         print(f"{CYAN}{BOLD}╚═══════════════════════════════════════════════════════════╝{RESET}\n")
         try:
             repo_input = input(f"{CYAN}? Enter GitHub Repository Link{RESET} (e.g. https://github.com/roco007/justDoIt): ").strip()
@@ -441,18 +701,27 @@ def main():
 
     if not repo_input:
         print(f"{PINK}Error: Repository link is required.{RESET}")
-        sys.exit(1)
+        return 1
 
-    process_repo(
-        repo_input=repo_input,
-        override_name=args.name,
-        override_live=args.live,
-        override_desc=args.desc,
-        override_category=args.category,
-        override_image=args.image,
-        override_tags=args.tags
-    )
+    try:
+        process_repo(
+            repo_input=repo_input,
+            override_name=args.name,
+            override_live=args.live,
+            override_desc=args.desc,
+            override_category=args.category,
+            override_image=args.image,
+            override_problem=args.problem,
+            override_features=args.features,
+            override_technologies=args.technologies,
+            featured=args.featured,
+            interactive=False if args.non_interactive else None,
+        )
+    except PortfolioUpdateError as error:
+        print(f"{PINK}Error: {error}{RESET}", file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

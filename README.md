@@ -13,7 +13,7 @@ An interactive digital portfolio designed for engineering leaders, technical rec
 - **Choreographed Motion:** Powered by **Anime.js 4.5.0** (timeline hero entrance, scroll-triggered reveals, 3D card tilt with specular glare, text scramble decryption).
 - **Interactive Developer CLI Terminal:** A functional command HUD accessible via navbar, floating dock, or `Ctrl + \`` supporting `/help`, `/about`, `/skills`, `/projects`, `/theme`, and `/contact`.
 - **Theme Manager:** Persistent Dark & Light modes with dynamic contrast tokens and system preference synchronization.
-- **Project Showcase:** 14 verified production systems across Multi-Agent AI, Developer Utilities, and 3D simulations with searchable filters and deep-dive technical specs.
+- **Project Showcase:** 15 verified production systems across Multi-Agent AI, Developer Utilities, and 3D simulations with searchable filters and deep-dive technical specs.
 - **Accessibility & Motion Compliance:** Full `prefers-reduced-motion: reduce` degradation, keyboard navigation, skip-to-content links, and WCAG AA contrast.
 - **SEO & Social Metadata:** JSON-LD structured schema, OpenGraph tags, Twitter Card metadata, and canonical URL mapping.
 
@@ -40,7 +40,7 @@ my-portfolio/
 ├── public/
 │   ├── favicon.svg           # High-resolution vector favicon
 │   ├── favicon.ico           # Legacy ICO favicon
-│   └── images/               # Production preview screenshots for all 14 projects
+│   └── images/               # Production preview screenshots for all 15 projects
 ├── src/
 │   ├── animations/
 │   │   ├── entrance.ts       # Hero choreographed timeline entrance
@@ -133,7 +133,19 @@ All personal details, skills, projects, and work history live in **`src/data/por
 
 ### 1. Adding a New Project
 
-Open `src/data/portfolio.ts` and add an object to the `PROJECTS` array:
+Use the branch-specific ingestion script. It fetches GitHub metadata, prompts for
+the portfolio details GitHub cannot infer, and appends the next `SYS.xxx` record
+to `src/data/portfolio.ts`:
+
+```bash
+python3 add_project.py https://github.com/roco007/my-new-tool
+```
+
+Run `python3 add_project.py --help` for non-interactive flags and image options.
+The command stops without making changes on branches that do not contain
+`src/data/portfolio.ts`.
+
+Alternatively, open `src/data/portfolio.ts` and add an object to the `PROJECTS` array manually:
 
 ```typescript
 {
@@ -152,7 +164,7 @@ Open `src/data/portfolio.ts` and add an object to the `PROJECTS` array:
   githubUrl: 'https://github.com/roco007/my-new-tool',
   liveUrl: 'https://my-new-tool.vercel.app', // optional
   image: 'images/my-tool-preview.webp',      // place file in public/images/
-  sysId: 'SYS.015',
+  sysId: 'SYS.016',
   featured: true
 }
 ```

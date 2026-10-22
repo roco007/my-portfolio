@@ -863,7 +863,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
               </h2>
 
               <p className={styles.subtitle}>
-                14 battle-tested production units revolving around the central AI engine like planets around the sun. Scroll horizontally or drag to orbit through systems and inspect live architectures.
+                15 battle-tested production units revolving around the central AI engine like planets around the sun. Scroll horizontally or drag to orbit through systems and inspect live architectures.
               </p>
 
               <div className={`${styles.metricRow} ${styles.desktopOnlyMetricRow}`}>
@@ -876,7 +876,7 @@ export const PinnedStoryContainer: React.FC<PinnedStoryContainerProps> = ({
                   <span className={styles.metricKey}>Core Angle</span>
                 </div>
                 <div className={styles.metricCard}>
-                  <span className={styles.metricVal}>14</span>
+                  <span className={styles.metricVal}>15</span>
                   <span className={styles.metricKey}>Total Planets</span>
                 </div>
               </div>

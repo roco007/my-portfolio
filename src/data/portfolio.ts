@@ -77,14 +77,14 @@ export const PERSONAL_INFO: PersonalInfo = {
   bio: [
     'I am a Software Engineer focused on crafting high-leverage developer utilities, multi-agent AI evaluation systems, and modern, high-performance web applications.',
     'My work bridges frontier AI intelligence—leveraging Google Gemini 2.5/3.5 models, agentic workflows, and code AST analysis—with robust, offline-first client-side architecture in React 19, TypeScript, Next.js, and Node.js.',
-    'With 14+ deployed production units and 34 public repositories, I prioritize privacy-first client processing, snappy zero-layout-shift microinteractions, and scalable system design.'
+    'With 15+ deployed production units and 34 public repositories, I prioritize privacy-first client processing, snappy zero-layout-shift microinteractions, and scalable system design.'
   ],
   location: 'Vasai West, Mumbai Metropolitan Region, India',
   email: 'raj45colaco@gmail.com',
   availableForHire: true,
   status: 'SYS.ONLINE // READY FOR NEW DEPLOYMENTS',
   stats: {
-    deployedProjects: 14,
+    deployedProjects: 15,
     openSourceRepos: 34,
     primaryStack: 'TypeScript / React / AI',
     yearsOfExperience: '5+ Years'
@@ -479,6 +479,26 @@ export const PROJECTS: Project[] = [
     image: 'images/workout_tracker.webp',
     sysId: 'SYS.014',
     featured: false
+  },
+  {
+    id: 'the-ninth-tide',
+    title: 'The Ninth Tide',
+    category: 'interactive',
+    categoryLabel: '3D & Interactive Apps',
+    description: 'A small, local-first browser exploration game. You have nine minutes to recover the Tideglass from a drowned island and bring it home.',
+    problemSolved: 'Short browser adventures often depend on accounts, downloads, or vague objectives. The Ninth Tide delivers a complete puzzle expedition locally in the browser with no backend.',
+    keyFeatures: [
+      'Three-state tide system reveals and closes navigation routes',
+      'Six-landmark bell puzzle with a Tideglass extraction loop',
+      'Keyboard, pointer, and touch controls with reduced-motion support',
+      'Persistent local journal, synthesized audio cues, and visible feedback'
+    ],
+    technologies: ['TypeScript', 'Phaser 3', 'Vite', 'Web Audio API', 'LocalStorage'],
+    githubUrl: 'https://github.com/roco007/TheNinthTide',
+    liveUrl: 'https://theninthtide.vercel.app',
+    image: 'images/TheNinthTide_preview.webp',
+    sysId: 'SYS.015',
+    featured: true
   }
 ];
 

@@ -73,7 +73,7 @@ export const Projects: React.FC = () => {
           tag="PROJECT ARCHIVE"
           title="PRODUCTION SYSTEMS & OPEN SOURCE ENGINES"
           highlightWord="ENGINES"
-          subtitle="Explore 14 live production units spanning multi-agent AI judges, automated documentation pipelines, AST converters, and 3D celestial simulations."
+          subtitle="Explore 15 live production units spanning multi-agent AI judges, automated documentation pipelines, AST converters, and 3D celestial simulations."
         />
 
         {/* Filters and Search Bar HUD */}
